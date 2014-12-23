@@ -1,25 +1,25 @@
 
-VERBOSE=1
+
 ifdef VERBOSE
-		Q =
-		E = @true 
+	Q =
+	E = @true 
 else
-		Q = @
-		E = @echo 
+	Q = @
+	E = @echo 
 endif
 
 ################################################################################
 
 CXX = g++
 
-PROJECT   = upray
-SRC_DIR   = "src"
-BUILD_DIR = "build"
+PROJECT   = raycpp
+SRC_DIR   = src
+BUILD_DIR = build
 
 ################################################################################
 
-CXXFLAGS = -MM --std=c++0x -Wall -Wextra -Wno-reorder -Wno-unused-parameter
-LDFLAGS  =
+CXXFLAGS = -fopenmp -O2 --std=c++11 -Wall -Wextra -Wno-reorder -Wno-unused-parameter
+LDFLAGS  = -fopenmp
 
 INCLUDE_DIRS := include
 LIBRARY_DIRS :=
@@ -28,16 +28,16 @@ LIBRARIES    := GLEW GL GLU glut
 ################################################################################
 
 CXXFILES := $(shell find $(SRC_DIR) -mindepth 1 -maxdepth 4 -name "*.cpp")
-INFILES  := $(CFILES) $(CXXFILES)
+INFILES  := $(CXXFILES)
 
 OBJFILES := $(CXXFILES:src/%.cpp=%)
-DEPFILES := $(CXXFILES:src/%.cpp=%.d)
+DEPFILES := $(CXXFILES:src/%.cpp=%)
 OFILES := $(OBJFILES:%=$(BUILD_DIR)/%.o)
 
 ################################################################################
 
 ifdef DEBUG
-		CXXFLAGS := $(CXXFLAGS) -g
+	CXXFLAGS := $(CXXFLAGS) -g
 endif
 
 CXXFLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
@@ -54,13 +54,9 @@ $(BUILD_DIR)/%.o: src/%.cpp
 	$(Q)if [ ! -d `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(Q)$(CXX) -o $@ -c $< $(CXXFLAGS)
 
-Makefile.dep: $(CFILES) $(CXXFILES)
-		$(E)Depend
-		$(Q)for i in $(^); do $(CXX) $(CXXFLAGS) -MM "$${i}" -MT $(BUILD_DIR)/`basename $${i%.*}`.o; done > $@
-
-$(PROJECT): Makefile.dep $(OFILES)
+$(PROJECT): $(OFILES)
 	$(E)Linking $@
-	$(Q)$(CXX) -o $@ $(OFILES) -fopenmp $(LDFLAGS)
+	$(Q)$(CXX) -o $@ $(OFILES) $(LDFLAGS)
 
 clean:
 	$(E)Removing files

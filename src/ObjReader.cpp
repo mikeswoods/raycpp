@@ -201,12 +201,17 @@ void ObjReader::parseVN(int lineNum, const std::string& line, istringstream& ss)
  * Classifies a face chunk into one of four categories defined by
  * ObjReader::FaceType
  */
-ObjReader::FaceType ObjReader::classifyFaceChunk(const std::string& chunk)
+ObjReader::FaceType ObjReader::classifyFaceChunk(std::string chunk)
 {
+
+	cout << "chunk => " << chunk << endl;
+
 	if (chunk.find("//") != string::npos) { // Case (3)
 		return FACE_VN;
 	} else if (chunk.find("/") != string::npos) { // Case (2) or (4)
-		size_t sz = Utils::split(string(chunk), "/").size();
+		string chunk_copy = chunk;
+		size_t sz = Utils::split(chunk_copy, "/").size();
+		cout << "chunk => " << chunk << endl;
 		if (sz == 2) {
 			return FACE_VT; // Case (2)
 		} else if (sz == 3) {
@@ -314,6 +319,8 @@ Face ObjReader::parseFVT(int lineNum, const std::string& line
 	int t[3] = {-1, -1, -1};
 	int n[3] = {-1, -1, -1};
 
+	cout << "chunk(1) \"" << chunk1 << "\"" << endl;
+
 	vector<string> parts[3] = {
 		 Utils::split(chunk1, "/")
 		,Utils::split(chunk2, "/")
@@ -321,7 +328,7 @@ Face ObjReader::parseFVT(int lineNum, const std::string& line
 	};
 
 	if (parts[0].size() != 2) {
-		cerr << parts[0].size() << "," << lineNum << ":" << line << endl;
+		cerr << parts[0].size() << "," << lineNum << ": [\"" << line << "\"]" << endl;
 		throw runtime_error("parseFVT: bad chunk(1) {" + chunk1 + "}");
 	} else if (parts[1].size() != 2) {
 		cerr << line << endl;

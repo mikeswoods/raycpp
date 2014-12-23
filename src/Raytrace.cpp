@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <ctime>
+#include <chrono>
 #include <cassert>
 #include <omp.h>
 #include <cstdlib>
@@ -41,9 +42,6 @@ using namespace std;
 
 // Maximum raytrace recursion depth:
 #define MAX_DEPTH 5
-
-// Enable parallel execution with OpenMP
-#define ENABLE_PARALLEL 1
 
 /******************************************************************************
  *
@@ -847,6 +845,7 @@ float detectEdges(const BMP& input, int w, int h, float* E)
 
 	float avgIntensity = 0.0f;
 
+	#pragma omp parallel for
 	for (int i=1; i<(w-1); i++) {
 		for (int j=1; j<(h-1); j++) {
 
@@ -906,8 +905,9 @@ void rayTrace(BMP& output
 			 ,int Y          // Y resolution
 			 ,TraceOptions& options)
 {
-	// Current line being rendered:
-	int line = 0;
+	unsigned int line = 0;
+	chrono::time_point<chrono::system_clock> start, end;
+	chrono::duration<double> elapsed_sec_1, elapsed_sec_2;
 
 	// Get all of the point lights, etc. defined in the scene configuration:
 	list<Light*> lights = state.getLights();
@@ -920,7 +920,7 @@ void rayTrace(BMP& output
 	clock_t pass1Start = clock();
 
 	// Compute the width and height of a single pixel
-	float pixW  = 0.0f;
+	float pixW = 0.0f;
 	float pixH = 1.0f;
 	Camera::pixelDimensions(X, Y, pixW, pixH);
 
@@ -944,113 +944,114 @@ void rayTrace(BMP& output
 	cout << "> Rendering with configuration: " << endl 
 		 << endl << options << endl;
 
-	// Toggle OpenMP parallel rendering:
-	#ifdef ENABLE_PARALLEL
-	#pragma omp parallel for schedule (guided)
-	#endif
-	for (int i=0; i<X; i++) {
+	start = chrono::system_clock::now();
 
-		for (int j=0; j<Y; j++) {
+	#pragma omp parallel
+	{
+		#pragma omp for schedule(static)
+		for (int i=0; i<X; i++) {
 
-			#ifdef ENABLE_PIXEL_DEBUG
-			bool hitDebugPixel =    options.enablePixelDebug 
-				                 && options.xDebugPixel == i 
-								 && options.yDebugPixel == j;
-			#else
-			bool hitDebugPixel = false;
-			#endif
+			for (int j=0; j<Y; j++) {
 
-			// Shoot a single ray through the center of each pixel
-			float xNDC = static_cast<float>(i) / fX;
-			float yNDC = static_cast<float>(j) / fY;
+				#ifdef ENABLE_PIXEL_DEBUG
+				bool hitDebugPixel =    options.enablePixelDebug 
+					                 && options.xDebugPixel == i 
+									 && options.yDebugPixel == j;
+				#else
+				bool hitDebugPixel = false;
+				#endif
 
-			Color c = trace(options, C.spawnRay(xNDC, yNDC), G, em, lights, 0, hitDebugPixel);
+				// Shoot a single ray through the center of each pixel
+				float xNDC = static_cast<float>(i) / fX;
+				float yNDC = static_cast<float>(j) / fY;
 
-			#ifdef ENABLE_PIXEL_DEBUG
-			// If we hit the debug pixel: break out, since there's nothing more to do
-			if (options.enablePixelDebug && hitDebugPixel) {
-				debugPixel(__FUNCTION_NAME__ ":done", 0, c);
-				// It's still abnormal termination:
-				exit(EXIT_FAILURE);
+				Color c = trace(options, C.spawnRay(xNDC, yNDC), G, em, lights, 0, hitDebugPixel);
+
+				#ifdef ENABLE_PIXEL_DEBUG
+				// If we hit the debug pixel: break out, since there's nothing more to do
+				if (options.enablePixelDebug && hitDebugPixel) {
+					debugPixel(__FUNCTION_NAME__ ":done", 0, c);
+					// It's still abnormal termination:
+					exit(EXIT_FAILURE);
+				}
+				#endif
+
+				output.SetPixel(i, j, colorToRGBAPixel(c));
 			}
-			#endif
 
-			output.SetPixel(i, j, colorToRGBAPixel(c));
+			++line;
+
+			cout << "(PASS-1) " << ((static_cast<float>(line) / fY) * 100.0f) << "%\r";
 		}
-
-		++line;
-
-		#pragma omp atomic
-		cout << "(PASS-1) Line: " << line << "\r";
 	}
 
-	// Calculate the elapsed time for the initial raytracing:
-	int pass1Msec = (clock() - pass1Start) * 1000 / CLOCKS_PER_SEC;
+	elapsed_sec_1 = chrono::system_clock::now() - start;
 
-	cout << endl << endl 
-		 << "> Rendering elapsed time: " << (pass1Msec / 1000) << "." << (pass1Msec % 1000) << "s" << endl 
+	cout << endl 
+	     << endl 
+		 << "> Rendering elapsed time: "
+		 << elapsed_sec_1.count() << "s" 
+		 << endl 
 		 << endl;
 
 	/// Adaptively antialias /////////////////////////////////////////////////
 
-	int pass2Msec = 0;
-
 	if (options.samplesPerPixel > 1) {
 
-		clock_t pass2Start = clock();
 		line = 0;
 
 		// Detect the edges of the image:
 		float avgIntensity = detectEdges(output, X, Y, edgeMap);
 		int N = options.samplesPerPixel;
 
-		cout << "> Adaptively supersampling with " << N << " x " << N << " samples per pixel" 
+		cout << "> Adaptively supersampling with " << N << " x " << N 
+		     << " samples per pixel" 
 			 << endl << endl;
-		//     << "*** Average edge intensity: " << avgIntensity << endl;
 
-		// Toggle OpenMP parallel rendering:
-		#ifdef ENABLE_PARALLEL
-		#pragma omp parallel for schedule (guided)
-		#endif
-		for (int i=0; i<X; i++) {
-			for (int j=0; j<Y; j++) {
+		start = chrono::system_clock::now();
 
-				// Linearize the index:
-				int k = (i * Y) + j;
+		#pragma omp parallel
+		{
+			#pragma omp for schedule(static)
+			for (int i=0; i<X; i++) {
+				for (int j=0; j<Y; j++) {
 
-				// For any pixel at (i,j) that has an edge intensity greater than
-				// the average value, run antialiasing:
-				if (edgeMap[k] > avgIntensity) {
+					// Linearize the index:
+					int k = (i * Y) + j;
 
-					Color c = samplePixel(options, C, G, em, lights, pixW, pixH, fX, fY, i ,j);
+					// For any pixel at (i,j) that has an edge intensity greater than
+					// the average value, run antialiasing:
+					if (edgeMap[k] > avgIntensity) {
 
-					// Overwrite the value previously stored at (i,j) with the 
-					// supersampled color value:
-					output.SetPixel(i, j, colorToRGBAPixel(c));
+						Color c = samplePixel(options, C, G, em, lights, pixW, pixH, fX, fY, i ,j);
+
+						// Overwrite the value previously stored at (i,j) with the 
+						// supersampled color value:
+						output.SetPixel(i, j, colorToRGBAPixel(c));
+					}
 				}
+
+				++line;
+
+				cout << "(PASS-2) " << ((static_cast<float>(line) / fY) * 100.0f) << "%\r";
 			}
-
-			++line;
-
-			#pragma omp atomic
-			cout << "(PASS-2) Line: " << line << "\r";
 		}
 
-		// Clean up:
 		if (edgeMap != NULL) {
 			delete [] edgeMap;
 			edgeMap = NULL;
 		}
 
-		// Calculate the elapsed time for the second supersampling pass:
-		int pass2Msec = (clock() - pass1Start) * 1000 / CLOCKS_PER_SEC;
-		int totalMsec = pass1Msec + pass2Msec;
+		elapsed_sec_2 = chrono::system_clock::now() - start;
 
-		cout << endl << endl 
-			 << "> Supersampling elapsed time: " << (pass2Msec / 1000) << "." << (pass2Msec % 1000) << "s"  << endl
-			 << "> Total elapsed time: "         << (totalMsec / 1000) << "." << (totalMsec % 1000) << "s"  << endl
+		cout << endl 
+		     << endl 
+			 << "> Supersampling elapsed time: " << elapsed_sec_2.count() << "s"  
+			 << endl
+			 << "> Total elapsed time: " << (elapsed_sec_1 + elapsed_sec_2).count() << "s"  
+			 << endl
 			 << endl;
 	}
 }
 
-/*****************************************************************************/
+/******************************************************************************/

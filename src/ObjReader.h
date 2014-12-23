@@ -45,7 +45,7 @@ class ObjReader
 		// Maximum vertex component in either X, Y, or Z
 		float maxVComp;
 
-		static FaceType classifyFaceChunk(const std::string& chunk);
+		static FaceType classifyFaceChunk(std::string chunk);
 
 		inline int normalizeIndex(int i) const;
 
