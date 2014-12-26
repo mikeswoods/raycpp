@@ -10,6 +10,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
 using namespace std;

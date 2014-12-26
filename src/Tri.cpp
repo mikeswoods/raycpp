@@ -109,7 +109,8 @@ void Tri::computeCentroid()
 
 void Tri::computeNormal()
 {
-	this->normal = -glm::cross(v1 - v3, v1 - v2);
+	this->normal = glm::cross(glm::normalize(this->v1 - this->v3)
+		                     ,glm::normalize(this->v1 - this->v2));
 }
 
 V Tri::getNormal() const
@@ -173,42 +174,65 @@ void Tri::buildGeometry()
  */
 float Tri::intersected(const Ray& ray) const
 {
-	glm::vec3 e1 = this->v2 - this->v1;
-	glm::vec3 e2 = this->v3 - this->v1;
-	glm::vec3 D  = glm::normalize(ray.dir);
-	glm::vec3 P  = glm::cross(D, e2);
-	float det    = glm::dot(e1, P);
-	float eps    = FLT_EPSILON;
+	glm::vec3 dir = glm::normalize(ray.dir);
+	glm::vec3 n   = glm::normalize(glm::cross(this->v2 - this->v1, this->v3 - this->v1));
+	float d       = glm::dot(n, this->v1.xyz);
+	float nd      = glm::dot(n, dir);
 
-	if (det > -eps && det < eps) {
+	if (nd == 0) {
 		return -1.0f;
 	}
 
-	float invDet = 1.0f / det;
-	glm::vec3 T  = ray.orig - this->v1;
+	float t = (d - (glm::dot(n, ray.orig))) / nd;
 
-	float u = glm::dot(T, P) * invDet;
-	if (u < 0.0f || u > 1.0f) {
-		return -1.0f;
-	}
+	P Q = ray.normalized().project(t);
 
-	glm::vec3 Q  = glm::cross(T, e1);
-	float v      = glm::dot(D, Q) * invDet;
+	float c1 = glm::dot(glm::cross(this->v2 - this->v1, Q - this->v1), n);
+	float c2 = glm::dot(glm::cross(this->v3 - this->v2, Q - this->v2), n);
+	float c3 = glm::dot(glm::cross(this->v1 - this->v3, Q - this->v3), n);
 
-	if (v < 0.0f || (u + v) > 1.0f) {
-		return -1.0f;
-	}
-
-	float t = glm::dot(e2, Q) * invDet;
-
-	if (t > eps) {
+	if (c1 >= 0.0f && c2 >= 0.0f && c3 >= 0.0f) {
 		return t;
 	}
 
 	return -1.0f;
+
+	// glm::vec3 e1 = this->v2 - this->v1;
+	// glm::vec3 e2 = this->v3 - this->v1;
+	// glm::vec3 D  = ray.dir;
+	// glm::vec3 P  = glm::cross(D, e2);
+	// float det    = glm::dot(e1, P);
+	// float eps    = FLT_EPSILON;
+
+	// if (det > -eps && det < eps) {
+	// 	return -1.0f;
+	// }
+
+	// float invDet = 1.0f / det;
+	// glm::vec3 T  = ray.orig - this->v1;
+
+	// float u = glm::dot(T, P) * invDet;
+	// if (u < 0.0f || u > 1.0f) {
+	// 	return -1.0f;
+	// }
+
+	// glm::vec3 Q  = glm::cross(T, e1);
+	// float v      = glm::dot(D, Q) * invDet;
+
+	// if (v < 0.0f || (u + v) > 1.0f) {
+	// 	return -1.0f;
+	// }
+
+	// float t = glm::dot(e2, Q) * invDet;
+
+	// if (t > eps) {
+	// 	return t;
+	// }
+
+	// return -1.0f;
 }
 
-Intersection Tri::intersectImpl(const Ray &ray, const glm::mat4& T) const
+Intersection Tri::intersectImpl(const Ray &ray) const
 {
 	return Intersection(this->intersected(ray), this->getNormal());
 }

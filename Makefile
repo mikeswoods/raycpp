@@ -1,4 +1,4 @@
-
+#WITH_OMP=1
 
 ifdef VERBOSE
 	Q =
@@ -8,6 +8,10 @@ else
 	E = @echo 
 endif
 
+ifdef WITH_OMP
+	CXXFLAGS += -DENABLE_OPENMP
+endif
+
 ################################################################################
 
 UNAME := $(shell uname)
@@ -15,7 +19,11 @@ UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
 CXX = g++-4.9
 else
-CXX = g++
+	ifeq ($(UNAME), Linux)
+		CXX = g++
+	else
+		CXX = g++
+	endif
 endif
 
 PROJECT   = raycpp
@@ -24,8 +32,7 @@ BUILD_DIR = build
 
 ################################################################################
 
-CXXFLAGS = \
-    -fdiagnostics-color=always \
+CXXFLAGS += \
 	-O2 \
 	--std=c++11 \
 	-Wall \
@@ -35,7 +42,11 @@ CXXFLAGS = \
 	-Wno-unused-function
 
 ifeq ($(UNAME), Darwin)
-	CXXFLAGS += -fopenmp
+	CXXFLAGS += -fopenmp -fdiagnostics-color=always
+else
+	ifeq ($(UNAME), Linux)
+		CXXFLAGS += -fopenmp
+	endif
 endif
 
 ################################################################################

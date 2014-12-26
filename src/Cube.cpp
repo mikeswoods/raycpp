@@ -127,7 +127,7 @@ void Cube::buildGeometry()
 	indices_.push_back(2); indices_.push_back(6); indices_.push_back(7);
 }
 
-Intersection Cube::intersectImpl(const Ray &ray, const glm::mat4& T) const
+Intersection Cube::intersectImpl(const Ray &ray) const
 {
 	float xd  = x(ray.dir);
     float yd  = y(ray.dir);

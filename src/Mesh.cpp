@@ -213,9 +213,9 @@ static bool closestTriangle(const Ray& ray, const vector<Tri>& tris, Tri& closes
 	return true;
 }
 
-Intersection Mesh::intersectImpl(const Ray &ray, const glm::mat4& T) const
+Intersection Mesh::intersectImpl(const Ray &ray) const
 {
-	float t; // t distance
+	float t = -1.0f; // t distance
 	Tri tri; // Closest triangle
 
 	if (this->tree != nullptr) { // Yes
@@ -241,7 +241,7 @@ Intersection Mesh::intersectImpl(const Ray &ray, const glm::mat4& T) const
 
 	glm::vec3 N = tri.getNormal();
 
-	return Intersection(t, glm::vec3(0,1,0));
+	return Intersection(t, N);
 }
 
 glm::vec3 Mesh::sampleImpl() const

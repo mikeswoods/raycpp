@@ -93,7 +93,7 @@ struct Ray
 	{ }
 
 	// Normalizes the ray and returns a new instance
-	Ray normalize() const;
+	Ray normalized() const;
 
 	// Project a magnitude along the ray yielding a position
 	P project(float t) const;

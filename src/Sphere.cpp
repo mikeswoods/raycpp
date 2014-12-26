@@ -137,7 +137,7 @@ void Sphere::buildGeometry()
     indices_.push_back(offset);
 }
 
-Intersection Sphere::intersectImpl(const Ray &ray, const glm::mat4& T) const
+Intersection Sphere::intersectImpl(const Ray &ray) const
 {
 	// Page 266 in the notes
 	glm::vec3 oc = ray.orig - this->center_;

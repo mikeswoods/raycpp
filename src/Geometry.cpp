@@ -35,7 +35,6 @@ vector<glm::vec3> Geometry::getColors(const Color& color) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Compute an intersection with a WORLD-space ray.
 Intersection Geometry::intersect(const glm::mat4 &T, Ray rayWorld) const
 {
 	Ray rayNormal  = Ray(rayWorld.orig, glm::normalize(rayWorld.dir));
@@ -43,8 +42,8 @@ Intersection Geometry::intersect(const glm::mat4 &T, Ray rayWorld) const
 
     // Transform the ray into OBJECT-LOCAL-space, for intersection calculation.
 	// (Remember that position = vec4(vec3, 1) while direction = vec4(vec3, 0).)
-	Ray rayLocal(transform(invT, glm::vec4(rayNormal.orig, 1))
-		        ,transform(invT, glm::vec4(rayNormal.dir, 0)));
+	Ray rayLocal(transform(invT, glm::vec4(rayNormal.orig, 1.0f))
+		        ,transform(invT, glm::vec4(rayNormal.dir, 0.0f)));
 
 	// Test the bounding volume first:
 	if (!this->getVolume().intersects(rayLocal)) {
@@ -52,7 +51,7 @@ Intersection Geometry::intersect(const glm::mat4 &T, Ray rayWorld) const
 	}
 
     // Compute the intersection in LOCAL-space.
-	Intersection isect = this->intersectImpl(rayLocal, T);
+    Intersection isect = this->intersectImpl(rayLocal);
 
     if (isect.isHit()) {
 
@@ -66,27 +65,25 @@ Intersection Geometry::intersect(const glm::mat4 &T, Ray rayWorld) const
 		// you would just use the unmodified transform T.)
 		//
         // http://www.arcsynthesis.org/gltut/Illumination/Tut09%20Normal%20Transformation.html
+		//
+        isect.normal = glm::normalize(transform(glm::transpose(invT), glm::vec4(normalLocal, 0.0f)));
 
-		if (this->type != MESH || this->type !=TRI) {
-		isect.normal = glm::normalize(transform(glm::transpose(invT)
-			                                   ,glm::vec4(normalLocal, 0.0f)));
-		}
 		// Compute the hit position in world space:
-		isect.hitWorld = rayWorld.project(isect.t);
+		isect.hitWorld = rayNormal.project(isect.t);
 
 		// Compute the hit position in local space:
 		isect.hitLocal = transform(invT, glm::vec4(isect.hitWorld.xyz, 1.0f));
 
-		// Compute the hit position in local space:
-		isect.normalLocal = normalLocal;
-
 		//  Make sure the intersection surface normal always points toward (not away from) the 
 		// incident ray's origin. See Piazza post @354
+
 		if (glm::dot(isect.normal, rayWorld.dir) > 0.0f) {
 
 			isect.normal = -isect.normal; // Flip the normal:
-			isect.inside = true;          // Indicate that the ray is actually in the object
+			isect.inside = true;
 		}
+
+		assert(abs(glm::length(isect.normal) - 1.0f) <= 1.0e-7f);
     }
 
     // The final output intersection data is in WORLD-space.

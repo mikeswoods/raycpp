@@ -3,7 +3,7 @@
 
 /*****************************************************************************/
 
-Ray Ray::normalize() const
+Ray Ray::normalized() const
 {
 	return Ray(this->orig, glm::normalize(this->dir));
 }

@@ -52,7 +52,7 @@ class Geometry
 		std::vector<unsigned int> indices_;
 
 		// Compute an intersection with an OBJECT-LOCAL-space ray.
-		virtual Intersection intersectImpl(const Ray &ray, const glm::mat4&) const = 0;
+		virtual Intersection intersectImpl(const Ray &ray) const = 0;
 
 		// Sample a point on the object's surface in OBJECT-LOCAL-space ray.
 		virtual glm::vec3 sampleImpl() const = 0;

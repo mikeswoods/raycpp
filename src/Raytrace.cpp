@@ -6,7 +6,7 @@
  * @author Michael Woods
  *
  *****************************************************************************/
-
+#define GLM_FORCE_RADIANS
 #include <algorithm>
 #include <ctime>
 #include <chrono>
@@ -39,8 +39,6 @@ using namespace std;
 
 // Enable pixel-level debugging:
 //#define ENABLE_PIXEL_DEBUG 1
-
-#define ENABLE_OPENMP 1
 
 // Maximum raytrace recursion depth:
 #define MAX_DEPTH 5
@@ -535,8 +533,7 @@ glm::vec3 blinnPhongShade(TraceOptions& options
 	}
 	#endif
 
-	//float Id = max(0.0f, cosineAngle);
-	float Id = cosineAngle;
+	float Id = max(0.0f, cosineAngle);
 	diffuse += kd * Id * matColor * lcol;
 
 	// === Specular component =================================================
@@ -604,6 +601,7 @@ static Color computeShading(TraceOptions& options
 		// Compute the Blinn-Phong diffuse and specular components for the current light
 		// if not in the shadow:
 		float amount = shadow(graph, isect.node, isect.hitWorld, *i, options.samplesPerLight);
+		//float amount = 1.0f;
 
 		// Apply the shading factor to the diffuse + specular components
 		diffuse  *= amount;

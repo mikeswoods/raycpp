@@ -25,7 +25,7 @@ class Cylinder : public Geometry
 		void buildVolume();
 
 	protected:
-		virtual Intersection intersectImpl(const Ray &ray, const glm::mat4& T) const;
+		virtual Intersection intersectImpl(const Ray &ray) const;
 		virtual glm::vec3 sampleImpl() const;
 
 	public:

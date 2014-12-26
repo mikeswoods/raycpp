@@ -23,7 +23,7 @@ class Cube : public Geometry
 
 	protected:
 		P p1, p2, centroid;
-		virtual Intersection intersectImpl(const Ray &ray, const glm::mat4& T) const;
+		virtual Intersection intersectImpl(const Ray &ray) const;
 		virtual glm::vec3 sampleImpl() const;
 
 	public:

@@ -41,7 +41,7 @@ class Mesh : public Geometry
 		// Self-contained triangle data:
 		std::vector<Tri> triangles;
 
-		virtual Intersection intersectImpl(const Ray &ray, const glm::mat4& T) const;
+		virtual Intersection intersectImpl(const Ray &ray) const;
 		virtual glm::vec3 sampleImpl() const;
 
 	public:
