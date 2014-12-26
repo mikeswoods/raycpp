@@ -10,7 +10,13 @@ endif
 
 ################################################################################
 
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), Darwin)
+CXX = g++-4.9
+else
 CXX = g++
+endif
 
 PROJECT   = raycpp
 SRC_DIR   = src
@@ -18,12 +24,31 @@ BUILD_DIR = build
 
 ################################################################################
 
-CXXFLAGS = -fopenmp -O2 --std=c++11 -Wall -Wextra -Wno-reorder -Wno-unused-parameter
-LDFLAGS  = -fopenmp
+CXXFLAGS = \
+    -fdiagnostics-color=always \
+	-O2 \
+	--std=c++11 \
+	-Wall \
+	-Wextra \
+	-Wno-reorder \
+	-Wno-unused-parameter \
+	-Wno-unused-function
+
+ifeq ($(UNAME), Darwin)
+	CXXFLAGS += -fopenmp
+endif
+
+################################################################################
+
+ifeq ($(UNAME), Darwin)
+LDFLAGS = -fopenmp -lGLEW -framework GLUT -framework OpenGL -framework Cocoa
+else
+LDFLAGS = -fopenmp -lGLEW -lGL -lGLU -lglut
+endif
+
+################################################################################
 
 INCLUDE_DIRS := include
-LIBRARY_DIRS :=
-LIBRARIES    := GLEW GL GLU glut
 
 ################################################################################
 
@@ -41,8 +66,6 @@ ifdef DEBUG
 endif
 
 CXXFLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
-LDFLAGS  += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir))
-LDFLAGS  += $(foreach library,$(LIBRARIES),-l$(library))
 
 ################################################################################
 

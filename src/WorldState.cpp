@@ -14,12 +14,12 @@ WorldState::WorldState(const Configuration& _config) :
 	this->flagCycleLightHue = false;
 	this->flagRotateScene   = false;
 	this->polyModeIndex     = 0;
-	this->envMap            = NULL;
+	this->envMap            = nullptr;
 }
 
 WorldState::~WorldState() 
 { 
-	delete this->graphIter;
+	delete this->iterator;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +41,7 @@ void WorldState::initialize()
 
 	this->lookAt = this->eye + this->viewDir;
 
-	this->graphIter = new Graph::pre_iterator(this->config.getSceneGraph(), true);
+	this->iterator = new Graph::pre_iterator(this->config.getSceneGraph(), true);
 
 	this->previewLight = PointLight(DEFAULT_LIGHT_POSITION, Color::WHITE);
 
@@ -84,17 +84,17 @@ float WorldState::getZFar()
 
 GraphNode* WorldState::gotoRoot()
 {
-	return this->graphIter->reset();
+	return this->iterator->reset();
 }
 
 GraphNode* WorldState::getCurrentNode()
 {
-	return this->graphIter->current();
+	return this->iterator->current();
 }
 
 GraphNode* WorldState::getNextNode()
 {
-	return this->graphIter->next();
+	return this->iterator->next();
 }
 
 // Operations /////////////////////////////////////////////////////////////////
@@ -116,11 +116,11 @@ void WorldState::highlightNextNode()
 	GLGeometry* currentInstance = this->getCurrentNode()->getInstance();
 	GLGeometry* nextInstance    = this->getNextNode()->getInstance();
 
-	if (currentInstance != NULL) {
+	if (currentInstance != nullptr) {
 		currentInstance->unHighlightObject();
 	}
 
-	if (nextInstance != NULL) {
+	if (nextInstance != nullptr) {
 		nextInstance->highlightObject();
 	}
 }
@@ -143,7 +143,7 @@ void WorldState::switchPolygonMode()
 
 	for (Graph::pre_iterator i = this->config.getSceneGraph().begin(); !i.done(); i++) {
 		GLGeometry* instance = (*i)->getInstance();
-		if (instance != NULL) {
+		if (instance != nullptr) {
 			instance->setPolyMode(useMode);
 		}
 	}
@@ -156,13 +156,13 @@ static void _deleteNode(GraphNode* node, Graph* graph)
 	node->detachFromParent();
 
 	if (node != graph->getRoot()) {
-		if (instance != NULL) {
+		if (instance != nullptr) {
 			delete instance;
 		}
 		delete node;
 	} else { // Special handling for root node:
-		graph->setRoot(NULL);
-		if (instance != NULL) {
+		graph->setRoot(nullptr);
+		if (instance != nullptr) {
 			delete instance;
 		}
 	}
@@ -177,7 +177,7 @@ bool WorldState::deleteSelectedNode()
 		    ,_deleteNode
 			,&graph);
 	
-	if (graph.getRoot() != NULL) {
+	if (graph.getRoot() != nullptr) {
 		this->gotoRoot();
 		return false;
 	} else {

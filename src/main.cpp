@@ -144,8 +144,8 @@ void main()
 
 // Scene state & render options ///////////////////////////////////////////////
 
-static WorldState* state = NULL;
-static TraceOptions* traceOptions = NULL;
+static WorldState* state = nullptr;
+static TraceOptions* traceOptions = nullptr;
 
 // Animation/transformation stuff /////////////////////////////////////////////
 
@@ -343,7 +343,7 @@ int main(int argc, char** argv)
 	// = Seed PRNG
 	// ===========================================================================
 
-	srand((unsigned int)time(NULL));
+	srand((unsigned int)time(nullptr));
 
 	// ===========================================================================
 	// = Run tests
@@ -388,7 +388,7 @@ int main(int argc, char** argv)
 	// Samples per pixel:
 	if (options[SAMPLES_PER_PIXEL].count() > 0) {
 		const char* str = options[SAMPLES_PER_PIXEL].first()->arg;
-		if (str != NULL) {
+		if (str != nullptr) {
 			traceOptions->samplesPerPixel = Utils::parseNumber(string(str), TraceOptions::SAMPLES_PER_PIXEL_DEFAULT);
 		} else {
 			traceOptions->samplesPerPixel = TraceOptions::SAMPLES_PER_PIXEL_DEFAULT;
@@ -398,7 +398,7 @@ int main(int argc, char** argv)
 	// Samples per light:
 	if (options[SAMPLES_PER_LIGHT].count() > 0) {
 		const char* str = options[SAMPLES_PER_LIGHT].first()->arg;
-		if (str != NULL) {
+		if (str != nullptr) {
 			traceOptions->samplesPerLight = Utils::parseNumber(string(str), TraceOptions::SAMPLES_PER_LIGHT_DEFAULT);
 		} else {
 			traceOptions->samplesPerLight = TraceOptions::SAMPLES_PER_LIGHT_DEFAULT;
@@ -535,9 +535,9 @@ void cleanup()
 
     glDeleteProgram(shaderProgram);
 
-	if (state != NULL) {
+	if (state != nullptr) {
 		delete state;
-		state = NULL;
+		state = nullptr;
 	}
 }
 
@@ -565,12 +565,12 @@ void initShader()
 	// the shaders complied correctly
 
     // - Vertex shader
-    glShaderSource(shadVert, 1, &vertexShader, NULL);
+    glShaderSource(shadVert, 1, &vertexShader, nullptr);
     glCompileShader(shadVert);
     GLUtils::printShaderInfoLog(clog, shadVert);
 
     // - Diffuse fragment shader
-    glShaderSource(shadFrag, 1, &fragmentShader, NULL);
+    glShaderSource(shadFrag, 1, &fragmentShader, nullptr);
     glCompileShader(shadFrag);
     GLUtils::printShaderInfoLog(clog, shadFrag);
 
@@ -611,11 +611,11 @@ static void* uploadNode(GraphNode* node, void* ignore, int depth)
 
 	GLGeometry* instance = node->getInstance();
 
-	if (instance != NULL) {
+	if (instance != nullptr) {
 		instance->upload(shaderProgram, locationPos, locationNor, locationCol);
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // Walks the scene graph, uploading the geometry contained in the graph's nodes
@@ -627,8 +627,8 @@ void uploadGeometry()
 
 	GraphNode* root = state->getConfiguration().getSceneGraph().getRoot();
 
-	if (root != NULL) {
-		walk(root, uploadNode, (void*)NULL);
+	if (root != nullptr) {
+		walk(root, uploadNode, (void*)nullptr);
 	}
 }
 
@@ -645,7 +645,7 @@ static glm::mat4 glDrawGeometry(GraphNode* node, glm::mat4 current, int depth)
 
 	GLGeometry* instance = node->getInstance();
 
-	if (instance != NULL) {
+	if (instance != nullptr) {
 		instance->draw(state, shaderProgram, unifModel, unifModelInvTr, next);
 	}
 
@@ -657,7 +657,7 @@ void glDrawSceneGraph()
 {
 	GraphNode* root = state->getConfiguration().getSceneGraph().getRoot();
 
-	if (root != NULL) {
+	if (root != nullptr) {
 		walk(root, glDrawGeometry, glm::mat4());
 	}
 }

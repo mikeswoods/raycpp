@@ -87,7 +87,7 @@ SurfaceMap::SurfaceMap(const SurfaceMap& other) :
 
 SurfaceMap::~SurfaceMap()
 {
-	if (this->bitmap != NULL) {
+	if (this->bitmap != nullptr) {
 	//	delete this->bitmap;
 	}
 }
@@ -225,8 +225,8 @@ Color TextureMap::getColor(float u, float v) const
 BumpMap::BumpMap(const string& filename) :
 	SurfaceMap(filename, BUMP_MAP),
 	N(0),
-	bU(NULL),
-	bV(NULL)
+	bU(nullptr),
+	bV(nullptr)
 {
 	this->initHeightMap();
 	this->computeDerivatives();

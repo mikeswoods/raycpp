@@ -33,7 +33,7 @@ class GraphNode
 		// Node name
 		std::string name;
 
-		// Pointer to parent, if any. If NULL, node is the root of the graph
+		// Pointer to parent, if any. If null, node is the root of the graph
 		GraphNode* parent;
 
 		// The geometric object definition itself
@@ -65,7 +65,7 @@ class GraphNode
 		GraphNode(const GraphNode& other);
 		~GraphNode();
 
-		bool isRoot() { return this->getParent() == NULL; }
+		bool isRoot() { return this->getParent() == nullptr; }
 
 		const std::string& getName() const    { return this->name; }
 		void setName(const std::string& name) { this->name = name; }
@@ -192,7 +192,7 @@ class Graph
 				{
 					this->st = std::stack<GraphNode*>();
 
-					if (this->start != NULL) {
+					if (this->start != nullptr) {
 						this->st.push(this->start);
 					}
 
@@ -203,7 +203,7 @@ class Graph
 				// resets as needed
 				void testAndReset()
 				{
-					if (this->cyclic && this->st.empty() && this->start != NULL) {
+					if (this->cyclic && this->st.empty() && this->start != nullptr) {
 						this->reset();
 					}
 				}
@@ -213,7 +213,7 @@ class Graph
 				{
 					this->testAndReset();
 
-					return this->st.empty() ? NULL : this->st.top();
+					return this->st.empty() ? nullptr : this->st.top();
 				}
 
 				// Advances the iterator, returning true if elements
@@ -267,7 +267,7 @@ class Graph
 					this->testAndReset();
 
 					if (this->st.empty()) {
-						return NULL;
+						return nullptr;
 					}
 
 					std::list<GraphNode*> children = this->st.top()->getChildren();
@@ -282,7 +282,7 @@ class Graph
 
 					this->testAndReset();
 
-					return this->st.empty() ? NULL : this->st.top();
+					return this->st.empty() ? nullptr : this->st.top();
 				}
 		};
 
@@ -329,7 +329,7 @@ void walk(GraphNode* root // The graph root
 
 	std::list<GraphNode*> children = root->getChildren();
 
-	for (std::list<GraphNode*>::const_iterator i=children.begin(); i != children.end(); i++) {
+	for (auto i=children.begin(); i != children.end(); i++) {
 		walk(*i, visit, next, depth+1);
 	}
 }
@@ -362,7 +362,7 @@ T fold(GraphNode* root                         // The graph root
 
 	std::list<GraphNode*> children = root->getChildren();
 
-	for (std::list<GraphNode*>::const_iterator i=children.begin(); i != children.end(); i++) {
+	for (auto i=children.begin(); i != children.end(); i++) {
 		total = accum(fold(*i, visit, accum, next), total);
 	}
 
@@ -382,7 +382,7 @@ void postWalk(GraphNode* root, void (*visit)(GraphNode* node,  T context), T con
 {
 	std::list<GraphNode*> children = root->getChildren();
 
-	for (std::list<GraphNode*>::const_iterator i=children.begin(); i != children.end(); i++) {
+	for (auto i=children.begin(); i != children.end(); i++) {
 		postWalk(*i, visit, context);
 	}
 

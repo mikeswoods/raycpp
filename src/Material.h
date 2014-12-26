@@ -66,8 +66,8 @@ class Material
 				,bool tran
 				,bool emit
 				,float ambient
-				,TextureMap const * textureMap = NULL
-				,BumpMap const * bumpMap = NULL);
+				,TextureMap const * textureMap = nullptr
+				,BumpMap const * bumpMap = nullptr);
 		Material(const Material& other);
 
         friend std::ostream& operator<<(std::ostream& os, const Material& m);
@@ -82,9 +82,9 @@ class Material
 		bool isEmissive() const                  { return this->emit; }
 		float getAmbientCoeff() const            { return this->ambient; } 
 		TextureMap const * getTextureMap() const { return this->textureMap; } 
-		bool hasTextureMap() const               { return this->textureMap != NULL; }
+		bool hasTextureMap() const               { return this->textureMap != nullptr; }
 		BumpMap const * getBumpMap() const       { return this->bumpMap; } 
-		bool hasBumpMap() const                  { return this->bumpMap != NULL; }
+		bool hasBumpMap() const                  { return this->bumpMap != nullptr; }
 
 		// "Smart" color function will return the correct color based on
 		// assigned material attributes:

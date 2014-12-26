@@ -18,6 +18,7 @@
 #include "ObjReader.h"
 #include "Utils.h"
 
+using namespace Utils;
 using namespace std;
 
 /*****************************************************************************/
@@ -131,16 +132,12 @@ Mesh* ObjReader::parse()
 
 		float scale = 0.5f * this->maxVComp;
 
-		for (std::vector<glm::vec3>::iterator i=this->vertices->begin(); i != this->vertices->end(); i++) {
+		for (auto i=this->vertices->begin(); i != this->vertices->end(); i++) {
 			i->x /= scale; 
 			i->y /= scale; 
 			i->z /= scale; 
 		}
-
-		cout << "MAX-COMPONENT: " << scale << endl;
 	}
-
-	
 
 	return new Mesh(this->getVertices(), this->getNormals(), this->getUVs(), this->getFaces());
 }
@@ -203,15 +200,10 @@ void ObjReader::parseVN(int lineNum, const std::string& line, istringstream& ss)
  */
 ObjReader::FaceType ObjReader::classifyFaceChunk(std::string chunk)
 {
-
-	cout << "chunk => " << chunk << endl;
-
 	if (chunk.find("//") != string::npos) { // Case (3)
 		return FACE_VN;
 	} else if (chunk.find("/") != string::npos) { // Case (2) or (4)
-		string chunk_copy = chunk;
-		size_t sz = Utils::split(chunk_copy, "/").size();
-		cout << "chunk => " << chunk << endl;
+		size_t sz = Utils::split(chunk, "/").size();
 		if (sz == 2) {
 			return FACE_VT; // Case (2)
 		} else if (sz == 3) {
@@ -241,49 +233,37 @@ void ObjReader::parseF(int lineNum, const std::string& line, istringstream& ss)
 	// Detect which variation about we have:
 	vector<string> chunks = Utils::split(string(line), " ");
 
-	// Remove the firs element, the "f":
-	chunks.erase(chunks.begin());
-
-	if (chunks.size() > 3) {
+	if (chunks.size() > 4) {
 		cerr << "parseF:<Warning> Only 3 vertices are supported for faces; discarding extra vertices..." << endl;
 	}
 
 	FaceType ft[3] = { 
-		 ObjReader::classifyFaceChunk(chunks[0])
-		,ObjReader::classifyFaceChunk(chunks[1])
+		 ObjReader::classifyFaceChunk(chunks[1])
 		,ObjReader::classifyFaceChunk(chunks[2])
+		,ObjReader::classifyFaceChunk(chunks[3])
 	};
 
 	if ((ft[0] == ft[1]) && (ft[1] == ft[2])) {
 		// Do nothing
 	} else {
-		cerr << ft[0] << "," << ft[1] << "," << ft[2] << ":BAD-LINE: " << lineNum << endl;
-		throw runtime_error("Bad face type definition on line");
+		throw runtime_error("at line " + S(lineNum) + ": Bad face type definition \"" + line + "\"");
 	}
 
 	switch (ft[0]) {
 		case FACE_V:
-			this->faces->push_back(this->parseFV(lineNum, line, chunks[0], chunks[1], chunks[2]));
+			this->faces->push_back(this->parseFV(lineNum, line, chunks[1], chunks[2], chunks[3]));
 			break;
 		case FACE_VT:
-			this->faces->push_back(this->parseFVT(lineNum, line, chunks[0], chunks[1], chunks[2]));
+			this->faces->push_back(this->parseFVT(lineNum, line, chunks[1], chunks[2], chunks[3]));
 			break;
 		case FACE_VN:
-			this->faces->push_back(this->parseFVN(lineNum, line, chunks[0], chunks[1], chunks[2]));
+			this->faces->push_back(this->parseFVN(lineNum, line, chunks[1], chunks[2], chunks[3]));
 			break;
 		case FACE_VTN:
-			this->faces->push_back(this->parseFVTN(lineNum, line, chunks[0], chunks[1], chunks[2]));
+			this->faces->push_back(this->parseFVTN(lineNum, line, chunks[1], chunks[2], chunks[3]));
 			break;
 		default:
-			{
-			cerr << ft[0] << "," << ft[1] << "," << ft[2] << ":BAD-LINE: " << lineNum << " "
-				 << "CHUNK[0] = {" << chunks[0] << "}; " 
-				 << "CHUNK[1] = {" << chunks[1] << "}; " 
-				 << "CHUNK[2] = {" << chunks[2] << "}"
-				 << endl;
-			throw runtime_error("Malformed face chunk");
-			}
-			break;
+			throw runtime_error("at line " + S(lineNum) + ": Malformed face chunk <"+ S(ft[0]) + "> \"" + line + "\"");
 	}
 }
 
@@ -319,8 +299,6 @@ Face ObjReader::parseFVT(int lineNum, const std::string& line
 	int t[3] = {-1, -1, -1};
 	int n[3] = {-1, -1, -1};
 
-	cout << "chunk(1) \"" << chunk1 << "\"" << endl;
-
 	vector<string> parts[3] = {
 		 Utils::split(chunk1, "/")
 		,Utils::split(chunk2, "/")
@@ -328,14 +306,11 @@ Face ObjReader::parseFVT(int lineNum, const std::string& line
 	};
 
 	if (parts[0].size() != 2) {
-		cerr << parts[0].size() << "," << lineNum << ": [\"" << line << "\"]" << endl;
-		throw runtime_error("parseFVT: bad chunk(1) {" + chunk1 + "}");
+		throw runtime_error("at line " + S(lineNum) + " in parseFVT: bad chunk(1) \"" + line + "\"");
 	} else if (parts[1].size() != 2) {
-		cerr << line << endl;
-		throw runtime_error("parseFVT: bad chunk(2) {" + chunk2 + "}");
+		throw runtime_error("at line " + S(lineNum) + " in parseFVT: bad chunk(2) \"" + line + "\"");
 	} else if (parts[2].size() != 2) {
-		cerr << line << endl;
-		throw runtime_error("parseFVT: bad chunk(3) {" + chunk3 + "}");
+		throw runtime_error("at line " + S(lineNum) + " in parseFVT: bad chunk(3) \"" + line + "\"");
 	}
 	 
 	v[0] = this->normalizeIndex(stoi(Utils::trim(parts[0][0])));
@@ -368,14 +343,11 @@ Face ObjReader::parseFVN(int lineNum, const std::string& line
 	};
 
 	if (parts[0].size() != 2) {
-		cerr << lineNum << ":" << line << endl;
-		throw runtime_error("parseFVN: bad chunk(1) {" + chunk1 + "}");
+		throw runtime_error("at line " + S(lineNum) + " in parseFVN: bad chunk(1) \"" + line + "\"");
 	} else if (parts[1].size() != 2) {
-		cerr << lineNum << ":" << line << endl;
-		throw runtime_error("parseFVN: bad chunk(2) {" + chunk2 + "}");
+		throw runtime_error("at line " + S(lineNum) + " in parseFVN: bad chunk(2) \"" + line + "\"");
 	} else if (parts[2].size() != 2) {
-		cerr << lineNum << ":" << line << endl;
-		throw runtime_error("parseFVN: bad chunk(3) {" + chunk3 + "}");
+		throw runtime_error("at line " + S(lineNum) + " in parseFVN: bad chunk(3) \"" + line + "\"");
 	}
 	 
 	v[0] = this->normalizeIndex(stoi(Utils::trim(parts[0][0])));
@@ -408,14 +380,11 @@ Face ObjReader::parseFVTN(int lineNum, const std::string& line
 	};
 
 	if (parts[0].size() != 3) {
-		cerr << lineNum << ":" << line << endl;
-		throw runtime_error("parseFVTN: bad chunk(1) {" + chunk1 + "}");
+		throw runtime_error("at line " + S(lineNum) + " in parseFVTN: bad chunk(1) \"" + line + "\"");
 	} else if (parts[1].size() != 3) {
-		cerr << lineNum << ":" << line << endl;
-		throw runtime_error("parseFVTN: bad chunk(2) {" + chunk2 + "}");
+		throw runtime_error("at line " + S(lineNum) + " in parseFVTN: bad chunk(2) \"" + line + "\"");
 	} else if (parts[2].size() != 3) {
-		cerr << lineNum << ":" << line << endl;
-		throw runtime_error("parseFVTN: bad chunk(3) {" + chunk3 + "}");
+		throw runtime_error("at line " + S(lineNum) + " in parseFVTN: bad chunk(3) \"" + line + "\"");
 	}
 	 
 	v[0] = this->normalizeIndex(stoi(Utils::trim(parts[0][0])));

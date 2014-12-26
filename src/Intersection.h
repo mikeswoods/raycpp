@@ -64,7 +64,7 @@ struct Intersection
 
 	Intersection() : 
 		t(-1.0f),
-		node(NULL),
+		node(nullptr),
 		inside(false)
 	{ 
 		
@@ -72,7 +72,7 @@ struct Intersection
 
 	Intersection(float _t, V _normal) : 
 		t(_t), 
-		node(NULL),
+		node(nullptr),
 		normal(_normal),
 		inside(false),
 		uv(glm::vec3()),
@@ -83,7 +83,7 @@ struct Intersection
 
 	Intersection(float _t, V _normal, V _uv) : 
 		t(_t), 
-		node(NULL),
+		node(nullptr),
 		normal(_normal),
 		inside(false),
 		uv(_uv),

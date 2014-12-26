@@ -40,6 +40,8 @@ using namespace std;
 // Enable pixel-level debugging:
 //#define ENABLE_PIXEL_DEBUG 1
 
+#define ENABLE_OPENMP 1
+
 // Maximum raytrace recursion depth:
 #define MAX_DEPTH 5
 
@@ -187,7 +189,7 @@ static TraceContext intersectNode(GraphNode* node, TraceContext ctx)
 	Geometry const * geometry = node->getGeometry();
 
 	glm::mat4 nextT    = applyTransform(node, ctx.T);
-	Intersection isect = geometry != NULL ? geometry->intersect(nextT, ctx.ray) : Intersection::miss();
+	Intersection isect = geometry != nullptr ? geometry->intersect(nextT, ctx.ray) : Intersection::miss();
 
 	if (isect.isHit()) {
 		isect.node = node;
@@ -251,7 +253,7 @@ static bool fastTestInShadow(const Ray& ray, const Graph& graph, GraphNode* igno
 		Geometry const * geometry = node->getGeometry();
 		glm::mat4 nextT = applyTransform(node, T);
 
-		if (node != ignore && geometry != NULL) {
+		if (node != ignore && geometry != nullptr) {
 
 			Intersection isect = geometry->intersect(nextT, ray);
 			isect.node = node;
@@ -265,7 +267,7 @@ static bool fastTestInShadow(const Ray& ray, const Graph& graph, GraphNode* igno
 		std::list<GraphNode*> children = node->getChildren();
 
 		// Otherwise, go through the children:
-		for (std::list<GraphNode*>::const_iterator i=children.begin(); i != children.end(); i++) {
+		for (auto i=children.begin(); i != children.end(); i++) {
 			S.push(make_pair(*i, nextT));
 		}
 	}
@@ -374,7 +376,7 @@ static Color traceReflect(TraceOptions& options
 						 ,bool isDebugPixel = false)
 {
 	Material const * mat = isect.node->getMaterial();
-	assert(mat != NULL);
+	assert(mat != nullptr);
 
 	V R = glm::reflect(I, N);
 
@@ -477,7 +479,7 @@ glm::vec3 blinnPhongShade(TraceOptions& options
 	Material const * mat      = isect.node->getMaterial();
 	Geometry const * geometry = isect.node->getGeometry();
 
-	assert(mat != NULL && geometry != NULL);
+	assert(mat != nullptr && geometry != nullptr);
 
 	// Adjust the height of the normal vector by multiplying it with the
 	// intensity value of the bump map
@@ -504,7 +506,7 @@ glm::vec3 blinnPhongShade(TraceOptions& options
 	Color matColor = mat->getColor(uv, geometry);
 
 	// Set the base ambient color component:
-	ambient = mat->getAmbientCoeff() * matColor;
+	ambient = (mat->getAmbientCoeff() < 0.0f ? ka : mat->getAmbientCoeff()) * matColor;
 
 	// If the material is assigned to an object that acts as a light source
 	// (as indicated by its "emissiveness", then there's no further work to do
@@ -561,16 +563,14 @@ static Color computeShading(TraceOptions& options
 						   ,bool isDebugPixel = false)
 {
 	GraphNode* const selfNode = isect.node;
-	assert(selfNode != NULL);
+	assert(selfNode != nullptr);
 
 	Material const * mat = selfNode->getMaterial();
-	assert(mat != NULL);
+	assert(mat != nullptr);
 
 	/**************************************************************************
 	 * Compute Blinn-Phong shading
 	 *************************************************************************/
-
-	float R  = 0.0f; // Fresnel reflection coefficient
 
 	Color ambient, diffuse, specular, reflected, refracted;
 
@@ -594,7 +594,7 @@ static Color computeShading(TraceOptions& options
 	V N = glm::vec3();
 
 	// For each light:
-	for (list<Light*>::const_iterator i=lights.begin(); i != lights.end(); i++) {
+	for (auto i=lights.begin(); i != lights.end(); i++) {
 
 		N += blinnPhongShade(options, isect, I, *i, ambient, diffuse, specular, isDebugPixel);
 
@@ -712,7 +712,8 @@ static Color trace(TraceOptions& options
 		}
 		#endif
 
-		return envMap != NULL ? envMap->getColorFromRay(ray) : Color::BLACK;
+		//return envMap != nullptr ? envMap->getColorFromRay(ray) : Color::BLACK;
+		return Color::BLACK;
 	}
 
 	bool hit         = false;
@@ -743,8 +744,8 @@ static Color trace(TraceOptions& options
 	} else {
 
 		// Hit against the environment map (if it is given):
-		if (envMap != NULL) {
-			output = envMap->getColorFromRay(ray);
+		if (envMap != nullptr) {
+		//	output = envMap->getColorFromRay(ray);
 		}
 
 		// Otherwise return black
@@ -815,7 +816,6 @@ static Color samplePixel(TraceOptions& options
 	return Color(avgR / K, avgG / K, avgB / K);
 }
 
-
 /******************************************************************************
  *
  * Detects the edges in the given bitmap using the Sobel operator, producing 
@@ -845,7 +845,9 @@ float detectEdges(const BMP& input, int w, int h, float* E)
 
 	float avgIntensity = 0.0f;
 
+	#ifdef ENABLE_OPENMP
 	#pragma omp parallel for
+	#endif
 	for (int i=1; i<(w-1); i++) {
 		for (int j=1; j<(h-1); j++) {
 
@@ -916,16 +918,13 @@ void rayTrace(BMP& output
 	// with the existing light list:
 	G.addAreaLights(&lights);
 
-	// Function timing code adapted http://stackoverflow.com/a/459704
-	clock_t pass1Start = clock();
-
 	// Compute the width and height of a single pixel
 	float pixW = 0.0f;
 	float pixH = 1.0f;
 	Camera::pixelDimensions(X, Y, pixW, pixH);
 
 	// Use an edge map to adaptively find where to perform supersampling:
-	float* edgeMap = NULL;
+	float* edgeMap = nullptr;
 	
 	// Only initialize the edge map if options.samplesPerPixel > 1
 
@@ -946,9 +945,13 @@ void rayTrace(BMP& output
 
 	start = chrono::system_clock::now();
 
+	#ifdef ENABLE_OPENMP
 	#pragma omp parallel
+	#endif
 	{
+		#ifdef ENABLE_OPENMP
 		#pragma omp for schedule(static)
+		#endif
 		for (int i=0; i<X; i++) {
 
 			for (int j=0; j<Y; j++) {
@@ -981,7 +984,7 @@ void rayTrace(BMP& output
 
 			++line;
 
-			cout << "(PASS-1) " << ((static_cast<float>(line) / fY) * 100.0f) << "%\r";
+			clog << "(PASS-1) " << ((static_cast<float>(line) / fY) * 100.0f) << "%\r";
 		}
 	}
 
@@ -1010,9 +1013,13 @@ void rayTrace(BMP& output
 
 		start = chrono::system_clock::now();
 
+		#ifdef ENABLE_OPENMP
 		#pragma omp parallel
+		#endif
 		{
+			#ifdef ENABLE_OPENMP
 			#pragma omp for schedule(static)
+			#endif
 			for (int i=0; i<X; i++) {
 				for (int j=0; j<Y; j++) {
 
@@ -1037,9 +1044,9 @@ void rayTrace(BMP& output
 			}
 		}
 
-		if (edgeMap != NULL) {
+		if (edgeMap != nullptr) {
 			delete [] edgeMap;
-			edgeMap = NULL;
+			edgeMap = nullptr;
 		}
 
 		elapsed_sec_2 = chrono::system_clock::now() - start;

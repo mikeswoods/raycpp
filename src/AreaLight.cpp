@@ -22,7 +22,7 @@ AreaLight::AreaLight(GraphNode const * _node, glm::mat4 _T) :
 { 
 	Geometry const * geometry = this->node->getGeometry();
 
-	assert(geometry != NULL);
+	assert(geometry != nullptr);
 
 	this->centroidWorld = P(transform(this->T, glm::vec4(geometry->getCentroid().xyz, 1.0f)));
 }
@@ -45,7 +45,7 @@ V AreaLight::fromCenter(const P& from) const
 {
 	Geometry const * geometry = this->node->getGeometry();
 
-	assert(geometry != NULL);
+	assert(geometry != nullptr);
 
 	// Necessary b/c we have to transform the centroid in object space to world space:
 	return this->centroidWorld.xyz - from.xyz;
@@ -55,7 +55,7 @@ V AreaLight::fromSampledPoint(const P& from) const
 {
 	Geometry const * geometry = this->node->getGeometry();
 
-	assert(geometry != NULL);
+	assert(geometry != nullptr);
 
 	return geometry->sample(this->T) - from;
 }
@@ -64,7 +64,7 @@ V AreaLight::fromSampledPoint(const P& from, float& cosineAngle) const
 {
 	Geometry const * geometry = this->node->getGeometry();
 
-	assert(geometry != NULL);
+	assert(geometry != nullptr);
 
 	P samplePoint = geometry->sample(this->T);
 	P centroid    = geometry->getCentroid();
@@ -79,7 +79,7 @@ V AreaLight::fromSampledPoint(const P& from, float& cosineAngle) const
 Color AreaLight::getColor(const P& from) const
 {
 	Material* mat = this->node->getMaterial();
-	assert(mat != NULL);
+	assert(mat != nullptr);
 
 	return mat->getDiffuseColor();
 }

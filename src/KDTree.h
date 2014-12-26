@@ -320,8 +320,8 @@ class KDTree
 
 		// Summarization function
 		friend void generateSummary(KDTree const * tree
-			                       ,const std::string& name = "<untitled>"
-								   ,std::ostream& out = std::cout);
+			                       ,const std::string& name
+								   ,std::ostream& out);
 };
 
 std::ostream& operator<<(std::ostream& s, const KDTree& tree);

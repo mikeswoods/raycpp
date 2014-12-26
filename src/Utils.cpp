@@ -1,3 +1,12 @@
+/******************************************************************************
+ *
+ * Various math and text processing utility functions
+ *
+ * @file Utils.h
+ * @author Michael Woods
+ *
+ ******************************************************************************/
+
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <algorithm>
@@ -13,9 +22,9 @@
 
 using namespace std;
 
-////////////////////////////////////////////////////////////////////////////////
-
-// Numeric functions ///////////////////////////////////////////////////////////
+/*******************************************************************************
+ * Numeric functions
+ ******************************************************************************/
 
 // Clamp values to a given range
 float Utils::clamp(float n, float lo, float hi)
@@ -77,7 +86,9 @@ bool Utils::leastGreaterThanZero(float x, float y, float& smallest)
 	return false;
 }
 
-// Vector functions ////////////////////////////////////////////////////////////
+/*******************************************************************************
+ * Vector functions
+ ******************************************************************************/
 
 // Test if two vectors are orthogonal
 bool Utils::orthogonal(glm::vec3 v1, glm::vec3 v2)
@@ -101,7 +112,9 @@ glm::vec3 Utils::fixUpVector(const glm::vec3& viewDir, const glm::vec3& up)
     return up;
 }
 
-// Geometry functions //////////////////////////////////////////////////////
+/*******************************************************************************
+ * Geometry functions
+ ******************************************************************************/
 
 // Tests if the given ray intersects the specified plane
 float Utils::hitsPlane(const glm::vec3& origin
@@ -122,7 +135,9 @@ float Utils::hitsPlane(const glm::vec3& origin
     return t >= 0.0f ? t : -1.0f;
 }
 
-// Text functions //////////////////////////////////////////////////////////////
+/*******************************************************************************
+ * Text functions
+ ******************************************************************************/
 
 // Return the current working directory. This solution was adapted from
 // the answer on Stackoverflow at http://stackoverflow.com/a/145309
@@ -153,7 +168,7 @@ std::string Utils::realPath(const std::string& relPath)
     char buffer[FILENAME_MAX];
 
     #if defined(_WIN32) || defined(_WIN64)
-    GetFullPathName(relPath.c_str(), sizeof(buffer), buffer, NULL);
+    GetFullPathName(relPath.c_str(), sizeof(buffer), buffer, nullptr);
     #else
     realpath(relPath.c_str(), buffer);
     #endif
@@ -200,34 +215,74 @@ string Utils::uppercase(string s)
 }
 
 // Convert s to upper case
-string  Utils::lowercase(string s)
+string Utils::lowercase(string s)
 {
 	transform(s.begin(), s.end(), s.begin(), ::tolower);
 	return s;
 }
 
-// Courtesy of http://stackoverflow.com/a/16286297
-vector<string> Utils::split(const string& str, const string& delim)
+// Convert the input i to a string
+string Utils::S(int i)
 {
-    std::vector<std::string> parts;
-    char* cstr = const_cast<char*>(str.c_str());
-    char *context = NULL;
-    char* current = strtok_r(cstr, delim.c_str(), &context);
-
-    while (current != NULL) {
-        parts.push_back(current);
-        current = strtok_r(NULL, delim.c_str(), &context);
-    }
-
-    return parts;
+    ostringstream out;
+    out << i;
+    return out.str();
 }
 
-/**
- * Parses a numeric pair specifier string like "123,45" into
- * its component floats and sets the values of x and y. If this
- * this function returns true, then the string was successfully parsed,
- * otherwise false is returned and x and y are not updated
- */
+string Utils::S(float i)
+{
+    ostringstream out;
+    out << i;
+    return out.str();
+}
+
+string Utils::S(vector<string> i)
+{
+    if (i.size() == 0) {
+        return "";
+    }
+
+    ostringstream out;
+
+    out << "[ ";
+    for (auto j=i.begin(); j != i.end(); j++) {
+        out << *j;
+        out << " ";
+    }
+    out << "]";
+    
+    return out.str();
+}
+
+// Courtesy of http://stackoverflow.com/a/16286297
+vector<string> Utils::split(string str, string delim)
+{
+    string s   = string(str);
+    string token;
+    vector<string> tokens;
+
+    auto i = 0U;
+    auto j = s.find(delim);
+    while (i != j && j != std::string::npos)
+    {
+        token = s.substr(i, j - i);
+
+        if (token.length() > 0) {
+            tokens.push_back(token);
+        }
+        i = j + delim.length();
+        j = s.find(delim, i);
+    }
+
+    tokens.push_back(s.substr(i));
+
+    return tokens;
+}
+
+// Parses a numeric pair specifier string like "123,45" into its component 
+// floats and sets the values of x and y. If this this function returns true, 
+// then the string was successfully parsed, otherwise false is returned 
+// and x and y are not updated
 bool Utils::parseTuple(string str, float& x, float& y)
 {
 	vector<string> parts = split(str, string(","));
@@ -263,4 +318,4 @@ std::string Utils::textFileRead(const string& filename)
     return Utils::textFileRead(filename.c_str());
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/

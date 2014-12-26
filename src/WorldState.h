@@ -47,7 +47,7 @@ class WorldState
 		glm::vec3 viewDir;
 		glm::vec3 lookAt;
 		glm::vec3 up;
-		Graph::iterator* graphIter;
+		Graph::iterator* iterator;
 
 		// Various flags and states:
 		bool flagRotateScene;

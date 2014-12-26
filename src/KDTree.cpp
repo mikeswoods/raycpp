@@ -108,7 +108,7 @@ int SurfaceAreaStrategy::nextAxis(const std::vector<Tri>& data)
 		float zMaxL = -inf, zMaxR = -inf;
 		int countL = 0, countR = 0;
 
-		for (std::vector<Tri>::const_iterator i=data.begin(); i != data.end(); i++) {
+		for (auto i=data.begin(); i != data.end(); i++) {
 			
 			Tri T       = *i;
 			P triCenter = T.getCentroid();
@@ -209,7 +209,7 @@ ostream& Leaf::repr(ostream& s
 
 	/*
 	// Print the actual leaf values:
-	for (std::vector<Tri>::const_iterator i=this->data.begin(); i != this->data.end(); i++) {
+	for (auto i=this->data.begin(); i != this->data.end(); i++) {
 		for (int j=0; j<this->depth; j++) {
 			s << "  ";
 		}
@@ -453,7 +453,7 @@ static AABB findExtent(const std::vector<Tri>& triangles)
 	float zMax = -numeric_limits<float>::infinity();
 	float eps = Utils::EPSILON;
 
-	for (std::vector<Tri>::const_iterator i=triangles.begin(); i != triangles.end(); i++) {
+	for (auto i=triangles.begin(); i != triangles.end(); i++) {
 		Tri T = *i;
 		xMin  = min(xMin, T.getXMinima());
 		yMin  = min(yMin, T.getYMinima());
@@ -556,7 +556,7 @@ NodeChild const * build(const std::vector<Tri>& triangles
 	// Partition the triangles according to the scheme:
 	std::vector<Tri> left, right;
 
-	for (std::vector<Tri>::const_iterator i=triangles.begin(); i != triangles.end(); i++) {
+	for (auto i=triangles.begin(); i != triangles.end(); i++) {
 
 		Tri T      = *i;
 		P centroid = T.getAABB().centroid();
@@ -629,7 +629,9 @@ void debugIntersectAll(ostream& s, KDTree const * tree, const Ray& ray)
 /**
  * Generates a summary of various statistics 
  */
-void generateSummary(KDTree const * tree, const string& name, ostream& out)
+void generateSummary(KDTree const * tree
+	                ,const string& name = "<untitled>"
+	                ,ostream& out = std::cout)
 {
 	#define N 100
 

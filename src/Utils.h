@@ -4,6 +4,7 @@
  *
  * @file Utils.h
  * @author Michael Woods
+ *
  ******************************************************************************/
 
 #ifndef UTILS_H
@@ -22,7 +23,6 @@
     #include <direct.h>
     #include <windows.h>
     #define GetCurrentDir _getcwd
-    #define strtok_r strtok_s
     #define DirSep "\\"
 #else
     #include <unistd.h>
@@ -33,8 +33,8 @@
 
 #include "Ray.h"
 
-namespace Utils {
-
+namespace Utils 
+{
 	// Constants ///////////////////////////////////////////////////////////////
 
 	const float EPSILON  = 1.0e-4f;
@@ -107,8 +107,13 @@ namespace Utils {
 	// Convert s to upper case
 	std::string lowercase(std::string s);
 
+    // Convert the input i to a string
+    std::string S(int i);
+    std::string S(float i);
+    std::string S(std::vector<std::string> i);
+
     // Split a string into pieces given a delimiter
-    std::vector<std::string> split(const std::string& str, const std::string& delim);
+    std::vector<std::string> split(std::string str, std::string delim);
 
 	// Parses a numeric pair specifier string like "123,45" into its component 
 	// floats and sets the values of x and y.

@@ -25,8 +25,8 @@ Material::Material() :
 	tran(false),
 	emit(false),
 	ambient(DEFAULT_AMBIENT_COEFF),
-	textureMap(NULL),
-	bumpMap(NULL)
+	textureMap(nullptr),
+	bumpMap(nullptr)
 { }
 
 Material::Material(string _name

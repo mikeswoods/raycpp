@@ -79,7 +79,7 @@ class Configuration
 
         void read();
 
-		bool hasEnvironmentMap() const { return this->environmentMap != NULL; }
+		bool hasEnvironmentMap() const { return this->environmentMap != nullptr; }
 
 		EnvironmentMap const * getEnvironmentMap() const { return this->environmentMap; }
 

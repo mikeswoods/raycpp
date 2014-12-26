@@ -11,10 +11,10 @@ using namespace std;
 GraphNode::GraphNode(const string& name)
 {
 	this->name     = name;
-	this->parent   = NULL;
-	this->instance = NULL;
-	this->material = NULL;
-	this->geometry = NULL;
+	this->parent   = nullptr;
+	this->instance = nullptr;
+	this->material = nullptr;
+	this->geometry = nullptr;
 	this->T        = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->R        = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->S        = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -47,9 +47,9 @@ void GraphNode::detachChild(GraphNode* child)
 
 void GraphNode::detachFromParent()
 {
-	if (this->parent != NULL) {
+	if (this->parent != nullptr) {
 		this->parent->detachChild(this);
-		//this->parent = NULL;
+		//this->parent = nullptr;
 	}
 }
 
@@ -60,7 +60,7 @@ bool GraphNode::isAreaLight() const
 {
 	Material const * mat = this->getMaterial();
 
-	if (mat == NULL) {
+	if (mat == nullptr) {
 		return false;
 	}
 
@@ -70,7 +70,7 @@ bool GraphNode::isAreaLight() const
 ostream& operator<<(ostream& os, const GraphNode& node)
 {
 	os  << "Node { \"" << node.name << "\", material = ";
-	if (node.material == NULL) {
+	if (node.material == nullptr) {
 		os << "<null>";
 	} else {
 		os << *(node.material);
@@ -123,7 +123,7 @@ glm::mat4 applyTransform(GraphNode* node, glm::mat4 current)
 
 Graph::Graph()
 { 
-	this->root = NULL;
+	this->root = nullptr;
 }
 
 Graph::Graph(GraphNode* root)
@@ -142,7 +142,7 @@ static LightsAndMatrix collectAreaLight(GraphNode* node, LightsAndMatrix current
 	glm::mat4 nextT = applyTransform(node, current.second);
 
 	// Found a node with an emissive material assigned to it:
-	if (node->getMaterial() != NULL && node->getMaterial()->isEmissive()) {
+	if (node->getMaterial() != nullptr && node->getMaterial()->isEmissive()) {
 
 		list<Light*>* areaLights = current.first;
 		AreaLight* areaLight     = new AreaLight(node, nextT);

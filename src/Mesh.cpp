@@ -39,7 +39,7 @@ Mesh::Mesh(const vector<glm::vec3>& vertices
 	this->buildVolume();
 	this->computeCentroid();
 
-	//this->tree = NULL;
+	//this->tree = nullptr;
 	this->tree = new KDTree(this->triangles, new CycleAxisStrategy(), new MaxValuesPerLeaf(20));
 	//this->tree = new KDTree(this->triangles, new RandomAxisStrategy(), new MaxValuesPerLeaf(10));
 	//this->tree = new KDTree(this->triangles, new SurfaceAreaStrategy(), new MaxValuesPerLeaf(10));
@@ -56,11 +56,11 @@ Mesh::Mesh(const Mesh& other) :
 
 Mesh::~Mesh() 
 { 
-	if (this->tree != NULL) {
+	if (this->tree != nullptr) {
 		delete this->tree;
 	}
 	
-	this->tree = NULL;
+	this->tree = nullptr;
 }
 
 ostream& operator<<(ostream& os, const Face& face)
@@ -74,16 +74,16 @@ void Mesh::repr(std::ostream& s) const
 {
 	s << "Mesh {"      << endl;
 	s << "  vertices<" << (this->vertices_.size()) << "> = {" << endl;
-	for (vector<glm::vec3>::const_iterator i=this->vertices_.begin(); i != this->vertices_.end(); i++) {
+	for (auto i=this->vertices_.begin(); i != this->vertices_.end(); i++) {
 		s << "    " << *i << endl;
 	}
 	s << "  }" << endl;
 	s << "  normals<" << (this->normals_.size()) << "> = {" << endl;
-	for (vector<glm::vec3>::const_iterator i=this->normals_.begin(); i != this->normals_.end(); i++) {
+	for (auto i=this->normals_.begin(); i != this->normals_.end(); i++) {
 		s << "    " << *i << endl;
 	}
 	s << "  faces<" << (this->faces.size()) << "> = {" << endl;
-	for (vector<Face>::const_iterator i=this->faces.begin(); i != this->faces.end(); i++) {
+	for (auto i=this->faces.begin(); i != this->faces.end(); i++) {
 		s << "    " << *i << endl;
 	}
 	s << "  }" << endl;
@@ -97,7 +97,7 @@ void Mesh::computeCentroid()
 	float cz = 0.0f;
 	float N  = static_cast<float>(this->triangles.size());
 
-	for (vector<Tri>::const_iterator i=this->triangles.begin(); i != this->triangles.end(); i++) {
+	for (auto i=this->triangles.begin(); i != this->triangles.end(); i++) {
 		P c = i->getCentroid();
 		cx += x(c);
 		cy += y(c);
@@ -123,7 +123,7 @@ void Mesh::buildVolume()
 
 	// Then, for every vertex, compute the distance to the center, updating radius to contain
 	// the current maximum distance:
-	for (vector<glm::vec3>::const_iterator i=this->vertices_.begin(); i != this->vertices_.end(); i++) {
+	for (auto i=this->vertices_.begin(); i != this->vertices_.end(); i++) {
 
 		float dist = glm::distance(center, *i);
 		if (dist > radius) {
@@ -219,7 +219,7 @@ Intersection Mesh::intersectImpl(const Ray &ray, const glm::mat4& T) const
 	Tri tri;   // Closest triangle
 	glm::vec3 W(0.333f, 0.333f, 0.333f); // Barycentric weights
 
-	if (this->tree != NULL) { // Yes
+	if (this->tree != nullptr) { // Yes
 
 		// First, get the set of triangles we'll be working with
 		// from the spatial KD-tree index:

@@ -55,7 +55,7 @@ Configuration::Configuration(const string& filename)
 
     this->FOVY    = 0.0f;
 	
-	this->root        = NULL;
+	this->root        = nullptr;
 	this->nodeMap     = new map<string,GraphNode*>();
 	this->materialMap = new map<string,Material*>();
 }
@@ -111,7 +111,7 @@ ostream& operator<<(ostream& os, const Configuration& c)
 	   << endl;
 
 	os << "Materials { " << endl;
-	for (std::map<string,Material*>::iterator i=c.materialMap->begin(); i != c.materialMap->end(); i++) {
+	for (auto i=c.materialMap->begin(); i != c.materialMap->end(); i++) {
 		os << "  \"" << i->first << "\": " << *(i->second) << endl;
 	}
 	os << "}"
@@ -153,11 +153,11 @@ void Configuration::linkNodes(const string& parentName, GraphNode* child)
 
 void Configuration::linkNodes(GraphNode* parent, GraphNode* child)
 {
-	if (parent == NULL) {
-		throw runtime_error("linkNodes: parent cannot be NULL");
+	if (parent == nullptr) {
+		throw runtime_error("linkNodes: parent cannot be null");
 	}
-	if (child == NULL) {
-		throw runtime_error("linkNodes: child cannot be NULL");
+	if (child == nullptr) {
+		throw runtime_error("linkNodes: child cannot be null");
 	}
 
 	child->setParent(parent);
@@ -272,7 +272,7 @@ void Configuration::parseEnvironmentSection(istream& is, const string& beginToke
 	string SHAPE           = "";
 	string envMapFile      = "";
 	string basePath        = Utils::baseName(Utils::realPath(this->filename));
-	EnvironmentMap* envMap = NULL;
+	EnvironmentMap* envMap = nullptr;
 
 	#ifdef DEBUG
 	clog << "parseEnvironmentSection:MAT:" << endl;
@@ -444,12 +444,12 @@ void Configuration::parseMaterialSection(istream& is, const string& beginToken)
 		throw runtime_error("Material name cannot be empty");
 	}
 
-	TextureMap const * textureMap = NULL;
+	TextureMap const * textureMap = nullptr;
 	if (textureMapFile != "") {
 		textureMap = new TextureMap(textureMapFile);
 	}
 
-	BumpMap const * bumpMap = NULL;
+	BumpMap const * bumpMap = nullptr;
 	if (bumpMapFile != "") {
 		bumpMap = new BumpMap(bumpMapFile);
 	}
@@ -543,8 +543,8 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 {
 	string line, attribute;
 	string objFileName    = "";
-	GraphNode* node       = NULL;
-	Geometry* geometry    = NULL;
+	GraphNode* node       = nullptr;
+	Geometry* geometry    = nullptr;
 	bool isMesh           = false;
 	bool readNonEmptyLine = false;
 	bool firstLine        = true;
@@ -588,7 +588,7 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 			readNonEmptyLine = true;
 		// -------------------------------------------------------------------------
 		} else {
-			if (node == NULL) {
+			if (node == nullptr) {
 				throw runtime_error(attribute + ": NODE attribute must be defined first");
 			}
 			// ----------------------------------------------------------------
@@ -632,7 +632,7 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 				ss >> parentName;
 				 // if parentName is null, then node is the scene graph's root
 				if (parentName == "null") {
-					node->setParent(NULL);
+					node->setParent(nullptr);
 					this->root = node;
 				} else {
 					// Otherwise, see if named parent exists, and if so link it to the child:
@@ -645,7 +645,7 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 				string shapeType;
 				ss >> shapeType;
 				if (shapeType == "null") {
-					geometry = NULL;
+					geometry = nullptr;
 				} else if (shapeType == "sphere") {
 					geometry = new Sphere();
 				} else if (shapeType == "cylinder") {
@@ -677,7 +677,7 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 						throw runtime_error("parseNodeDefinition: Material not defined: " + matName);
 					}
 					Material* material = this->getMaterial(matName);
-					if (material == NULL) {
+					if (material == nullptr) {
 						// This should never happen:
 						throw runtime_error("No material instance found for name: " + matName);
 					}
@@ -693,7 +693,7 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 	}
 
 	// This should never happen
-	if (node == NULL) {
+	if (node == nullptr) {
 		throw runtime_error("Node must exist by now!");
 	}
 
@@ -710,7 +710,7 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 	}
 
 	// We have a non-null object:
-	if (geometry != NULL) {
+	if (geometry != nullptr) {
 
 		// Associate the geometric object definition with the actual node:
 		node->setGeometry(geometry);
