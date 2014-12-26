@@ -195,7 +195,7 @@ static bool closestTriangle(const Ray& ray, const vector<Tri>& tris, Tri& closes
 	t        = numeric_limits<float>::infinity();
 
 	for (unsigned int i=0; i<N; i++) {
-		float z = tris[i].intersected(ray, false);
+		float z = tris[i].intersected(ray);
 		if (z >= 0.0f) {
 			if (z < t) {
 				j = i;
@@ -216,8 +216,7 @@ static bool closestTriangle(const Ray& ray, const vector<Tri>& tris, Tri& closes
 Intersection Mesh::intersectImpl(const Ray &ray, const glm::mat4& T) const
 {
 	float t; // t distance
-	Tri tri;   // Closest triangle
-	glm::vec3 W(0.333f, 0.333f, 0.333f); // Barycentric weights
+	Tri tri; // Closest triangle
 
 	if (this->tree != nullptr) { // Yes
 
@@ -240,14 +239,9 @@ Intersection Mesh::intersectImpl(const Ray &ray, const glm::mat4& T) const
 		}
 	}
 
-	float tLocal     = tri.intersected(ray, true);
-	glm::vec3 pLocal = ray.project(tLocal).xyz;
+	glm::vec3 N = tri.getNormal();
 
-	tri.barycenter(pLocal, W);
-
-	glm::vec3 N = glm::normalize(W[0]*tri.n1 + W[1]*tri.n2 + W[2]*tri.n3);
-
-	return Intersection(t, N, glm::normalize(pLocal - this->getCentroid().xyz));
+	return Intersection(t, glm::vec3(0,1,0));
 }
 
 glm::vec3 Mesh::sampleImpl() const

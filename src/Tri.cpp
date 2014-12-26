@@ -109,7 +109,7 @@ void Tri::computeCentroid()
 
 void Tri::computeNormal()
 {
-	this->normal = glm::normalize(glm::cross(v3 - v1, v2 - v1));
+	this->normal = -glm::cross(v1 - v3, v1 - v2);
 }
 
 V Tri::getNormal() const
@@ -163,25 +163,6 @@ void Tri::buildGeometry()
 	// Do nothing
 }
 
-bool Tri::barycenter(const glm::vec3& test, glm::vec3& weights)
-{
-	glm::vec3 e1 = this->v2 - this->v1;
-	glm::vec3 e2 = this->v3 - this->v1;
-	glm::vec3 e3 = test - this->v1;
-	float d11    = glm::dot(e1, e1);
-	float d12    = glm::dot(e1, e2);
-	float d22    = glm::dot(e2, e2);
-	float d31    = glm::dot(e3, e1);
-	float d32    = glm::dot(e3, e2);
-	float denom  = (d11 * d22) - (d12 * d12);
-
-	weights[1] = ((d22 * d31) - (d12 * d32)) / denom;
-	weights[2] = ((d11 * d32) - (d12 * d31)) / denom;
-	weights[0] = 1.0f - weights[1] - weights[2];
-
-	return weights[1] >= 0.0f && weights[1] >= 0.0f && weights[2] >= 0.0f;
-}
-
 /**
  * From http://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
  * 
@@ -190,11 +171,11 @@ bool Tri::barycenter(const glm::vec3& test, glm::vec3& weights)
  * distance value t from the ray's origin on the direction vector to the point of
  * intersection is returned
  */
-float Tri::intersected(const Ray& ray, bool normalizeDir) const
+float Tri::intersected(const Ray& ray) const
 {
 	glm::vec3 e1 = this->v2 - this->v1;
 	glm::vec3 e2 = this->v3 - this->v1;
-	glm::vec3 D  = normalizeDir ? glm::normalize(ray.dir) : ray.dir;
+	glm::vec3 D  = glm::normalize(ray.dir);
 	glm::vec3 P  = glm::cross(D, e2);
 	float det    = glm::dot(e1, P);
 	float eps    = FLT_EPSILON;
@@ -229,7 +210,7 @@ float Tri::intersected(const Ray& ray, bool normalizeDir) const
 
 Intersection Tri::intersectImpl(const Ray &ray, const glm::mat4& T) const
 {
-	return Intersection(this->intersected(ray, false), this->getNormal());
+	return Intersection(this->intersected(ray), this->getNormal());
 }
 
 glm::vec3 Tri::sampleImpl() const

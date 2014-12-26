@@ -57,11 +57,9 @@ class Tri : public Geometry
 		virtual const P& getCentroid() const;
 		V getNormal() const;
 		const AABB& getAABB() { return this->aabb; }
-		bool getBarycenter(const P& p, glm::vec3& W);
 		virtual const BoundingVolume& getVolume() const;
 
-		bool barycenter(const glm::vec3& test, glm::vec3& weights);
-		float intersected(const Ray& ray, bool normalizeDir) const;
+		float intersected(const Ray& ray) const;
 
 		virtual void buildGeometry();
 		virtual void repr(std::ostream& s) const;

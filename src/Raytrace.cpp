@@ -487,8 +487,10 @@ glm::vec3 blinnPhongShade(TraceOptions& options
 
 	// Choose the UV mapping vector. If one is given in the intersection, use it,
 	// otherwise use the local hit
-	glm::vec3 uv = isect.hasUV ? isect.uv : glm::normalize(isect.hitLocal.xyz);
+	//glm::vec3 uv = isect.hasUV ? isect.uv : glm::normalize(isect.hitLocal.xyz);
+	//glm::vec3 uv = glm::normalize(isect.hitLocal.xyz);
 
+	/*
 	if (mat->hasBumpMap()) {
 
 		V B = mat->getNormal(uv, geometry);
@@ -501,9 +503,10 @@ glm::vec3 blinnPhongShade(TraceOptions& options
 
 		N = glm::normalize(N + B);
 	}
+	*/
 
 	// Get the color at the hit position:
-	Color matColor = mat->getColor(uv, geometry);
+	Color matColor = mat->getColor(N, geometry);
 
 	// Set the base ambient color component:
 	ambient = (mat->getAmbientCoeff() < 0.0f ? ka : mat->getAmbientCoeff()) * matColor;
@@ -1040,7 +1043,7 @@ void rayTrace(BMP& output
 
 				++line;
 
-				cout << "(PASS-2) " << ((static_cast<float>(line) / fY) * 100.0f) << "%\r";
+				clog << "(PASS-2) " << ((static_cast<float>(line) / fY) * 100.0f) << "%\r";
 			}
 		}
 
