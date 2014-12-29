@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
  *
  * This file defines a type for representing triangular mesh gemoetric object
  * as well as operations over such objects
@@ -6,11 +6,12 @@
  * @file Mesh.h
  * @author Michael Woods
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 #ifndef MESH_H
 #define MESH_H
-
+\
+#include <tuple>
 #include <vector>
 #include "R3.h"
 #include "Geometry.h"
@@ -18,13 +19,16 @@
 #include "KDTree.h"
 #include "Face.h"
 
-/*****************************************************************************/
+/******************************************************************************/
+
+typedef std::tuple<int,int,int> VNIndex;
+
+/******************************************************************************/
 
 class Mesh : public Geometry
 {
 	private:
 		P centroid;
-		//BoundingSphere volume;
 		TrivialVolume volume;
 		KDTree* tree;
 
@@ -40,6 +44,9 @@ class Mesh : public Geometry
 
 		// Self-contained triangle data:
 		std::vector<Tri> triangles;
+
+		// Triangle vertex normal indices
+		std::vector<VNIndex> vnIndex;
 
 		virtual Intersection intersectImpl(const Ray &ray) const;
 		virtual glm::vec3 sampleImpl() const;
@@ -64,4 +71,4 @@ class Mesh : public Geometry
 
 #endif
 
-/*****************************************************************************/
+/******************************************************************************/

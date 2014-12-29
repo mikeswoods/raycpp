@@ -201,7 +201,7 @@ double Test_RayPolyIntersect(vec3 const& P0, vec3 const& V0,
                              vec3 const& p1, vec3 const& p2, vec3 const& p3,
                              mat4 const& T)
 {
-    return Tri(p1, p2, p3).intersect(T, Ray(P0, V0)).t;
+    return Tri(-1, p1, p2, p3).intersect(T, Ray(P0, V0)).t;
 }
 
 double Test_RayCubeIntersect(vec3 const& P0, vec3 const& V0,

@@ -1,4 +1,4 @@
-#WITH_OMP=1
+WITH_OMP=1
 
 ifdef VERBOSE
 	Q =

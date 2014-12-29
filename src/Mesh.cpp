@@ -39,8 +39,8 @@ Mesh::Mesh(const vector<glm::vec3>& vertices
 	this->buildVolume();
 	this->computeCentroid();
 
-	//this->tree = nullptr;
-	this->tree = new KDTree(this->triangles, new CycleAxisStrategy(), new MaxValuesPerLeaf(20));
+	this->tree = nullptr;
+	//this->tree = new KDTree(this->triangles, new CycleAxisStrategy(), new MaxValuesPerLeaf(20));
 	//this->tree = new KDTree(this->triangles, new RandomAxisStrategy(), new MaxValuesPerLeaf(10));
 	//this->tree = new KDTree(this->triangles, new SurfaceAreaStrategy(), new MaxValuesPerLeaf(10));
 }
@@ -131,7 +131,6 @@ void Mesh::buildVolume()
 		}
 	}
 
-	//this->volume = BoundingSphere(center, radius + Utils::EPSILON);
 	this->volume = TrivialVolume();
 }
 
@@ -142,104 +141,122 @@ const BoundingVolume& Mesh::getVolume() const
 
 void Mesh::buildGeometry()
 {
-	unsigned int N = this->faces.size();
-	this->normals_ = vector<glm::vec3>(this->getVertexCount(), glm::vec3(0.0f, 0.0f, 0.0f));
+    const int vc = this->getVertexCount();
+    const int fc = this->faces.size();
+    glm::vec3* normals = new glm::vec3[vc]; 
 
-	// For each face, compute the face normal and add the normal to
-	// each shared vertex normal
-	for (unsigned int i=0; i<N; i++) {
+    // For each face, compute the face normal and add the normal to
+    // each shared vertex normal
+    for (auto i=0; i<fc; i++) {
 
-		int j = this->faces[i].v[0] - 1;
-		int k = this->faces[i].v[1] - 1;
-		int l = this->faces[i].v[2] - 1;
+        int j = this->faces[i].v[0] - 1;
+        int k = this->faces[i].v[1] - 1;
+        int l = this->faces[i].v[2] - 1;
 
-		this->indices_.push_back(j);
-		this->indices_.push_back(k);
-		this->indices_.push_back(l);
+        this->indices_.push_back(j);
+        this->indices_.push_back(k);
+        this->indices_.push_back(l);
 
-		Tri T(this->vertices_[j], this->vertices_[k], this->vertices_[l]);
+        Tri T(i, this->vertices_[j], this->vertices_[k], this->vertices_[l]);
 
-		this->triangles.push_back(T);
+        this->triangles.push_back(T);
+        this->vnIndex.push_back(VNIndex(j,k,l));
 
-		V n = T.getNormal();
+        V n = T.getNormal();
+        normals[j] += n;
+        normals[k] += n;
+        normals[l] += n;
+    }
 
-		this->normals_[j] += n;
-		this->normals_[k] += n;
-		this->normals_[l] += n;
-	}
+    for (auto i=0; i<vc; i++) {
+        this->normals_.push_back(glm::normalize(normals[i]));
+    }
 
-	for (unsigned int i=0; i<N; i++) {
+    assert(this->triangles.size() == this->vnIndex.size());
 
-		int j = this->faces[i].v[0] - 1;
-		int k = this->faces[i].v[1] - 1;
-		int l = this->faces[i].v[2] - 1;
-
-		this->normals_[j] = glm::normalize(this->normals_[j]);
-		this->normals_[k] = glm::normalize(this->normals_[k]);
-		this->normals_[l] = glm::normalize(this->normals_[l]);
-
-		this->triangles[i].n1 = this->normals_[j];
-		this->triangles[i].n2 = this->normals_[k];
-		this->triangles[i].n3 = this->normals_[l];
-	}
+    delete [] normals;
 }
 
 /**
  * Given a vector of triangles, this function returns the closest one with
  * a t value >= 0
  */
-static bool closestTriangle(const Ray& ray, const vector<Tri>& tris, Tri& closestTri, float& t)
+static bool closestTriangle(const Ray& ray, const vector<Tri>& tris
+	                       ,int& k, float& t, glm::vec3& W)
 {
-	int j    = -1;
-	size_t N = tris.size();
-	t        = numeric_limits<float>::infinity();
+	t = numeric_limits<float>::infinity();
+	k = -1;
+	bool found = false;
 
-	for (unsigned int i=0; i<N; i++) {
-		float z = tris[i].intersected(ray);
-		if (z >= 0.0f) {
-			if (z < t) {
-				j = i;
-				t = z;
-			}
+	for (auto i=0; i<static_cast<int>(tris.size()); i++) {
+		float d = tris[i].intersected(ray, W);
+		if (d >= 0.0f && d < t) {
+			t = d;
+			//cout << "* (" << tris.size() << ") t=" << d << endl;
+			k = i;
+			found = true;
 		}
 	}
 
-	if (j < 0) {
+	if (!found) {
+		t = -1.0f;
 		return false;
 	}
 
-	closestTri = tris[j];
+	//cout << "FINAL t=" << t << endl;
 
 	return true;
 }
 
 Intersection Mesh::intersectImpl(const Ray &ray) const
 {
+	vector<Tri> collected;
 	float t = -1.0f; // t distance
-	Tri tri; // Closest triangle
+	int I   = -1;    // Index of closest triangle found in collected
+	glm::vec3 W;     // barycentric weights
 
 	if (this->tree != nullptr) { // Yes
 
 		// First, get the set of triangles we'll be working with
 		// from the spatial KD-tree index:
-		vector<Tri> collected;
 
 		if (!this->tree->intersects(ray, collected)) {
 			return Intersection::miss(); // No intersections: bail out
 		}
 
-		if (!closestTriangle(ray, collected, tri, t)) {
+		int k = -1;
+		if (!closestTriangle(ray, collected, k, t, W)) {
 			return Intersection::miss();
 		}
+
+		// Get the index of the triangle as it appears in this->triangles
+		I = collected[k].getMeshIndex(); 
 
 	} else { // No
 
-		if (!closestTriangle(ray, this->triangles, tri, t)) {
+		int k = -1;
+		if (!closestTriangle(ray, this->triangles, k, t, W)) {
 			return Intersection::miss();
 		}
+
+		// Get the index of the triangle as it appears in this->triangles
+		//I = this->triangles[k].getMeshIndex(); 
+		I = k;
 	}
 
-	glm::vec3 N = tri.getNormal();
+	assert(I >=0 && I <= this->triangles.size() && I <= this->vnIndex.size());
+
+	// Normal at point-of-intersection
+	//glm::vec3 N = this->triangles[I].getNormal();
+
+	VNIndex VN  = this->vnIndex[I];
+	
+	cout << "T[" << I << "] : (" << get<0>(VN) << ", " << get<1>(VN) << ", " << get<2>(VN) << ")" << endl;
+
+
+	glm::vec3 N = (this->triangles[get<0>(VN)].getNormal() * W[2]) + 
+	              (this->triangles[get<1>(VN)].getNormal() * W[0]) + 
+	              (this->triangles[get<2>(VN)].getNormal() * W[1]);
 
 	return Intersection(t, N);
 }

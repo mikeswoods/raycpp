@@ -83,7 +83,7 @@ Intersection Geometry::intersect(const glm::mat4 &T, Ray rayWorld) const
 			isect.inside = true;
 		}
 
-		assert(abs(glm::length(isect.normal) - 1.0f) <= 1.0e-7f);
+		//assert(abs(glm::length(isect.normal) - 1.0f) <= 1.0e-6f);
     }
 
     // The final output intersection data is in WORLD-space.

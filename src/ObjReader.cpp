@@ -63,7 +63,7 @@ Mesh* ObjReader::parse()
 		throw runtime_error("ObjReader::readFromFile: " + this->objFile + " cannot be read");
 	}
 
-	int lineCount = 0;
+	int lineCount = 0, nextFaceId = 1;
 	string line, lineType;
 
 	while (getline(is, line)) {
@@ -112,7 +112,7 @@ Mesh* ObjReader::parse()
 
 		} else if (lineType == "f") { // Face
 
-			this->parseF(lineCount, line, ss);
+			this->parseF(lineCount, nextFaceId++, line, ss);
 
 		} else if (lineType == "vn") { // Vertex normal
 
@@ -212,6 +212,7 @@ ObjReader::FaceType ObjReader::classifyFaceChunk(std::string chunk)
 			return FACE_BAD;
 		}
 	}
+
 	return FACE_V; // otherwise case (1)
 }
 
@@ -224,7 +225,8 @@ ObjReader::FaceType ObjReader::classifyFaceChunk(std::string chunk)
  * (3) Face with vertex normals: "f v1//n1 v2//n2 .... vn//nn"
  * (4) Face with txt and norms:  "f v1/t1/n1 v2/t2/n2 .... vn/tn/nn"
  */
-void ObjReader::parseF(int lineNum, const std::string& line, istringstream& ss)
+void ObjReader::parseF(int lineNum, int nextFaceId
+	                  ,const std::string& line, istringstream& ss)
 {
 	#ifdef DEBUG
 	clog << "called ObjReader::parseF" << endl;
@@ -251,16 +253,16 @@ void ObjReader::parseF(int lineNum, const std::string& line, istringstream& ss)
 
 	switch (ft[0]) {
 		case FACE_V:
-			this->faces->push_back(this->parseFV(lineNum, line, chunks[1], chunks[2], chunks[3]));
+			this->faces->push_back(this->parseFV(lineNum, nextFaceId, line, chunks[1], chunks[2], chunks[3]));
 			break;
 		case FACE_VT:
-			this->faces->push_back(this->parseFVT(lineNum, line, chunks[1], chunks[2], chunks[3]));
+			this->faces->push_back(this->parseFVT(lineNum, nextFaceId, line, chunks[1], chunks[2], chunks[3]));
 			break;
 		case FACE_VN:
-			this->faces->push_back(this->parseFVN(lineNum, line, chunks[1], chunks[2], chunks[3]));
+			this->faces->push_back(this->parseFVN(lineNum, nextFaceId, line, chunks[1], chunks[2], chunks[3]));
 			break;
 		case FACE_VTN:
-			this->faces->push_back(this->parseFVTN(lineNum, line, chunks[1], chunks[2], chunks[3]));
+			this->faces->push_back(this->parseFVTN(lineNum, nextFaceId, line, chunks[1], chunks[2], chunks[3]));
 			break;
 		default:
 			throw runtime_error("at line " + S(lineNum) + ": Malformed face chunk <"+ S(ft[0]) + "> \"" + line + "\"");
@@ -272,7 +274,7 @@ void ObjReader::parseF(int lineNum, const std::string& line, istringstream& ss)
  * 
  * Format: "f v1 v2 ... vn"
  */
-Face ObjReader::parseFV(int lineNum, const std::string& line
+Face ObjReader::parseFV(int lineNum, int nextFaceId, const std::string& line
 	                   ,const string& chunk1, const string& chunk2, const string& chunk3) const 
 {
 	int v[3] = {-1, -1, -1};
@@ -284,7 +286,7 @@ Face ObjReader::parseFV(int lineNum, const std::string& line
 	v[1] = this->normalizeIndex(stoi(chunk2));
 	v[2] = this->normalizeIndex(stoi(chunk3));
 
-	return Face(v, t, n);
+	return Face(nextFaceId, v, t, n);
 }
 
 /**
@@ -292,7 +294,7 @@ Face ObjReader::parseFV(int lineNum, const std::string& line
  * 
  * Format: "f v1/t1 v2/t2 .... vn/tn"
  */
-Face ObjReader::parseFVT(int lineNum, const std::string& line
+Face ObjReader::parseFVT(int lineNum, int nextFaceId, const std::string& line
 	                    ,const std::string& chunk1, const std::string& chunk2, const std::string& chunk3) const
 {
 	int v[3] = {-1, -1, -1};
@@ -321,7 +323,7 @@ Face ObjReader::parseFVT(int lineNum, const std::string& line
 	t[1] = this->normalizeIndex(stoi(Utils::trim(parts[1][1])));
 	t[2] = this->normalizeIndex(stoi(Utils::trim(parts[2][1])));
 
-	return Face(v, t, n);
+	return Face(nextFaceId, v, t, n);
 }
 
 /**
@@ -329,7 +331,7 @@ Face ObjReader::parseFVT(int lineNum, const std::string& line
  * 
  * Format: "f v1//n1 v2//n2 .... vn//nn"
  */
-Face ObjReader::parseFVN(int lineNum, const std::string& line
+Face ObjReader::parseFVN(int lineNum, int nextFaceId, const std::string& line
 	                    ,const std::string& chunk1, const std::string& chunk2, const std::string& chunk3) const
 {
 	int v[3] = {-1, -1, -1};
@@ -358,7 +360,7 @@ Face ObjReader::parseFVN(int lineNum, const std::string& line
 	n[1] = this->normalizeIndex(stoi(Utils::trim(parts[1][1])));
 	n[2] = this->normalizeIndex(stoi(Utils::trim(parts[2][1])));
 
-	return Face(v, t, n);
+	return Face(nextFaceId, v, t, n);
 }
 
 /**
@@ -366,7 +368,7 @@ Face ObjReader::parseFVN(int lineNum, const std::string& line
  * 
  * Format: "f v1/t1/n1 v2/t2/n2 .... vn/tn/nn"
  */
-Face ObjReader::parseFVTN(int lineNum, const std::string& line
+Face ObjReader::parseFVTN(int lineNum, int nextFaceId, const std::string& line
 	                     ,const std::string& chunk1, const std::string& chunk2, const std::string& chunk3) const
 {
 	int v[3] = {-1, -1, -1};
@@ -399,7 +401,7 @@ Face ObjReader::parseFVTN(int lineNum, const std::string& line
 	n[1] = this->normalizeIndex(stoi(Utils::trim(parts[1][2])));
 	n[2] = this->normalizeIndex(stoi(Utils::trim(parts[2][2])));
 
-	return Face(v, t, n);
+	return Face(nextFaceId, v, t, n);
 }
 
 /*****************************************************************************/

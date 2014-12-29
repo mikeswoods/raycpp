@@ -55,12 +55,12 @@ class ObjReader
 		void parseVT(int lineNum, const std::string& line, std::istringstream& ss);
 		void parseVN(int lineNum, const std::string& line, std::istringstream& ss);
 
-		void parseF(int lineNum, const std::string& line, std::istringstream& ss);
+		void parseF(int lineNum, int nextFaceId, const std::string& line, std::istringstream& ss);
 
-		Face parseFV(int lineNum, const std::string& line, const std::string& chunk1, const std::string& chunk2, const std::string& chunk3) const;
-		Face parseFVT(int lineNum, const std::string& line, const std::string& chunk1, const std::string& chunk2, const std::string& chunk3) const;
-		Face parseFVN(int lineNum, const std::string& line, const std::string& chunk1, const std::string& chunk2, const std::string& chunk3) const;
-		Face parseFVTN(int lineNum, const std::string& line, const std::string& chunk1, const std::string& chunk2, const std::string& chunk3) const;
+		Face parseFV(int lineNum, int nextFaceId, const std::string& line, const std::string& chunk1, const std::string& chunk2, const std::string& chunk3) const;
+		Face parseFVT(int lineNum, int nextFaceId, const std::string& line, const std::string& chunk1, const std::string& chunk2, const std::string& chunk3) const;
+		Face parseFVN(int lineNum, int nextFaceId, const std::string& line, const std::string& chunk1, const std::string& chunk2, const std::string& chunk3) const;
+		Face parseFVTN(int lineNum, int nextFaceId, const std::string& line, const std::string& chunk1, const std::string& chunk2, const std::string& chunk3) const;
 
 	public:
 		ObjReader(const std::string& objFile);
