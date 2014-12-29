@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
  *
  * This file defines a type for representing triangular mesh gemoetric object
  * as well as operations over such objects
@@ -6,7 +6,7 @@
  * @file Mesh.h
  * @author Michael Woods
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 #include <cassert>
 #include <stdexcept>
@@ -19,7 +19,18 @@
 
 using namespace std;
 
-/*****************************************************************************/
+/******************************************************************************/
+
+ostream& operator<<(ostream& s, const VNIndex& vnIndex)
+{
+	s << "{ " << get<0>(vnIndex)
+	  << ", " << get<1>(vnIndex)
+	  << ", " << get<2>(vnIndex)
+	  << "}";
+	return s;
+}
+
+/******************************************************************************/
 
 Mesh::Mesh(const vector<glm::vec3>& vertices
 	      ,const vector<glm::vec3>& normals
@@ -39,8 +50,8 @@ Mesh::Mesh(const vector<glm::vec3>& vertices
 	this->buildVolume();
 	this->computeCentroid();
 
-	this->tree = nullptr;
-	//this->tree = new KDTree(this->triangles, new CycleAxisStrategy(), new MaxValuesPerLeaf(20));
+	//this->tree = nullptr;
+	this->tree = new KDTree(this->triangles, new CycleAxisStrategy(), new MaxValuesPerLeaf(20));
 	//this->tree = new KDTree(this->triangles, new RandomAxisStrategy(), new MaxValuesPerLeaf(10));
 	//this->tree = new KDTree(this->triangles, new SurfaceAreaStrategy(), new MaxValuesPerLeaf(10));
 }
@@ -141,40 +152,41 @@ const BoundingVolume& Mesh::getVolume() const
 
 void Mesh::buildGeometry()
 {
-    const int vc = this->getVertexCount();
-    const int fc = this->faces.size();
-    glm::vec3* normals = new glm::vec3[vc]; 
+    const int VC = this->getVertexCount();
+    const int FC = this->faces.size();
 
     // For each face, compute the face normal and add the normal to
     // each shared vertex normal
-    for (auto i=0; i<fc; i++) {
+    for (auto i=0; i<FC; i++) {
 
-        int j = this->faces[i].v[0] - 1;
-        int k = this->faces[i].v[1] - 1;
-        int l = this->faces[i].v[2] - 1;
+        int u = this->faces[i].v[0] - 1;
+        int v = this->faces[i].v[1] - 1;
+        int w = this->faces[i].v[2] - 1;
 
-        this->indices_.push_back(j);
-        this->indices_.push_back(k);
-        this->indices_.push_back(l);
+        this->indices_.push_back(u);
+        this->indices_.push_back(v);
+        this->indices_.push_back(w);
 
-        Tri T(i, this->vertices_[j], this->vertices_[k], this->vertices_[l]);
+        Tri TRI(i, this->vertices_[u], this->vertices_[v], this->vertices_[w]);
 
-        this->triangles.push_back(T);
-        this->vnIndex.push_back(VNIndex(j,k,l));
+        this->triangles.push_back(TRI);
+        this->vnIndex.push_back(VNIndex(u, v, w));
 
-        V n = T.getNormal();
-        normals[j] += n;
-        normals[k] += n;
-        normals[l] += n;
+        //this->normals_.push_back(TRI.getNormal());
+        this->normals_.push_back(glm::vec3());
     }
 
-    for (auto i=0; i<vc; i++) {
-        this->normals_.push_back(glm::normalize(normals[i]));
-    }
+    for (auto i=0; i<FC; i++) {
+    	VNIndex vni = this->vnIndex[i];
+    	glm::vec3 n = this->triangles[i].getNormal();
+        this->normals_[get<0>(vni)] += n;
+        this->normals_[get<1>(vni)] += n;
+        this->normals_[get<2>(vni)] += n;
+   	}
 
-    assert(this->triangles.size() == this->vnIndex.size());
-
-    delete [] normals;
+   	for (auto i=0; i<VC; i++) {
+   		this->normals_[i] = glm::normalize(this->normals_[i]);
+   	}
 }
 
 /**
@@ -192,7 +204,6 @@ static bool closestTriangle(const Ray& ray, const vector<Tri>& tris
 		float d = tris[i].intersected(ray, W);
 		if (d >= 0.0f && d < t) {
 			t = d;
-			//cout << "* (" << tris.size() << ") t=" << d << endl;
 			k = i;
 			found = true;
 		}
@@ -202,8 +213,6 @@ static bool closestTriangle(const Ray& ray, const vector<Tri>& tris
 		t = -1.0f;
 		return false;
 	}
-
-	//cout << "FINAL t=" << t << endl;
 
 	return true;
 }
@@ -240,25 +249,40 @@ Intersection Mesh::intersectImpl(const Ray &ray) const
 		}
 
 		// Get the index of the triangle as it appears in this->triangles
-		//I = this->triangles[k].getMeshIndex(); 
-		I = k;
+		I = this->triangles[k].getMeshIndex(); 
+		//I = k;
 	}
 
-	assert(I >=0 && I <= this->triangles.size() && I <= this->vnIndex.size());
+	// assert(I    >=0 
+	// 	   && I <= static_cast<int>(this->triangles.size())
+	// 	   && I <= static_cast<int>(this->vnIndex.size()));
+
+	VNIndex VN  = this->vnIndex[I];
 
 	// Normal at point-of-intersection
 	//glm::vec3 N = this->triangles[I].getNormal();
 
-	VNIndex VN  = this->vnIndex[I];
-	
-	cout << "T[" << I << "] : (" << get<0>(VN) << ", " << get<1>(VN) << ", " << get<2>(VN) << ")" << endl;
+	glm::vec3 N = (this->normals_[get<0>(VN)] * 0.333f) + 
+	              (this->normals_[get<1>(VN)] * 0.333f) + 
+	              (this->normals_[get<2>(VN)] * 0.333f);
 
+	// cout << "I=" << I << " : " << VN << endl
+	//      << "    " << this->normals_[get<0>(VN)] << endl
+	//      << "    " << this->normals_[get<1>(VN)] << endl
+	//      << "    " << this->normals_[get<2>(VN)] << endl
+	//      << "   1." << this->triangles[I].getNormal() << endl
+	//      << "   2." << glm::normalize(-N) << endl
+	//      << endl;
 
-	glm::vec3 N = (this->triangles[get<0>(VN)].getNormal() * W[2]) + 
-	              (this->triangles[get<1>(VN)].getNormal() * W[0]) + 
-	              (this->triangles[get<2>(VN)].getNormal() * W[1]);
-
-	return Intersection(t, N);
+	/*
+	cout << "T["<<I<<"] : " << this->triangles[I] << endl
+	     << "("<<get<0>(VN)<<", "<<get<1>(VN)<<", "<<get<2>(VN)<<") " << endl
+	     << "    W = " << W[0] << ", " << W[1] << ", " << W[2] << endl
+	     << "    " << this->triangles[I].getNormal() << ", " << glm::length(this->triangles[I].getNormal()) << endl
+	     << "    " << N << ", " << glm::length(N) << endl
+	     << endl;
+	*/
+	return Intersection(t, glm::normalize(N));
 }
 
 glm::vec3 Mesh::sampleImpl() const
@@ -266,4 +290,4 @@ glm::vec3 Mesh::sampleImpl() const
 	throw runtime_error("Mesh::sampleImpl() not implemented");
 }
 
-/*****************************************************************************/
+/******************************************************************************/

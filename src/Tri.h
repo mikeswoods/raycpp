@@ -1,11 +1,11 @@
-/******************************************************************************
+/*******************************************************************************
  *
  * Triangle intersection test
  *
  * @file Triangle.h
  * @author Michael Woods
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
@@ -21,8 +21,9 @@ class Tri : public Geometry
 {
 	private:
 		int meshIndex;
-		P v1, v2, v3, centroid;
-		V normal;
+		P v[3];     // corner vertices
+		P centroid; // precomputed centroid
+		V normal;   // precomputed normal
 		BoundingSphere volume;
 		AABB aabb;
 
@@ -54,9 +55,10 @@ class Tri : public Geometry
 		float getYMaxima() const;
 		float getZMaxima() const;
 
-		const P& getV1() { return this->v1; }
-		const P& getV2() { return this->v2; }
-		const P& getV3() { return this->v3; }
+		P const * getVertices() const { return this->v; }
+
+		bool hasVertex(const P& v) const;
+		bool hasVertex(const glm::vec3& v) const;
 
 		virtual const P& getCentroid() const;
 		V getNormal() const;

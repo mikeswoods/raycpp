@@ -4,7 +4,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const glm::vec3 WorldState::DEFAULT_LIGHT_POSITION = glm::vec3(0.0f, 7.0f, 0.0f);
+const glm::vec3 WorldState::DEFAULT_LIGHT_POSITION = glm::vec3(0.0f, 9.0f, 0.0f);
 
 WorldState::WorldState(const Configuration& _config) :
 	config(_config)
@@ -46,6 +46,8 @@ void WorldState::initialize()
 	this->previewLight = PointLight(DEFAULT_LIGHT_POSITION, Color::WHITE);
 
 	this->globalLightHue = 0.0f;
+
+	std::clog << this->previewLight << std::endl;
 }
 
 // Window state queries and operations ////////////////////////////////////////

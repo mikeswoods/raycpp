@@ -41,6 +41,8 @@ namespace Utils
 
     // Numeric functions ///////////////////////////////////////////////////////
 
+    float almostEqual(float a, float b, float epsilon);
+
     // Clamp a value to the range [lo,hi]
     float clamp(float n, float lo, float hi);
 

@@ -26,6 +26,30 @@ using namespace std;
  * Numeric functions
  ******************************************************************************/
 
+// Almost equal
+float Utils::almostEqual(float a, float b, float epsilon)
+{
+    // assume small positive epsilon
+    assert(epsilon >= 0.0f && epsilon <= 1.0f);
+
+    float diff = abs(a - b);
+    float maxab = max(abs(a), abs(b));
+
+    // if the multiply won't underflow then use a multiply
+    if (maxab >= 1.0f) {
+        return diff <= (epsilon * maxab);
+    } else if (maxab > 0.0f) {
+        // multiply could underflow so use a divide if nonzero denominator
+        // correctly returns false on divide overflow
+        // (inf < = epsilon is false), since overflow means the
+        // relative difference is large and they are therefore not close
+        return diff / maxab <= epsilon;
+    }
+
+    // both a and b are zero
+    return false;
+}
+
 // Clamp values to a given range
 float Utils::clamp(float n, float lo, float hi)
 {

@@ -67,7 +67,7 @@ static GLint unifLightColor;
 static GLuint shaderProgram;
 
 // -- Vertex shader ----------------------------------------------------------
-const GLchar* vertexShader = GLSL(150,
+const GLchar* vertexShader = GLSL(130,
 
 uniform vec4 u_EyePos;
 uniform mat4 u_Model;
@@ -105,7 +105,7 @@ void main()
 
 // -- Fragment shader ----------------------------------------------------------
 
-const GLchar* fragmentShader = GLSL(150,
+const GLchar* fragmentShader = GLSL(130,
 
 uniform vec4 u_LightColor;
 
