@@ -1,10 +1,22 @@
+/*******************************************************************************
+ *
+ * This file defines the class used to represent abstract geometric
+ * objects in the rendering system, both for raytracer-based rendering as well
+ * as OpenGL rendering
+ *
+ * @file Geometry.h
+ * @author Michael Woods
+ *
+ ******************************************************************************/
+
 #include <sstream>
 #include "Geometry.h"
+ #include "Graph.h"
 #include "R3.h"
 
 using namespace std;
 
-////////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/
 
 ostream& operator<<(ostream& s, const Geometry& geometry) 
 {
@@ -12,11 +24,11 @@ ostream& operator<<(ostream& s, const Geometry& geometry)
     return s;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 Geometry::Geometry(Type _type) :
     type(_type)
-{ }
+{ 
+
+}
 
 Geometry::~Geometry()
 {
@@ -33,9 +45,7 @@ vector<glm::vec3> Geometry::getColors(const Color& color) const
 							,glm::vec3(color.fR(), color.fG(), color.fB()));
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-Intersection Geometry::intersect(const glm::mat4 &T, Ray rayWorld) const
+Intersection Geometry::intersect(const glm::mat4 &T, const Ray& rayWorld) const
 {
 	Ray rayNormal  = Ray(rayWorld.orig, glm::normalize(rayWorld.dir));
 	glm::mat4 invT = glm::inverse(T);
@@ -65,7 +75,6 @@ Intersection Geometry::intersect(const glm::mat4 &T, Ray rayWorld) const
 		// you would just use the unmodified transform T.)
 		//
         // http://www.arcsynthesis.org/gltut/Illumination/Tut09%20Normal%20Transformation.html
-		//
         isect.normal = glm::normalize(transform(glm::transpose(invT), glm::vec4(normalLocal, 0.0f)));
 
 		// Compute the hit position in world space:
@@ -79,11 +88,20 @@ Intersection Geometry::intersect(const glm::mat4 &T, Ray rayWorld) const
 
 		if (glm::dot(isect.normal, rayWorld.dir) > 0.0f) {
 
-			isect.normal = -isect.normal; // Flip the normal:
+            // Only for non-mesh objects:
+            if (isect.node != nullptr  && 
+                isect.node->getGeometry() != nullptr && 
+                isect.node->getGeometry()->getGeometryType() != Geometry::MESH) 
+            {
+                isect.normal = -isect.normal; // Flip the normal:    
+            }
+			
 			isect.inside = true;
 		}
 
-		//assert(abs(glm::length(isect.normal) - 1.0f) <= 1.0e-6f);
+        #ifdef DEBUG
+		assert(abs(glm::length(isect.normal) - 1.0f) <= 1.0e-6f);
+        #endif
     }
 
     // The final output intersection data is in WORLD-space.
@@ -96,4 +114,4 @@ glm::vec3 Geometry::sample(const glm::mat4& T) const
 	return transform(T, glm::vec4(this->sampleImpl(), 1.0f));
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/

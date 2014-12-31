@@ -19,61 +19,30 @@ using namespace std;
 /******************************************************************************/
 
 Tri::Tri() :
-	Geometry(TRI),
 	meshIndex(-1)
 { 
 	
 }
 
-Tri::Tri(int _meshIndex, const P& v1, const P& v2, const P& v3) :
-    Geometry(TRI),
-    meshIndex(_meshIndex)
-{
-	this->v[0] = v1;
-	this->v[1] = v2;
-	this->v[2] = v3;
-
-	this->buildGeometry();
-	this->computeCentroid();
-	this->computeNormal();
-	this->buildVolume();
-	this->buildAABB();
-}
-
 Tri::Tri(int _meshIndex, const glm::vec3& _v1, const glm::vec3& _v2, const glm::vec3& _v3) :
-    Geometry(TRI),
     meshIndex(_meshIndex)
 { 
 	this->v[0] = P(_v1);
 	this->v[1] = P(_v2);
 	this->v[2] = P(_v3);
 
-	this->buildGeometry();
-	this->computeCentroid();
 	this->computeNormal();
-	this->buildVolume();
 	this->buildAABB();
 }
 
 Tri::Tri(const Tri& other) :
-    Geometry(TRI),
     meshIndex(other.meshIndex),
 	normal(other.normal),
-	centroid(other.centroid),
-	volume(other.volume),
 	aabb(other.aabb)
 { 
 	this->v[0] = other.v[0];
 	this->v[1] = other.v[1];
 	this->v[2] = other.v[2];
-}
-
-void Tri::repr(ostream& s) const
-{
-	s << "Tri<" << this->meshIndex << ">"
-	  << "["<< this->v[0] <<","<< this->v[1] << this->v[2] << "]"
-	  << ",centroid=" << this->centroid
-	  << "}";
 }
 
 float Tri::getXMinima() const
@@ -106,26 +75,6 @@ float Tri::getZMaxima() const
 	return max(max(z(this->v[0]), z(this->v[1])), z(this->v[2]));
 }
 
-bool Tri::hasVertex(const P& u) const
-{
-	for (auto i=0; i <3; i++) {
-		if (u == this->v[i]) {
-			return true;
-		}
-	}
-	return false;
-}
-
-bool Tri::hasVertex(const glm::vec3& v) const
-{
-	return this->hasVertex(P(v));
-}
-
-void Tri::computeCentroid()
-{
-	this->centroid = P((this->v[0].xyz + this->v[1].xyz + this->v[2].xyz) / 3.0f);
-}
-
 void Tri::computeNormal()
 {
 	this->normal = glm::normalize(glm::cross(this->v[1] - this->v[0], this->v[2] - this->v[0]));
@@ -134,30 +83,6 @@ void Tri::computeNormal()
 V Tri::getNormal() const
 {
 	return this->normal;
-}
-
-const P& Tri::getCentroid() const
-{
-	return this->centroid;
-}
-
-/**
- * Builds the bounding volume used by this object for faster intersection
- * testing
- */
-void Tri::buildVolume()
-{
-	float dist1  = glm::distance(this->centroid.xyz, this->v[0].xyz);
-	float dist2  = glm::distance(this->centroid.xyz, this->v[1].xyz);
-	float dist3  = glm::distance(this->centroid.xyz, this->v[2].xyz);
-	float radius = max(dist1, max(dist2, dist3));
-
-	this->volume = BoundingSphere(this->centroid, radius + Utils::EPSILON);
-}
-
-const BoundingVolume& Tri::getVolume() const
-{
-	return this->volume;
 }
 
 /**
@@ -175,11 +100,6 @@ void Tri::buildAABB()
 	float zMax = max(max(z(this->v[0]), z(this->v[1])), z(this->v[2]));
 
 	this->aabb = AABB(P(xMin, yMin, zMin), P(xMax, yMax, zMax));
-}
-
-void Tri::buildGeometry()
-{
-	// Do nothing
 }
 
 /**
@@ -234,7 +154,9 @@ float Tri::naiveIntersect(const Ray& ray, glm::vec3& W) const
 		W[1] = glm::dot(glm::cross(e13, eQ3), n) / nk; // beta
 		W[2] = glm::dot(glm::cross(e21, eQ1), n) / nk; // gamma
 
+		#ifdef DEBUG
 		assert(abs(1.0f - (W[0] + W[1] + W[2])) < 1.0e-6f);
+		#endif
 
 		return t;
 	}
@@ -247,11 +169,9 @@ float Tri::naiveIntersect(const Ray& ray, glm::vec3& W) const
  */
 float Tri::mollerTrumboreIntersect(const Ray& ray, glm::vec3& W) const
 {
-	W = glm::vec3(0.0f,0.0f,0.0f);
-
 	glm::vec3 e1 = this->v[1] - this->v[0];
 	glm::vec3 e2 = this->v[2] - this->v[0];
-	glm::vec3 D  = glm::normalize(ray.dir);
+	glm::vec3 D  = ray.dir;
 	glm::vec3 P  = glm::cross(D, e2);
 	float det    = glm::dot(e1, P);
 	float eps    = FLT_EPSILON;
@@ -276,30 +196,43 @@ float Tri::mollerTrumboreIntersect(const Ray& ray, glm::vec3& W) const
 	}
 
 	float t = glm::dot(e2, Q) * invDet;
+	W = glm::vec3(1.0f - u - v, u, v);
+
+	#ifdef DEBUG
+	assert(abs(1.0f - (W[0] + W[1] + W[2])) < 1.0e-6f);
+	#endif
 
 	if (t > eps) {
-		W = glm::vec3(u, v, 1.0f - (u + v));
 		return t;
 	}
 
 	return -1.0f;
 }
 
+glm::vec3 Tri::barycenter(const P& p) const
+{
+    glm::vec3 v0 = this->v[1] - this->v[0]; 
+    glm::vec3 v1 = this->v[2] - this->v[0];
+    glm::vec3 v2 = p - this->v[0];
+    float d00 = glm::dot(v0, v0);
+    float d01 = glm::dot(v0, v1);
+    float d11 = glm::dot(v1, v1);
+    float d20 = glm::dot(v2, v0);
+    float d21 = glm::dot(v2, v1);
+    float denom = d00 * d11 - d01 * d01;
+
+    glm::vec3 W;
+    W[1] = (d11 * d20 - d01 * d21) / denom;
+    W[2] = (d00 * d21 - d01 * d20) / denom;
+    W[0] = 1.0f - W[1] - W[2];
+
+    return W;
+}
+
 float Tri::intersected(const Ray& ray, glm::vec3& W) const
 {
-	return this->naiveIntersect(ray, W);
-	//return this->mollerTrumboreIntersect(ray, W);
-}
-
-Intersection Tri::intersectImpl(const Ray &ray) const
-{
-	glm::vec3 W;
-	return Intersection(this->intersected(ray, W), this->getNormal());
-}
-
-glm::vec3 Tri::sampleImpl() const
-{
-	throw runtime_error("Tri::sampleImpl() not implemented");
+	//return this->naiveIntersect(ray, W);
+	return this->mollerTrumboreIntersect(ray, W);
 }
 
 /******************************************************************************/

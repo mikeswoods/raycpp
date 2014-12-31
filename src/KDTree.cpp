@@ -111,7 +111,7 @@ int SurfaceAreaStrategy::nextAxis(const std::vector<Tri>& data)
 		for (auto i=data.begin(); i != data.end(); i++) {
 			
 			Tri T       = *i;
-			P triCenter = T.getCentroid();
+			P triCenter = T.getAABB().centroid();
 
 			// Partition the points based on the current axis and update the extrema
 			// of the bounding box formed on each side of the partition:

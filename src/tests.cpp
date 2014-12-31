@@ -139,7 +139,6 @@ void RunKDTreeTests()
 // --- Intersection tests -----------------------------------------------------
 
 void RunRaySphereTests();
-void RunRayPolyTests();
 void RunRayCubeTests();
 void RunRayCylinderTests();
 void RunYourTests();
@@ -178,7 +177,6 @@ void RunIntersectionTests()
     std::cout.sync_with_stdio(true);
 
     RunRaySphereTests();
-    RunRayPolyTests();
     RunRayCubeTests();
     RunRayCylinderTests();
     RunYourTests();
@@ -195,13 +193,6 @@ double Test_RaySphereIntersect(vec3 const& P0, vec3 const& V0,
                                mat4 const& T)
 {
     return Sphere().intersect(T, Ray(P0, V0)).t;
-}
-
-double Test_RayPolyIntersect(vec3 const& P0, vec3 const& V0,
-                             vec3 const& p1, vec3 const& p2, vec3 const& p3,
-                             mat4 const& T)
-{
-    return Tri(-1, p1, p2, p3).intersect(T, Ray(P0, V0)).t;
 }
 
 double Test_RayCubeIntersect(vec3 const& P0, vec3 const& V0,
@@ -294,39 +285,6 @@ void RunRaySphereTests()
         "Sphere::Another angle",
         Test_RaySphereIntersect(NEGFIVEOFIVE_VECTOR, POSXNEGZ_NORM_VECTOR, IDENTITY_MATRIX),
         (5.0 * SQRT_TWO) - 1);
-}
-
-void RunRayPolyTests()
-{
-    RunTest(
-        "Poly::Hi, Tri",
-        Test_RayPolyIntersect(POSZ_VECTOR, NEGZ_VECTOR, POINT_N1N10, POINT_1N10, POINT_010, IDENTITY_MATRIX),
-        1.0);
-
-    RunTest(
-        "Poly::Bye, Tri",
-        Test_RayPolyIntersect(POSXPOSZ_VECTOR, NEGZ_VECTOR, POINT_N1N10, POINT_1N10, POINT_010, IDENTITY_MATRIX),
-        -1.0);
-
-    RunTest(
-        "Poly::Looking back",
-        Test_RayPolyIntersect(POSZ_VECTOR, POSZ_VECTOR, POINT_N1N10, POINT_1N10, POINT_010, IDENTITY_MATRIX),
-        -1.0);
-
-    RunTest(
-        "Poly::Flip it good",
-        Test_RayPolyIntersect(POSZ_VECTOR, NEGZ_VECTOR, POINT_010, POINT_1N10, POINT_N1N10, IDENTITY_MATRIX),
-        1.0);
-
-    RunTest(
-        "Poly::It moves",
-        Test_RayPolyIntersect(ZERO_VECTOR, NEGZ_VECTOR, POINT_N1N10, POINT_1N10, POINT_010, BACK5ANDTURN_MATRIX),
-        5.0);
-
-    RunTest(
-        "Poly::TODO And turns",
-        Test_RayPolyIntersect(HALFX_VECTOR, NEGZ_VECTOR, POINT_N2N10, POINT_2N10, POINT_010, BACK5ANDTURN_MATRIX),
-        5.5);
 }
 
 void RunRayCubeTests()
@@ -437,19 +395,6 @@ void RunOurTests() {
 	const vec3 POLY0P0(1,-1,2);
 	const vec3 POLY0V0(0,0,-1);
 
-	RunTest(
-		"GRADING POLY 0",
-		Test_RayPolyIntersect(POLY0P0, POLY0V0, POLY0P[0], POLY0P[1], POLY0P[2], IDENTITY_MATRIX),
-		1.0);
-
-	const mat4 POLY1TRANS(-3,0,0,0,   0,2,0,0,   0,0,-2,0,   0,0,0,1);
-
-	RunTest(
-		"GRADING POLY 1",
-		Test_RayPolyIntersect(POLY0P0, POLY0V0, POLY0P[0], POLY0P[1], POLY0P[2], POLY1TRANS),
-		3.0);
-
-
 	const vec3 CUBE0P0(1,1,1);
 	const vec3 CUBE0V0(-0.5773,-0.5773,-0.5773);
 
@@ -515,12 +460,6 @@ void RunOurTests() {
 		"Nonuniformly scaled cube",
 		Test_RayCubeIntersect(vec3(0.6,1.3,-0.1), normalize(vec3(2,3,1)), SCALE_MATRIX),
 		-1.0);
-
-	RunTest(
-		"Nonuniformly scaled triangle",
-		Test_RayPolyIntersect(vec3(0,0,-1), normalize(vec3(0.1,-0.05,1)), vec3(0.5,0.4,0.7),
-		vec3(-1.2,-0.4,0.6), vec3(0.6,-0.5,0.8), SCALE_MATRIX),
-		2.52);
 
 	RunTest(
 		"Inside cylinder intersect side",

@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
  *
  * This file defines the class used to represent abstract geometric
  * objects in the rendering system, both for raytracer-based rendering as well
@@ -7,7 +7,7 @@
  * @file Geometry.h
  * @author Michael Woods
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
@@ -21,7 +21,7 @@
 #include "Ray.h"
 #include "BoundingVolume.h"
 
-/*****************************************************************************/
+/******************************************************************************/
 
 class Geometry
 {
@@ -32,8 +32,7 @@ class Geometry
 		// Type that specifies the geometric primitive type:
 		enum Type 
 		{
-			 TRI
-			,CUBE
+			 CUBE
 			,SPHERE
 			,CYLINDER
 			,MESH
@@ -92,7 +91,7 @@ class Geometry
 		Type getGeometryType() const { return this->type; };
 
 		// Compute an intersection with a WORLD-space ray.
-		Intersection intersect(const glm::mat4& T, Ray rayWorld) const;
+		Intersection intersect(const glm::mat4& T, const Ray& rayWorld) const;
 
 		// Returns a sample point from the surface of the object in WORLD-space
 		glm::vec3 sample(const glm::mat4& T) const;

@@ -39,12 +39,9 @@ Mesh::Mesh(const vector<glm::vec3>& vertices
     Geometry(MESH)
 { 
 	copy(vertices.begin(), vertices.end(), back_inserter(this->vertices_));
-
-	this->normals_  = normals;
-
+	copy(normals.begin(), normals.end(), back_inserter(this->normals_));
 	copy(textureUV.begin(), textureUV.end(), back_inserter(this->textureUV));
-
-	this->faces = _faces;
+	copy(_faces.begin(), _faces.end(), back_inserter(this->faces));
 
 	this->buildGeometry();
 	this->buildVolume();
@@ -106,13 +103,12 @@ void Mesh::computeCentroid()
 	float cx = 0.0f;
 	float cy = 0.0f;
 	float cz = 0.0f;
-	float N  = static_cast<float>(this->triangles.size());
+	float N  = static_cast<float>(this->vertices_.size());
 
-	for (auto i=this->triangles.begin(); i != this->triangles.end(); i++) {
-		P c = i->getCentroid();
-		cx += x(c);
-		cy += y(c);
-		cz += z(c);
+	for (auto i=this->vertices_.begin(); i != this->vertices_.end(); i++) {
+		cx += i->x;
+		cy += i->y;
+		cz += i->z;
 	}
 
 	this->centroid = P(cx / N, cy / N, cz / N);
@@ -157,6 +153,10 @@ void Mesh::buildGeometry()
 
     // For each face, compute the face normal and add the normal to
     // each shared vertex normal
+    for (auto i=0; i<VC; i++) {
+    	this->normals_.push_back(glm::vec3());
+    }
+
     for (auto i=0; i<FC; i++) {
 
         int u = this->faces[i].v[0] - 1;
@@ -172,21 +172,16 @@ void Mesh::buildGeometry()
         this->triangles.push_back(TRI);
         this->vnIndex.push_back(VNIndex(u, v, w));
 
-        //this->normals_.push_back(TRI.getNormal());
-        this->normals_.push_back(glm::vec3());
+        glm::vec3 N = TRI.getNormal();
+
+        this->normals_[u] += N;
+        this->normals_[v] += N;
+        this->normals_[w] += N;
     }
-
-    for (auto i=0; i<FC; i++) {
-    	VNIndex vni = this->vnIndex[i];
-    	glm::vec3 n = this->triangles[i].getNormal();
-        this->normals_[get<0>(vni)] += n;
-        this->normals_[get<1>(vni)] += n;
-        this->normals_[get<2>(vni)] += n;
-   	}
-
-   	for (auto i=0; i<VC; i++) {
-   		this->normals_[i] = glm::normalize(this->normals_[i]);
-   	}
+ 
+    for (auto i=0; i<VC; i++) {
+    	this->normals_[i] = glm::normalize(this->normals_[i]);
+    }
 }
 
 /**
@@ -199,11 +194,11 @@ static bool closestTriangle(const Ray& ray, const vector<Tri>& tris
 	t = numeric_limits<float>::infinity();
 	k = -1;
 	bool found = false;
-
+	
 	for (auto i=0; i<static_cast<int>(tris.size()); i++) {
-		float d = tris[i].intersected(ray, W);
-		if (d >= 0.0f && d < t) {
-			t = d;
+		float t_i = tris[i].intersected(ray, W);
+		if (t_i >= 0.0f && t_i < t) {
+			t = t_i;
 			k = i;
 			found = true;
 		}
@@ -214,14 +209,17 @@ static bool closestTriangle(const Ray& ray, const vector<Tri>& tris
 		return false;
 	}
 
+	// Finally, recompute barycentric weights for the correct triangle at k:
+	t = tris[k].intersected(ray, W);
+
 	return true;
 }
 
 Intersection Mesh::intersectImpl(const Ray &ray) const
 {
 	vector<Tri> collected;
-	float t = -1.0f; // t distance
-	int I   = -1;    // Index of closest triangle found in collected
+	float t  = -1.0f; // t distance
+	size_t I = 0;    // Index of closest triangle found in collected
 	glm::vec3 W;     // barycentric weights
 
 	if (this->tree != nullptr) { // Yes
@@ -248,40 +246,21 @@ Intersection Mesh::intersectImpl(const Ray &ray) const
 			return Intersection::miss();
 		}
 
-		// Get the index of the triangle as it appears in this->triangles
-		I = this->triangles[k].getMeshIndex(); 
-		//I = k;
+		I = k;
 	}
 
-	// assert(I    >=0 
-	// 	   && I <= static_cast<int>(this->triangles.size())
-	// 	   && I <= static_cast<int>(this->vnIndex.size()));
+	assert(I < this->triangles.size()
+		   && this->vertices_.size() == this->normals_.size() 
+		   && this->triangles.size() == this->vnIndex.size());
 
 	VNIndex VN  = this->vnIndex[I];
 
 	// Normal at point-of-intersection
 	//glm::vec3 N = this->triangles[I].getNormal();
+	glm::vec3 N  = (W[0] * this->normals_[get<0>(VN)]) 
+	             + (W[1] * this->normals_[get<1>(VN)]) 
+	             + (W[2] * this->normals_[get<2>(VN)]);
 
-	glm::vec3 N = (this->normals_[get<0>(VN)] * 0.333f) + 
-	              (this->normals_[get<1>(VN)] * 0.333f) + 
-	              (this->normals_[get<2>(VN)] * 0.333f);
-
-	// cout << "I=" << I << " : " << VN << endl
-	//      << "    " << this->normals_[get<0>(VN)] << endl
-	//      << "    " << this->normals_[get<1>(VN)] << endl
-	//      << "    " << this->normals_[get<2>(VN)] << endl
-	//      << "   1." << this->triangles[I].getNormal() << endl
-	//      << "   2." << glm::normalize(-N) << endl
-	//      << endl;
-
-	/*
-	cout << "T["<<I<<"] : " << this->triangles[I] << endl
-	     << "("<<get<0>(VN)<<", "<<get<1>(VN)<<", "<<get<2>(VN)<<") " << endl
-	     << "    W = " << W[0] << ", " << W[1] << ", " << W[2] << endl
-	     << "    " << this->triangles[I].getNormal() << ", " << glm::length(this->triangles[I].getNormal()) << endl
-	     << "    " << N << ", " << glm::length(N) << endl
-	     << endl;
-	*/
 	return Intersection(t, glm::normalize(N));
 }
 
