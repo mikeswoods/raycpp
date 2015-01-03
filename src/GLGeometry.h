@@ -11,7 +11,6 @@
 #define GL_GEOMETRY_H
 
 #include <glew/glew.h>
-#include <GL/glut.h>
 #include "Geometry.h"
 #include "Color.h"
 

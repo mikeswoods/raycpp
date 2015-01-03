@@ -384,14 +384,6 @@ void RunOurTests() {
 		Test_RaySphereIntersect(SPHERE1P0, SPHERE1V0, SPHERE1TRANS),
 		3.0 - std::sqrt(0.75));
 
-
-	const vec3 POLY0P[3] = {
-		vec3(0,2,-2),
-		vec3(-3,-2,2),
-		vec3(3,-2,2)
-	};
-
-
 	const vec3 POLY0P0(1,-1,2);
 	const vec3 POLY0V0(0,0,-1);
 

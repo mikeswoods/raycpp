@@ -42,19 +42,19 @@ CXXFLAGS += \
 	-Wno-unused-function
 
 ifeq ($(UNAME), Darwin)
-	CXXFLAGS += -fopenmp -fdiagnostics-color=always
+	CXXFLAGS += -fopenmp -fdiagnostics-color=always `pkg-config --cflags glfw3`
 else
 	ifeq ($(UNAME), Linux)
-		CXXFLAGS += -fopenmp
+		CXXFLAGS += -fopenmp `pkg-config --cflags glfw3`
 	endif
 endif
 
 ################################################################################
 
 ifeq ($(UNAME), Darwin)
-LDFLAGS = -fopenmp -lGLEW -framework GLUT -framework OpenGL -framework Cocoa
+LDFLAGS = -fopenmp -lGLEW `pkg-config --static --libs glfw3`
 else
-LDFLAGS = -fopenmp -lGLEW -lGL -lGLU -lglut
+LDFLAGS = -fopenmp -lGLEW `pkg-config --static --libs glfw3`
 endif
 
 ################################################################################

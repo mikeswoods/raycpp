@@ -308,11 +308,6 @@ void Configuration::parseEnvironmentSection(istream& is, const string& beginToke
 			ss >> SHAPE;
 			readNonEmptyLine = true;
 			// ----------------------------------------------------------------
-		} else if (attribute == "SHAPE") {
-			// ----------------------------------------------------------------
-			ss >> SHAPE;
-			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else {
 			clog << "parseEnvironmentSection::Ignoring extra attribute: " << attribute << endl;
 		}

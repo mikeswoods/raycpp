@@ -15,7 +15,7 @@
  * This preprocessor macro allows you to expand GLSL inline 
  * like so:
  *
- * const GLchar* vert = GLSL(120,
+ * const GLchar* vert = GLSL(150,
  *
  *   attribute vec2 position;
  *

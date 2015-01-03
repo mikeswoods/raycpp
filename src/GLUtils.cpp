@@ -1,7 +1,5 @@
 #include <iostream>
 #include <ostream>
-#include <glew/glew.h>
-#include <GL/glut.h>
 #include "GLUtils.h"
 
 using namespace std;
