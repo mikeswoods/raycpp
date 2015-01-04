@@ -1,12 +1,11 @@
-/******************************************************************************
+/*******************************************************************************
  *
  * A simple spherical environment map model
  *
  * @file EnvironmentMap.h
  * @author Michael Woods
  *
- *****************************************************************************/
-
+ ******************************************************************************/
 
 #ifndef ENVIRONMENT_MAP_H
 #define ENVIRONMENT_MAP_H
@@ -18,9 +17,11 @@
 #include "Color.h"
 #include "SurfaceMap.h"
 
-/*****************************************************************************/
+/*******************************************************************************
+ * Abstract environment map type
+ ******************************************************************************/
 
-class EnvironmentMap : public TextureMap
+class EnvironmentMap
 {
 	public:
 		enum MappingType 
@@ -40,12 +41,44 @@ class EnvironmentMap : public TextureMap
 		MappingType stringToType(const std::string& name) const;
 
 	public:
-		EnvironmentMap(const std::string& filename, const std::string& mapType, float radius = 1.0e3f);
+		EnvironmentMap(const std::string& mapType, float radius = 1.0e3f);
 
 		MappingType getMappingType() const { return this->mapType; }
-		Color getColorFromRay(const Ray& ray) const;
+
+		virtual Color getColor(float u, float v) const = 0;
+		Color getColor(const Ray& ray) const;
 };
 
-/*****************************************************************************/
+/*******************************************************************************
+ * Simple color-based environment map type
+ ******************************************************************************/
+
+class ColorEnvironmentMap : public EnvironmentMap
+{
+	protected:
+		Color color;
+
+	public:
+		ColorEnvironmentMap(const Color& color);
+
+		virtual Color getColor(float u, float v) const;
+
+		const Color& getColor() const { return this->color; }
+};
+
+/*******************************************************************************
+ * Texture environment map type
+ ******************************************************************************/
+
+class TextureEnvironmentMap : public EnvironmentMap, public TextureMap
+{
+	public:
+		TextureEnvironmentMap(const std::string& filename, const std::string& mapType);
+		TextureEnvironmentMap(const std::string& filename, const std::string& mapType, float radius);
+
+		virtual Color getColor(float u, float v) const;
+};
+
+/******************************************************************************/
 
 #endif

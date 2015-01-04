@@ -1,11 +1,11 @@
-/******************************************************************************
+/*******************************************************************************
  *
  * This file defines the core of the raytracer implementation
  *
  * @file Raytrace.h
  * @author Michael Woods
  *
- *****************************************************************************/
+ ******************************************************************************/
 #define GLM_FORCE_RADIANS
 #include <algorithm>
 #include <ctime>
@@ -23,11 +23,11 @@
 
 using namespace std;
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Macro definitions
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 #ifndef __FUNCTION_NAME__
     #ifdef WIN32   //WINDOWS
@@ -43,11 +43,11 @@ using namespace std;
 // Maximum raytrace recursion depth:
 #define MAX_DEPTH 5
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Foward declarations
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 static Color trace(TraceOptions& options
 	              ,const Ray& ray
@@ -57,11 +57,11 @@ static Color trace(TraceOptions& options
 		          ,int depth
 				  ,bool isDebugPixel);
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Output operations
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 std::ostream& operator<<(std::ostream& s, const Intersection& isect)
 {
@@ -100,11 +100,11 @@ std::ostream& operator<<(std::ostream& s, const TraceOptions& options)
 	return s;
 }
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Debug a given pixel
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 static std::ostream& debugPixel(std::ostream& os, string funcName, int depth)
 {
@@ -140,11 +140,11 @@ static std::ostream& debugPixel(string funcName, int depth, string output)
 	return debugPixel(cerr, funcName, depth) << output << endl;
 }
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Initializes the raytracer camera
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 void initRaytrace(const Configuration& config, WorldState& state, Camera& camera)
 {
@@ -169,7 +169,7 @@ void initRaytrace(const Configuration& config, WorldState& state, Camera& camera
 	state.setEnvironmentMap(config.getEnvironmentMap());
 }
 
-/*****************************************************************************/
+/******************************************************************************/
 
 /**
  * Fold function used in closestIntersection() below
@@ -205,11 +205,11 @@ static TraceContext findClosestContextNode(TraceContext currentCtx, TraceContext
 	return isCloser(currentCtx, lastCtx) ? currentCtx : lastCtx;
 }
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Given a ray, this function computes the closest intersect in a scene graph
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 static TraceContext closestIntersection(const Ray& ray
 	                                   ,const Graph& graph
@@ -224,12 +224,12 @@ static TraceContext closestIntersection(const Ray& ray
 	return finalCtx;
 }
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Faster method to determine if something is hit. As soon as an intersection
  * occurs, the loop exits and returns the first intersection
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 static bool fastTestInShadow(const Ray& ray, const Graph& graph, GraphNode* ignore, float withinDist)
 {
@@ -273,11 +273,11 @@ static bool fastTestInShadow(const Ray& ray, const Graph& graph, GraphNode* igno
 	return false;
 }
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Tests if the given point is in the shadow of another object
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 static bool isOccludedFromPosition(const Graph& graph
 	                              ,GraphNode* const selfNode
@@ -299,24 +299,9 @@ static bool isOccludedFromPosition(const Graph& graph
 	Ray ray(hitAt, glm::normalize(L), Utils::EPSILON, Ray::SHADOW);
 
 	return fastTestInShadow(ray, graph, selfNode, glm::length(L));
-
-	/*
-	bool hit = false;
-
-	TraceContext ctx = closestIntersection(ray, graph, hit);
-
-	// Was there a hit AND the node that was intersected was not the object 
-	// being test for occlusion AND the distance from the test object is
-	// less than or equal to the distance from intersected node to the 
-	// light source?
-
-	return hit && ctx.closestIsect.node != selfNode 
-		       && !light->isLightSourceNode(ctx.closestIsect.node)
-		       && ctx.closestIsect.t < glm::length(L);
-	*/
 };
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Given a hit position, a light source, and a number of samples, this function
  * tests if the position is considered to be in a shadow, returning the shade
@@ -325,7 +310,7 @@ static bool isOccludedFromPosition(const Graph& graph
  * A shade factor of 0 indicates the object is fully occluded (in shadow), 
  * while a value of 1 indicates it is not shadowed at all.
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 static float shadow(const Graph& graph
 	                ,GraphNode* const selfNode
@@ -357,11 +342,11 @@ static float shadow(const Graph& graph
 	return shadeFactor;
 };
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Compute the color contribution from the reflected ray
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 static Color traceReflect(TraceOptions& options
 	                     ,const Graph& graph
@@ -390,11 +375,11 @@ static Color traceReflect(TraceOptions& options
 		   trace(options, ray, graph, envMap, lights, depth + 1, isDebugPixel);
 }
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Compute the color contribution from the refracted ray
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 static Color traceRefract(TraceOptions& options
 	                     ,const Graph& graph
@@ -437,12 +422,12 @@ static Color traceRefract(TraceOptions& options
 	return trace(options, ray, graph, envMap, lights, depth + 1, isDebugPixel);
 }
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Computes Schlick's approximation of the Fresnel term
  * http://en.wikipedia.org/wiki/Schlick%27s_approximation
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 float reflectCoeff(const V& lightDir, const V& viewDir, float n1, float n2)
 {
@@ -454,11 +439,11 @@ float reflectCoeff(const V& lightDir, const V& viewDir, float n1, float n2)
 	return R0 + ((1.0f - R0) * powf(max(0.0f, 1.0f - cosI), 5.0f));
 }
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Applies diffuse + specular shading
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 glm::vec3 blinnPhongShade(TraceOptions& options
 	                     ,const Intersection& isect
@@ -485,13 +470,11 @@ glm::vec3 blinnPhongShade(TraceOptions& options
 
 	// Choose the UV mapping vector. If one is given in the intersection, use it,
 	// otherwise use the local hit
-	//glm::vec3 uv = isect.hasUV ? isect.uv : glm::normalize(isect.hitLocal.xyz);
-	//glm::vec3 uv = glm::normalize(isect.hitLocal.xyz);
+	glm::vec3 uvFromHit = glm::normalize(isect.hitLocal.xyz);
 
-	/*
 	if (mat->hasBumpMap()) {
 
-		V B = mat->getNormal(uv, geometry);
+		V B = mat->getNormal(uvFromHit, geometry);
 
 		#ifdef ENABLE_PIXEL_DEBUG
 		if (options.enablePixelDebug && isDebugPixel) {
@@ -501,10 +484,9 @@ glm::vec3 blinnPhongShade(TraceOptions& options
 
 		N = glm::normalize(N + B);
 	}
-	*/
 
 	// Get the color at the hit position:
-	Color matColor = mat->getColor(N, geometry);
+	Color matColor = mat->getColor(uvFromHit, geometry);
 
 	// Set the base ambient color component:
 	ambient = (mat->getAmbientCoeff() < 0.0f ? ka : mat->getAmbientCoeff()) * matColor;
@@ -523,8 +505,7 @@ glm::vec3 blinnPhongShade(TraceOptions& options
 	V R        = glm::reflect(L, N);
 	Color lcol = light->getColor(isect.hitWorld);
 
-	// === Diffuse component ==================================================
-
+	// Diffuse component:
 	float cosineAngle = glm::dot(L, N);
 
 	#ifdef ENABLE_PIXEL_DEBUG
@@ -536,7 +517,7 @@ glm::vec3 blinnPhongShade(TraceOptions& options
 	float Id = max(0.0f, cosineAngle);
 	diffuse += kd * Id * matColor * lcol;
 
-	// === Specular component =================================================
+	// Specular component:
 	if (mat->getSpecularExponent() > 0.0f) {
 		float Is = glm::dot(I, R);
 		if (Is > 0.0f) {
@@ -547,11 +528,11 @@ glm::vec3 blinnPhongShade(TraceOptions& options
 	return N; // The surface normal
 }
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Computes surface shading
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 static Color computeShading(TraceOptions& options
 	                       ,const Intersection& isect
@@ -568,9 +549,9 @@ static Color computeShading(TraceOptions& options
 	Material const * mat = selfNode->getMaterial();
 	assert(mat != nullptr);
 
-	/**************************************************************************
+	/***************************************************************************
 	 * Compute Blinn-Phong shading
-	 *************************************************************************/
+	 **************************************************************************/
 
 	Color ambient, diffuse, specular, reflected, refracted;
 
@@ -639,9 +620,9 @@ static Color computeShading(TraceOptions& options
 		#endif
 	}
 
-	/**************************************************************************
+	/***************************************************************************
 	 * Output
-	 *************************************************************************/
+	 **************************************************************************/
 	if (mat->isTransparent() && mat->isMirror()) {
 
 		#ifdef ENABLE_PIXEL_DEBUG
@@ -691,11 +672,11 @@ static Color computeShading(TraceOptions& options
 	return ambient + diffuse + specular;
 }
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Traces a ray for the given pixel (i,j), returning the color
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 static Color trace(TraceOptions& options
 	              ,const Ray& ray
@@ -713,8 +694,7 @@ static Color trace(TraceOptions& options
 		}
 		#endif
 
-		//return envMap != nullptr ? envMap->getColorFromRay(ray) : Color::BLACK;
-		return Color::BLACK;
+		return envMap->getColor(ray);
 	}
 
 	bool hit         = false;
@@ -744,22 +724,17 @@ static Color trace(TraceOptions& options
 	
 	} else {
 
-		// Hit against the environment map (if it is given):
-		if (envMap != nullptr) {
-		//	output = envMap->getColorFromRay(ray);
-		}
-
-		// Otherwise return black
+		output = envMap->getColor(ray);
 	}
 
 	return output;
 }
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Samples a pixel with N rays, producing an averaged Color value
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 static Color samplePixel(TraceOptions& options
 	                    ,const Camera& camera
@@ -817,13 +792,13 @@ static Color samplePixel(TraceOptions& options
 	return Color(avgR / K, avgG / K, avgB / K);
 }
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Detects the edges in the given bitmap using the Sobel operator, producing 
  * an edge intensity map. This map is used to selectively determine where to 
  * apply antialiasing
  *
- ******************************************************************************/
+ *******************************************************************************/
 
 float luminosity(const RGBApixel& pixel)
 {
@@ -894,7 +869,7 @@ static inline RGBApixel colorToRGBAPixel(const Color& color)
 	return pixel;
 }
 
-/******************************************************************************
+/*******************************************************************************
  *
  * Raytraces the entire scene
  *
@@ -935,14 +910,21 @@ void rayTrace(BMP& output
 	}
 
 	// Environment map:
-	EnvironmentMap const * em = state.getEnvironmentMap();
+	EnvironmentMap const * envMap = state.getEnvironmentMap();
+
+	// If the given environment map is null, just use a simple color:
+	if (envMap == nullptr) {
+		envMap = new ColorEnvironmentMap(Color::DEBUG);
+	}
 
 	float fX = static_cast<float>(X);
 	float fY = static_cast<float>(Y);
 	
 	// Dump the trace options:
 	cout << "> Rendering with configuration: " << endl 
-		 << endl << options << endl;
+		 << endl 
+		 << options 
+		 << endl;
 
 	start = chrono::system_clock::now();
 
@@ -969,7 +951,7 @@ void rayTrace(BMP& output
 				float xNDC = static_cast<float>(i) / fX;
 				float yNDC = static_cast<float>(j) / fY;
 
-				Color c = trace(options, C.spawnRay(xNDC, yNDC), G, em, lights, 0, hitDebugPixel);
+				Color c = trace(options, C.spawnRay(xNDC, yNDC), G, envMap, lights, 0, hitDebugPixel);
 
 				#ifdef ENABLE_PIXEL_DEBUG
 				// If we hit the debug pixel: break out, since there's nothing more to do
@@ -998,8 +980,7 @@ void rayTrace(BMP& output
 		 << endl 
 		 << endl;
 
-	/// Adaptively antialias /////////////////////////////////////////////////
-
+	// Adaptively antialias:
 	if (options.samplesPerPixel > 1) {
 
 		line = 0;
@@ -1031,7 +1012,7 @@ void rayTrace(BMP& output
 					// the average value, run antialiasing:
 					if (edgeMap[k] > avgIntensity) {
 
-						Color c = samplePixel(options, C, G, em, lights, pixW, pixH, fX, fY, i ,j);
+						Color c = samplePixel(options, C, G, envMap, lights, pixW, pixH, fX, fY, i ,j);
 
 						// Overwrite the value previously stored at (i,j) with the 
 						// supersampled color value:

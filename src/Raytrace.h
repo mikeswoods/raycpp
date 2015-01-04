@@ -1,11 +1,11 @@
-/******************************************************************************
+/*******************************************************************************
  *
  * This file defines the core of the raytracer implementation
  *
  * @file Raytrace.h
  * @author Michael Woods
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 #ifndef RAYTRACE_H
 #define RAYTRACE_H
@@ -21,7 +21,7 @@
 #include "Ray.h"
 #include "WorldState.h"
 
-/*****************************************************************************/
+/******************************************************************************/
 
 /**
  * NDC coordinate pair datatype
@@ -76,8 +76,6 @@ class TraceOptions
 		friend std::ostream& operator<<(std::ostream& s, const TraceOptions& options);
 };
 
-///////////////////////////////////////////////////////////////////////////////
-
 /**
  * A representation of the current raytracing state/context state during
  * rendering
@@ -123,8 +121,9 @@ struct TraceContext
 	{ }
 };
 
-// Raytracing code ////////////////////////////////////////////////////////////
-
+/**
+ * Raytracing code 
+ */
 void initRaytrace(const Configuration& config, WorldState& state, Camera& camera);
 
 void rayTrace(BMP& output

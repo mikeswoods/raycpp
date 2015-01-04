@@ -46,8 +46,6 @@ void WorldState::initialize()
 	this->previewLight = PointLight(DEFAULT_LIGHT_POSITION, Color::WHITE);
 
 	this->globalLightHue = 0.0f;
-
-	std::clog << this->previewLight << std::endl;
 }
 
 // Window state queries and operations ////////////////////////////////////////

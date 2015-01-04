@@ -33,13 +33,13 @@ BUILD_DIR = build
 ################################################################################
 
 CXXFLAGS += \
-	-O2 \
+	-O3 \
 	--std=c++11 \
 	-Wall \
 	-Wextra \
 	-Wno-reorder \
 	-Wno-unused-parameter \
-	-Wno-unused-function
+	-Wno-unused-function 
 
 ifeq ($(UNAME), Darwin)
 	CXXFLAGS += -fopenmp -fdiagnostics-color=always `pkg-config --cflags glfw3`

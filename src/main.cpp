@@ -463,6 +463,7 @@ void initPreviewWindow(int argc, char** argv, const string& title)
 
     // Initialize the shader:
     initShader();
+
     // Send the geometry data to the GPU:
     uploadGeometry();
 

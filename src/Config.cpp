@@ -55,9 +55,10 @@ Configuration::Configuration(const string& filename)
 
     this->FOVY    = 0.0f;
 	
-	this->root        = nullptr;
-	this->nodeMap     = new map<string,GraphNode*>();
-	this->materialMap = new map<string,Material*>();
+	this->root           = nullptr;
+	this->nodeMap        = new map<string,GraphNode*>();
+	this->materialMap    = new map<string,Material*>();
+	this->environmentMap = nullptr;
 }
 
 Configuration::Configuration(const Configuration& other)
@@ -88,6 +89,7 @@ Configuration::Configuration(const Configuration& other)
 	this->nodeMap->insert(other.nodeMap->begin(), other.nodeMap->end());
 	this->materialMap->insert(other.materialMap->begin(), other.materialMap->end());
 	this->lights   = other.lights;
+	this->environmentMap = other.environmentMap;
 }
 
 Configuration::~Configuration() 
@@ -313,7 +315,7 @@ void Configuration::parseEnvironmentSection(istream& is, const string& beginToke
 		}
 	}
 
-	envMap = new EnvironmentMap(envMapFile, Utils::uppercase(SHAPE));
+	envMap = new TextureEnvironmentMap(envMapFile, Utils::uppercase(SHAPE));
 
 	this->registerEnvironmentMap(envMap);
 }

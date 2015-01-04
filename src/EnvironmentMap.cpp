@@ -5,7 +5,7 @@
  * @file EnvironmentMap.h
  * @author Michael Woods
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -14,13 +14,11 @@
 
 using namespace std;
 
-/*****************************************************************************/
+/*******************************************************************************
+ * Abstract environment map type
+ ******************************************************************************/
 
-EnvironmentMap::EnvironmentMap(const std::string& filename
-	                          ,const std::string& mapType
-							  ,float radius) :
-	TextureMap(filename),
-	mapType(SPHERE)
+EnvironmentMap::EnvironmentMap(const std::string& mapType, float radius)
 {
 	this->mapType = this->stringToType(mapType);
 	this->sphere  = new Sphere();
@@ -33,20 +31,29 @@ EnvironmentMap::MappingType EnvironmentMap::stringToType(const std::string& name
 	// Convert SHAPE to a mapping type: sphere by default
 	EnvironmentMap::MappingType mapType = EnvironmentMap::SPHERE;
 
-	if (name == "CUBE") {
+	string _name = Utils::uppercase(name);
+
+	if (_name == "CUBE") {
+
 		mapType = EnvironmentMap::CUBE;
-	} else if (name == "SPHERE") {
+
+	} else if (_name == "SPHERE") {
+
 		mapType = EnvironmentMap::SPHERE;
-	} else if (name == "WILD1") {
+
+	} else if (_name == "WILD1") {
+
 		mapType = EnvironmentMap::WILD1;
-	} else if (name == "WILD2") {
+
+	} else if (_name == "WILD2") {
+
 		mapType = EnvironmentMap::WILD2;
 	}
 
 	return mapType;
 }
 
-Color EnvironmentMap::getColorFromRay(const Ray& ray) const
+Color EnvironmentMap::getColor(const Ray& ray) const
 {
 	Intersection isect;
 
@@ -101,4 +108,44 @@ Color EnvironmentMap::getColorFromRay(const Ray& ray) const
 	return Color::BLACK;
 };
 
-/*****************************************************************************/
+/*******************************************************************************
+ * Simple color-based environment map type
+ ******************************************************************************/
+
+ColorEnvironmentMap::ColorEnvironmentMap(const Color& _color) :
+	color(_color),
+	EnvironmentMap("SPHERE")
+{
+
+}
+
+Color ColorEnvironmentMap::getColor(float u, float v) const
+{
+	return this->color;
+}
+
+/*******************************************************************************
+ * Texture environment map type
+ ******************************************************************************/
+
+TextureEnvironmentMap::TextureEnvironmentMap(const std::string& filename
+	                                        ,const std::string& mapType) :
+	EnvironmentMap(mapType),
+	TextureMap(filename)
+{
+
+}
+
+TextureEnvironmentMap::TextureEnvironmentMap(const std::string& filename
+	                                        ,const std::string& mapType
+							                ,float radius) :
+	EnvironmentMap(mapType, radius),
+	TextureMap(filename)
+{
+
+}
+
+Color TextureEnvironmentMap::getColor(float u, float v) const
+{
+	return TextureMap::getColor(u, v);
+};

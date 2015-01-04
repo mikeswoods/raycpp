@@ -313,7 +313,6 @@ glm::vec3 BumpMap::getNormal(float u, float v) const
 
 	float bu     = this->bU[k];
 	float bv     = this->bV[k];
-	glm::vec3 p  = glm::vec3(u, v, 1.0f);
 	glm::vec3 pu = glm::vec3(u, v, bu);
 	glm::vec3 pv = glm::vec3(u, v, bv);
 	glm::vec3 n  = glm::cross(pu, pv);

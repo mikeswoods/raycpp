@@ -21,8 +21,9 @@
 #include "R3.h"
 #include "Geometry.h"
 
-/******************************************************************************/
-
+/*******************************************************************************
+ * Abstract surface map type
+ ******************************************************************************/
 class SurfaceMap
 {
 	public:
@@ -77,9 +78,9 @@ class SurfaceMap
 		friend std::ostream& operator<<(std::ostream& s, const SurfaceMap& m);
 };
 
-/**
+/*******************************************************************************
  * Texture map
- */
+ ******************************************************************************/
 class TextureMap : public SurfaceMap
 {
 	public:
@@ -91,9 +92,9 @@ class TextureMap : public SurfaceMap
 		virtual Color getColor(float u, float v) const;
 };
 
-/**
+/*******************************************************************************
  * Bump map
- */
+ ******************************************************************************/
 class BumpMap : public SurfaceMap
 {
 	private:
