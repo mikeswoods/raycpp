@@ -16,6 +16,7 @@
 #include <list>
 #include <string>
 #include "Graph.h"
+#include "GraphBuilder.h"
 #include "ObjReader.h"
 #include "Light.h"
 #include "Material.h"
@@ -39,6 +40,8 @@ class Configuration
 		void registerLight(Light* light);
 
     protected:
+        GraphBuilder graphBuilder;
+
 		std::string filename;
 		GraphNode* root;
 		EnvironmentMap* environmentMap;

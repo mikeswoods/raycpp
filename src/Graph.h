@@ -25,7 +25,7 @@
 #include "GLGeometry.h"
 #include "Light.h"
 
-/*****************************************************************************/
+/******************************************************************************/
 
 class GraphNode
 {
@@ -122,14 +122,11 @@ class GraphNode
 
 std::ostream& operator<<(std::ostream& os, const glm::mat4 M);
 
-///////////////////////////////////////////////////////////////////////////////
-
-// Based on the parameters of the given node, this function will apply 
-// the given transformation matrix T, yielding a new transformation matrix T'
-
+/**
+ * Based on the parameters of the given node, this function will apply 
+ * the given transformation matrix T, yielding a new transformation matrix T'
+ */
 glm::mat4 applyTransform(GraphNode* node, glm::mat4 current);
-
-///////////////////////////////////////////////////////////////////////////////
 
 /**
  * Shorthand for data returned from collectAreaLight and returnCurrent
@@ -300,10 +297,6 @@ class Graph
 		friend std::ostream& operator<<(std::ostream& os, const Graph& graph);
 };
 
-/////////////////////////////////////////////////////////////////////////////////
-// Scene graph tree traversal
-/////////////////////////////////////////////////////////////////////////////////
-
 /**
  * Perform a pre-order traversal over a scene graph w/o accumulation
  */
@@ -389,6 +382,6 @@ void postWalk(GraphNode* root, void (*visit)(GraphNode* node,  T context), T con
 	visit(root, context);
 }
 
-/*****************************************************************************/
+/******************************************************************************/
 
 #endif

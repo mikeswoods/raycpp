@@ -22,6 +22,7 @@
 
 #include "optionparser.h"
 #include <EasyBMP/EasyBMP.h>
+//#include <chibi/eval.h>
 
 // Namespace ///////////////////////////////////////////////////////////////////
 

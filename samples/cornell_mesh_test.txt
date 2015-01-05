@@ -75,5 +75,5 @@ SCALE 2 2 2
 CENTER 0 0 0
 PARENT root
 SHAPE mesh
-FILE teapot.obj
+FILE dragon.obj
 MAT mat5
