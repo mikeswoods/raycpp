@@ -54,9 +54,7 @@ Configuration::Configuration(const string& filename)
     this->UVEC[2] = 0.0f;
 
     this->FOVY    = 0.0f;
-	
-	this->root           = nullptr;
-	this->nodeMap        = new map<string,GraphNode*>();
+
 	this->materialMap    = new map<string,Material*>();
 	this->environmentMap = nullptr;
 }
@@ -82,11 +80,8 @@ Configuration::Configuration(const Configuration& other)
 
     this->FOVY     = other.FOVY;
 
-	this->root     = other.root;
 	this->graph    = other.graph;
 
-	this->nodeMap  = new map<string,GraphNode*>();
-	this->nodeMap->insert(other.nodeMap->begin(), other.nodeMap->end());
 	this->materialMap->insert(other.materialMap->begin(), other.materialMap->end());
 	this->lights   = other.lights;
 	this->environmentMap = other.environmentMap;
@@ -94,7 +89,7 @@ Configuration::Configuration(const Configuration& other)
 
 Configuration::~Configuration() 
 { 
-	//delete this->nodeMap;
+
 }
 
 ostream& operator<<(ostream& os, const Configuration& c)
@@ -107,7 +102,6 @@ ostream& operator<<(ostream& os, const Configuration& c)
        << "  UVEC      = <"  << c.UVEC[0]  << "," << c.UVEC[1] << "," << c.UVEC[2] << ">" << endl
        << "  FOVY      = "   << c.FOVY            << endl
        << "  |light|   = "   << c.lights.size()   << endl
-	   << "  shapes    = "   << c.nodeMap->size() << endl
        << "}"
 	   << endl 
 	   << endl;
@@ -125,45 +119,6 @@ ostream& operator<<(ostream& os, const Configuration& c)
 	   << "}"                       << endl;
 
 	return os;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Configuration::registerNode(GraphNode* node)
-{
-	(*this->nodeMap)[node->getName()] = node;
-}
-
-GraphNode* Configuration::getNode(const std::string& name) const
-{
-	return (*this->nodeMap)[name];
-}
-
-bool Configuration::nodeExists(const string& name) const
-{
-	return this->nodeMap->find(name) != this->nodeMap->end();
-}
-
-void Configuration::linkNodes(const string& parentName, GraphNode* child)
-{
-	if (!this->nodeExists(parentName)) {
-		throw runtime_error("linkNodes: Parent node does not exist: " + parentName);
-	}
-
-	this->linkNodes((*this->nodeMap)[parentName], child);
-}
-
-void Configuration::linkNodes(GraphNode* parent, GraphNode* child)
-{
-	if (parent == nullptr) {
-		throw runtime_error("linkNodes: parent cannot be null");
-	}
-	if (child == nullptr) {
-		throw runtime_error("linkNodes: child cannot be null");
-	}
-
-	child->setParent(parent);
-	parent->addChild(child);
 }
 
 void Configuration::registerMaterial(Material* material)
@@ -630,10 +585,10 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 				 // if parentName is null, then node is the scene graph's root
 				if (parentName == "null") {
 					node->setParent(nullptr);
-					this->root = node;
+					this->graphBuilder.setRoot(node);
 				} else {
 					// Otherwise, see if named parent exists, and if so link it to the child:
-					this->linkNodes(parentName, node);
+					this->graphBuilder.linkNodes(parentName, node);
 				}
 				readNonEmptyLine = true;
 			// ----------------------------------------------------------------
@@ -722,10 +677,10 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 
 	// Test if the map contains the node already. If so
 	// signal an error, since a duplicate has been defined
-	if (this->nodeExists(node->getName())) {
+	if (this->graphBuilder.nodeExists(node->getName())) {
 		throw runtime_error("Duplicate node found: " + node->getName());
 	} else {
-		this->registerNode(node);
+		this->graphBuilder.registerNode(node);
 	}
 }
 
@@ -772,7 +727,7 @@ void Configuration::read()
 	}
 
 	// Finally, set the scene graph's root node:
-	this->graph = Graph(this->root);
+	this->graph = this->graphBuilder.build();
 
 	is.close();
 }

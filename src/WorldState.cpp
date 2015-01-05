@@ -141,7 +141,7 @@ void WorldState::switchPolygonMode()
 			break;
 	}
 
-	for (Graph::pre_iterator i = this->config.getSceneGraph().begin(); !i.done(); i++) {
+	for (auto i = this->config.getSceneGraph().begin(); !i.done(); i++) {
 		GLGeometry* instance = (*i)->getInstance();
 		if (instance != nullptr) {
 			instance->setPolyMode(useMode);

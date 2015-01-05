@@ -34,6 +34,7 @@
         GraphBuilder const * linkNodes(const std::string& parentName, GraphNode* child);
         GraphBuilder const * linkNodes(GraphNode* parent, GraphNode* child);
         GraphBuilder const * setRoot(GraphNode* root);
+        Graph build() const;
 };
 
 /******************************************************************************/

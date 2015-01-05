@@ -27,12 +27,6 @@
 class Configuration
 {
 	private:
-		bool nodeExists(const std::string& name) const;
-		void registerNode(GraphNode* node);
-		GraphNode* getNode(const std::string& name) const;
-		void linkNodes(const std::string& parentName, GraphNode* child);
-		void linkNodes(GraphNode* parent, GraphNode* child);
-
 		bool materialExists(const std::string& name) const;
 		Material* getMaterial(const std::string& name) const;
 		void registerMaterial(Material* material);
@@ -43,10 +37,8 @@ class Configuration
         GraphBuilder graphBuilder;
 
 		std::string filename;
-		GraphNode* root;
 		EnvironmentMap* environmentMap;
 		Graph graph;
-		std::map<std::string,GraphNode*>* nodeMap;
 		std::map<std::string,Material*>* materialMap;
         std::list<Light*> lights;
 

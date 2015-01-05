@@ -75,5 +75,5 @@ SCALE 2 2 2
 CENTER 0 0 0
 PARENT root
 SHAPE mesh
-FILE dragon.obj
+FILE cow.obj
 MAT mat5

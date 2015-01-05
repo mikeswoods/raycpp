@@ -9,6 +9,7 @@
  ******************************************************************************/
 
 #include <stdexcept>
+ #include <iterator>
 #include "GraphBuilder.h"
 
 using namespace std;
@@ -22,10 +23,9 @@ GraphBuilder::GraphBuilder() :
 }
 
 GraphBuilder::GraphBuilder(const GraphBuilder& other) :
-    root(other.root),
-    nodeMap(other.nodeMap)
+    root(other.root)
 {
-
+    this->nodeMap.insert(other.nodeMap.begin(), other.nodeMap.end());
 }
 
 GraphBuilder::~GraphBuilder()
@@ -78,6 +78,11 @@ GraphBuilder const * GraphBuilder::setRoot(GraphNode* root)
 {
     this->root = root;
     return this;
+}
+
+Graph GraphBuilder::build() const
+{
+    return Graph(this->root);
 }
 
 /******************************************************************************/
