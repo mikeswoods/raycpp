@@ -29,8 +29,8 @@ SceneContext::SceneContext(const glm::vec2& _resolution
     lights(_lights)
 {
 
-  this->upDir          = Utils::fixUpVector(this->viewDir, this->upDir);
-  this->lookAtPosition = this->eyePosition + this->viewDir;
+  this->upDir          = Utils::fixUpVector(_viewDir, _upDir);
+  this->lookAtPosition = _eyePosition + _viewDir;
 }
 
 SceneContext::SceneContext(const SceneContext& other) :

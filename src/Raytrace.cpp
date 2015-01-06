@@ -145,33 +145,14 @@ static std::ostream& debugPixel(string funcName, int depth, string output)
  *
  ******************************************************************************/
 
-void initRaytrace(WorldState& state, Camera& camera)
+void initRaytrace(const SceneContext& sc, Camera& camera)
 {
-	float const * EYEP = state.getConfiguration().EYEP; 
-	float const * VDIR = state.getConfiguration().VDIR; 
-	float const * UVEC = state.getConfiguration().UVEC; 
-	int const * RESO   = state.getConfiguration().RESO;
-	float FOVY         = state.getConfiguration().FOVY;
-	EnvironmentMap const * envMap = state.getConfiguration().getEnvironmentMap();
-
-	P position = P(EYEP[0], EYEP[1], EYEP[2]);
-	V viewDir  = V(VDIR[0], VDIR[1], VDIR[2]);
-	V upVec    = Utils::fixUpVector(V(VDIR[0], VDIR[1], VDIR[2]), V(UVEC[0], UVEC[1], UVEC[2]));
-
-	// Camera
-	camera.setPosition(position);
-	camera.setViewDir(viewDir);
-	camera.setUp(upVec);
-
+	camera.setPosition(sc.getEyePosition());
+	camera.setViewDir(sc.getViewDir());
+	camera.setUp(sc.getUpDir());
 	// Divide this by 2 to match the FOV produced by glm::perspective(). 
-	// See Piazza post @374 for details.
-	camera.setFOV(FOVY / 2.0f);
-
-	// Resolution
-	camera.setAspectRatio(static_cast<float>(RESO[0]) / static_cast<float>(RESO[1]));
-
-	// Environment map:
-	state.setEnvironmentMap(envMap);
+	camera.setFOV(sc.getFOVAngle() / 2.0f);
+	camera.setAspectRatio(sc.getAspectRatio());
 }
 
 /******************************************************************************/
@@ -881,7 +862,7 @@ static inline RGBApixel colorToRGBAPixel(const Color& color)
  ******************************************************************************/
 
 void rayTrace(BMP& output
-	         ,const WorldState& state
+	         ,const SceneContext& sc
 	         ,const Camera& C
 			 ,const Graph& G // Scene graph
 			 ,int X          // X resolution
@@ -893,7 +874,7 @@ void rayTrace(BMP& output
 	chrono::duration<double> elapsed_sec_1, elapsed_sec_2;
 
 	// Get all of the point lights, etc. defined in the scene configuration:
-	list<Light*> lights = state.getLights();
+	list<Light*> lights = sc.getLights();
 
 	// Collect all objects that constitute emissive objects and merge them
 	// with the existing light list:
@@ -915,7 +896,7 @@ void rayTrace(BMP& output
 	}
 
 	// Environment map:
-	EnvironmentMap const * envMap = state.getEnvironmentMap();
+	EnvironmentMap const * envMap = sc.getEnvironmentMap();
 
 	// If the given environment map is null, just use a simple color:
 	if (envMap == nullptr) {

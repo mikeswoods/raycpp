@@ -263,7 +263,7 @@ const option::Descriptor usage[] =
 static void runRaytracer(TraceOptions options, bool disablePreview = false)
 {
     rayTrace(output
-            ,*state
+            ,*sceneContext
             ,rayTraceCamera
             ,state->getConfiguration().getSceneGraph()
             ,state->getConfiguration().RESO[0]
@@ -397,7 +397,7 @@ int main(int argc, char** argv)
 
     // Initialize raytracer code:
     glm::vec2 reso = sceneContext->getResolution();
-    initRaytrace(*state, rayTraceCamera);
+    initRaytrace(*sceneContext, rayTraceCamera);
     output.SetBitDepth(24);
     output.SetSize(reso.x, reso.y);
 

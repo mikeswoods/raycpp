@@ -19,7 +19,7 @@
 #include "Config.h"
 #include "Camera.h"
 #include "Ray.h"
-#include "WorldState.h"
+#include "SceneContext.h"
 
 /******************************************************************************/
 
@@ -63,7 +63,9 @@ class TraceOptions
 			enablePixelDebug(false),
 			xDebugPixel(-1),
 			yDebugPixel(-1)
-		{ }
+		{ 
+
+		}
 
 		TraceOptions(const TraceOptions& opts) :
 			samplesPerLight(opts.samplesPerLight),
@@ -71,7 +73,9 @@ class TraceOptions
 			enablePixelDebug(opts.enablePixelDebug),
 			xDebugPixel(opts.xDebugPixel),
 			yDebugPixel(opts.yDebugPixel)
-		{ }
+		{ 
+
+		}
 
 		friend std::ostream& operator<<(std::ostream& s, const TraceOptions& options);
 };
@@ -94,40 +98,50 @@ struct TraceContext
 	TraceContext() :
 		T(glm::mat4()),
 		closestIsect(Intersection::miss())
-	{ }
+	{ 
+
+	}
 
 	TraceContext(const Ray& _ray) :
 		ray(_ray),
 		T(glm::mat4()),
 		closestIsect(Intersection::miss())
-	{ }
+	{ 
+
+	}
 
 	TraceContext(const Ray& _ray, const glm::mat4& _T) :
 		ray(_ray),
 		T(_T),
 		closestIsect(Intersection::miss())
-	{ }
+	{ 
+
+	}
 
 	TraceContext(const Ray& _ray, const glm::mat4& _T, const Intersection& _closestIsect) :
 		ray(_ray),
 		T(_T),
 		closestIsect(_closestIsect)
-	{ }
+	{ 
+
+	}
 
 	TraceContext(const TraceContext& other) :
 		ray(other.ray),
 		T(other.T),
 		closestIsect(other.closestIsect)
-	{ }
+	{
+
+	}
 };
 
 /**
  * Raytracing code 
  */
-void initRaytrace(WorldState& state, Camera& camera);
+void initRaytrace(const SceneContext& sc, Camera& camera);
 
 void rayTrace(BMP& output
-	         ,const WorldState& state
+	         ,const SceneContext& sc
 	         ,const Camera& camera
 			 ,const Graph& graph
 			 ,int resoX
