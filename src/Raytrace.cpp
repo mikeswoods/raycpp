@@ -861,14 +861,13 @@ static inline RGBApixel colorToRGBAPixel(const Color& color)
  *
  ******************************************************************************/
 
-void rayTrace(BMP& output
-	         ,const SceneContext& sc
-	         ,const Camera& C
-			 ,const Graph& G // Scene graph
-			 ,int X          // X resolution
-			 ,int Y          // Y resolution
-			 ,TraceOptions& options)
+void rayTrace(BMP& output, const SceneContext& sc, const Camera& C, TraceOptions& opts)
 {
+	Graph G        = sc.getSceneGraph();
+	glm::vec2 reso = sc.getResolution();
+	int X = reso.x;
+	int Y = reso.y;
+
 	unsigned int line = 0;
 	chrono::time_point<chrono::system_clock> start, end;
 	chrono::duration<double> elapsed_sec_1, elapsed_sec_2;
@@ -888,9 +887,9 @@ void rayTrace(BMP& output
 	// Use an edge map to adaptively find where to perform supersampling:
 	float* edgeMap = nullptr;
 	
-	// Only initialize the edge map if options.samplesPerPixel > 1
+	// Only initialize the edge map if opts.samplesPerPixel > 1
 
-	if (options.samplesPerPixel > 1) {
+	if (opts.samplesPerPixel > 1) {
 		edgeMap = new float[X * Y];
 		memset(&edgeMap[0], 0, sizeof(edgeMap[0]) * X * Y);
 	}
@@ -906,10 +905,10 @@ void rayTrace(BMP& output
 	float fX = static_cast<float>(X);
 	float fY = static_cast<float>(Y);
 	
-	// Dump the trace options:
+	// Dump the trace opts:
 	cout << "> Rendering with configuration: " << endl 
 		 << endl 
-		 << options 
+		 << opts 
 		 << endl;
 
 	start = chrono::system_clock::now();
@@ -922,13 +921,12 @@ void rayTrace(BMP& output
 		#pragma omp for schedule(static)
 		#endif
 		for (int i=0; i<X; i++) {
-
 			for (int j=0; j<Y; j++) {
 
 				#ifdef ENABLE_PIXEL_DEBUG
-				bool hitDebugPixel =    options.enablePixelDebug 
-					                 && options.xDebugPixel == i 
-									 && options.yDebugPixel == j;
+				bool hitDebugPixel =    opts.enablePixelDebug 
+					                 && opts.xDebugPixel == i 
+									 && opts.yDebugPixel == j;
 				#else
 				bool hitDebugPixel = false;
 				#endif
@@ -937,11 +935,11 @@ void rayTrace(BMP& output
 				float xNDC = static_cast<float>(i) / fX;
 				float yNDC = static_cast<float>(j) / fY;
 
-				Color c = trace(options, C.spawnRay(xNDC, yNDC), G, envMap, lights, 0, hitDebugPixel);
+				Color c = trace(opts, C.spawnRay(xNDC, yNDC), G, envMap, lights, 0, hitDebugPixel);
 
 				#ifdef ENABLE_PIXEL_DEBUG
 				// If we hit the debug pixel: break out, since there's nothing more to do
-				if (options.enablePixelDebug && hitDebugPixel) {
+				if (opts.enablePixelDebug && hitDebugPixel) {
 					debugPixel(__FUNCTION_NAME__ ":done", 0, c);
 					// It's still abnormal termination:
 					exit(EXIT_FAILURE);
@@ -967,13 +965,13 @@ void rayTrace(BMP& output
 		 << endl;
 
 	// Adaptively antialias:
-	if (options.samplesPerPixel > 1) {
+	if (opts.samplesPerPixel > 1) {
 
 		line = 0;
 
 		// Detect the edges of the image:
 		float avgIntensity = detectEdges(output, X, Y, edgeMap);
-		int N = options.samplesPerPixel;
+		int N = opts.samplesPerPixel;
 
 		cout << "> Adaptively supersampling with " << N << " x " << N 
 		     << " samples per pixel" 
@@ -998,7 +996,7 @@ void rayTrace(BMP& output
 					// the average value, run antialiasing:
 					if (edgeMap[k] > avgIntensity) {
 
-						Color c = samplePixel(options, C, G, envMap, lights, pixW, pixH, fX, fY, i ,j);
+						Color c = samplePixel(opts, C, G, envMap, lights, pixW, pixH, fX, fY, i ,j);
 
 						// Overwrite the value previously stored at (i,j) with the 
 						// supersampled color value:

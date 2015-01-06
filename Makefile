@@ -52,9 +52,9 @@ endif
 ################################################################################
 
 ifeq ($(UNAME), Darwin)
-LDFLAGS = -fopenmp -lGLEW `pkg-config --static --libs glfw3` -lchibi-scheme
+LDFLAGS = -fopenmp -lGLEW `pkg-config --static --libs glfw3`
 else
-LDFLAGS = -fopenmp -lGLEW `pkg-config --static --libs glfw3` -lchibi-scheme
+LDFLAGS = -fopenmp -lGLEW `pkg-config --static --libs glfw3`
 endif
 
 ################################################################################

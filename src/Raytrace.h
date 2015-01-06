@@ -138,14 +138,7 @@ struct TraceContext
 /**
  * Raytracing code 
  */
-void initRaytrace(const SceneContext& sc, Camera& camera);
-
-void rayTrace(BMP& output
-	         ,const SceneContext& sc
-	         ,const Camera& camera
-			 ,const Graph& graph
-			 ,int resoX
-			 ,int resoY
-			 ,TraceOptions& options);
+void initRaytrace(const SceneContext&, Camera&);
+void rayTrace(BMP&, const SceneContext&, const Camera&, TraceOptions&);
 
 #endif

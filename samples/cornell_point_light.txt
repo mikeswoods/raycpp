@@ -132,11 +132,10 @@ MAT mat4
 NODE cylinder
 TRANSLATION 2 3 4
 ROTATION 45 0 45
-SCALE 2 2 2
+SCALE 1 1 1
 CENTER 0 0 0
 PARENT root
-SHAPE mesh
-FILE cube.obj
+SHAPE sphere
 MAT mat3
 
 NODE specular_sphere

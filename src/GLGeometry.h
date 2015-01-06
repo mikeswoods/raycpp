@@ -16,7 +16,7 @@
 
 /*****************************************************************************/
 
-class WorldState;
+class GLWorldState;
 
 // Used to pack data into a VBO:
 
@@ -36,11 +36,7 @@ class GLGeometry
 		// GL object instance color
 		Color color;
 
-		// VAO
-		GLuint vao;
-
-		// VBOs
-		GLuint vbo, vboIndex;
+		GLuint vao, vbo, vboIndex;
 
 		// Determines which drawing mode will be passed to glDrawElements()
 		// when the geometry contained in this instance is rendered
@@ -50,7 +46,8 @@ class GLGeometry
 		// when the geometry contained in this instance is rendered
 		GLenum polyMode;
 
-		WorldState* state;
+		// Current world state, as used in the OpenGL scene preview
+		GLWorldState* state;
 
 	public:
 		GLGeometry(Geometry* geometry);
@@ -80,7 +77,7 @@ class GLGeometry
 				   ,GLint locationNor
 				   ,GLint locationCol);
 
-		void draw(WorldState* state
+		void draw(GLWorldState* state
 			     ,GLuint shaderProgram
 				 ,GLint unifModel
 				 ,GLint unifModelInvT

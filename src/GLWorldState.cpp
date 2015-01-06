@@ -1,60 +1,67 @@
+/******************************************************************************
+ *
+ * This file defines a world state, which as the name implies is a type that
+ * contains quanities, flags, and other pieces of data used to define the 
+ * current state of the rendering world at a given point in time
+ *
+ * @file GLWorldState.h
+ * @author Michael Woods
+ *
+ ******************************************************************************/
+
 #define _USE_MATH_DEFINES
 #include <cmath>
-#include "WorldState.h"
+#include "GLWorldState.h"
 
-////////////////////////////////////////////////////////////////////////////////
 
-const glm::vec3 WorldState::DEFAULT_LIGHT_POSITION = glm::vec3(0.0f, 9.0f, 0.0f);
+const glm::vec3 GLWorldState::DEFAULT_LIGHT_POSITION = glm::vec3(0.0f, 9.0f, 0.0f);
 
-WorldState::WorldState(const Configuration& _config) :
-	config(_config)
+
+GLWorldState::GLWorldState(const Graph& _graph)
 { 
 	this->flagCycleLightHue = false;
 	this->flagRotateScene   = false;
 	this->polyModeIndex     = 0;
-	this->envMap            = nullptr;
-	this->iterator          = new Graph::pre_iterator(this->config.getSceneGraph(), true);
+	this->iterator          = new Graph::pre_iterator(_graph, true);
 	this->previewLight      = PointLight(DEFAULT_LIGHT_POSITION, Color::WHITE);
 	this->globalLightHue    = 0.0f;
 }
 
-WorldState::~WorldState() 
+GLWorldState::~GLWorldState() 
 { 
 	delete this->iterator;
 }
 
 // Node traversal operations //////////////////////////////////////////////////
 
-GraphNode* WorldState::gotoRoot()
+GraphNode* GLWorldState::gotoRoot()
 {
 	return this->iterator->reset();
 }
 
-GraphNode* WorldState::getCurrentNode()
+GraphNode* GLWorldState::getCurrentNode()
 {
 	return this->iterator->current();
 }
 
-GraphNode* WorldState::getNextNode()
+GraphNode* GLWorldState::getNextNode()
 {
 	return this->iterator->next();
 }
 
 // Operations /////////////////////////////////////////////////////////////////
 
-// Rotation operations:
-void WorldState::toggleRotateScene()
+void GLWorldState::toggleRotateScene()
 {
 	this->flagRotateScene = !this->flagRotateScene; 
 }
 
-bool WorldState::doRotateScene()
+bool GLWorldState::doRotateScene()
 {
 	return this->flagRotateScene;
 }
 
-// Select the active node:
-void WorldState::highlightNextNode()
+void GLWorldState::highlightNextNode()
 {
 	GLGeometry* currentInstance = this->getCurrentNode()->getInstance();
 	GLGeometry* nextInstance    = this->getNextNode()->getInstance();
@@ -69,7 +76,7 @@ void WorldState::highlightNextNode()
 }
 
 // Switch between polygon drawing modes:
-void WorldState::switchPolygonMode()
+void GLWorldState::switchPolygonMode()
 {
 	GLenum useMode = GL_FILL;
 	switch (++this->polyModeIndex % 3) {
@@ -84,7 +91,7 @@ void WorldState::switchPolygonMode()
 			break;
 	}
 
-	for (auto i = this->config.getSceneGraph().begin(); !i.done(); i++) {
+	for (auto i = this->graph.begin(); !i.done(); i++) {
 		GLGeometry* instance = (*i)->getInstance();
 		if (instance != nullptr) {
 			instance->setPolyMode(useMode);
@@ -92,7 +99,7 @@ void WorldState::switchPolygonMode()
 	}
 }
 
-// used in WorldState::deleteSelectedNode()
+// used in GLWorldState::deleteSelectedNode()
 static void _deleteNode(GraphNode* node, Graph* graph)
 {
 	GLGeometry* instance = node->getInstance();
@@ -112,14 +119,10 @@ static void _deleteNode(GraphNode* node, Graph* graph)
 }
 
 // Delete the selected node
-bool WorldState::deleteSelectedNode()
+bool GLWorldState::deleteSelectedNode()
 {
-	Graph graph = this->config.getSceneGraph();
+	postWalk(this->getCurrentNode(), _deleteNode, &this->graph);
 
-	postWalk(this->getCurrentNode()
-		    ,_deleteNode
-			,&graph);
-	
 	if (graph.getRoot() != nullptr) {
 		this->gotoRoot();
 		return false;
@@ -130,7 +133,7 @@ bool WorldState::deleteSelectedNode()
 
 // Translate //////////////////////////////////////////////////////////////////
 
-void WorldState::translateSelectedXPos()
+void GLWorldState::translateSelectedXPos()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -142,7 +145,7 @@ void WorldState::translateSelectedXPos()
 	#endif
 }
 
-void WorldState::translateSelectedXNeg()
+void GLWorldState::translateSelectedXNeg()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -154,7 +157,7 @@ void WorldState::translateSelectedXNeg()
 	#endif
 }
 
-void WorldState::translateSelectedYPos()
+void GLWorldState::translateSelectedYPos()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -166,7 +169,7 @@ void WorldState::translateSelectedYPos()
 	#endif
 }
 
-void WorldState::translateSelectedYNeg()
+void GLWorldState::translateSelectedYNeg()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -178,7 +181,7 @@ void WorldState::translateSelectedYNeg()
 	#endif
 }
 
-void WorldState::translateSelectedZPos()
+void GLWorldState::translateSelectedZPos()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -190,7 +193,7 @@ void WorldState::translateSelectedZPos()
 	#endif
 }
 
-void WorldState::translateSelectedZNeg()
+void GLWorldState::translateSelectedZNeg()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -204,7 +207,7 @@ void WorldState::translateSelectedZNeg()
 
 // Rotate /////////////////////////////////////////////////////////////////////
 
-void WorldState::rotateSelectedPosX()
+void GLWorldState::rotateSelectedPosX()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -216,7 +219,7 @@ void WorldState::rotateSelectedPosX()
 	#endif
 }
 
-void WorldState::rotateSelectedNegX()
+void GLWorldState::rotateSelectedNegX()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -228,7 +231,7 @@ void WorldState::rotateSelectedNegX()
 	#endif
 }
 
-void WorldState::rotateSelectedPosY()
+void GLWorldState::rotateSelectedPosY()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -240,7 +243,7 @@ void WorldState::rotateSelectedPosY()
 	#endif
 }
 
-void WorldState::rotateSelectedNegY()
+void GLWorldState::rotateSelectedNegY()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -252,7 +255,7 @@ void WorldState::rotateSelectedNegY()
 	#endif
 }
 
-void WorldState::rotateSelectedPosZ()
+void GLWorldState::rotateSelectedPosZ()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -264,7 +267,7 @@ void WorldState::rotateSelectedPosZ()
 	#endif
 }
 
-void WorldState::rotateSelectedNegZ()
+void GLWorldState::rotateSelectedNegZ()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -278,7 +281,7 @@ void WorldState::rotateSelectedNegZ()
 
 // Scale //////////////////////////////////////////////////////////////////////
 
-void WorldState::scaleIncreaseSelectedX()
+void GLWorldState::scaleIncreaseSelectedX()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -290,7 +293,7 @@ void WorldState::scaleIncreaseSelectedX()
 	#endif
 }
 
-void WorldState::scaleDecreaseSelectedX()
+void GLWorldState::scaleDecreaseSelectedX()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -302,7 +305,7 @@ void WorldState::scaleDecreaseSelectedX()
 	#endif
 }
 
-void WorldState::scaleIncreaseSelectedY()
+void GLWorldState::scaleIncreaseSelectedY()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -314,7 +317,7 @@ void WorldState::scaleIncreaseSelectedY()
 	#endif
 }
 
-void WorldState::scaleDecreaseSelectedY()
+void GLWorldState::scaleDecreaseSelectedY()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -326,7 +329,7 @@ void WorldState::scaleDecreaseSelectedY()
 	#endif
 }
 
-void WorldState::scaleIncreaseSelectedZ()
+void GLWorldState::scaleIncreaseSelectedZ()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -338,7 +341,7 @@ void WorldState::scaleIncreaseSelectedZ()
 	#endif
 }
 
-void WorldState::scaleDecreaseSelectedZ()
+void GLWorldState::scaleDecreaseSelectedZ()
 {
 	GraphNode* node = this->getCurrentNode();
 	#ifdef DEBUG
@@ -352,51 +355,49 @@ void WorldState::scaleDecreaseSelectedZ()
 
 // Light //////////////////////////////////////////////////////////////////////
 
-void WorldState::toggleLightHueChange()
+void GLWorldState::toggleLightHueChange()
 {
 	this->flagCycleLightHue = !this->flagCycleLightHue;
 }
 
-bool WorldState::doLightHueChange()
+bool GLWorldState::doLightHueChange()
 {
 	return this->flagCycleLightHue;
 }
 
-void WorldState::translateLightPosX()
+void GLWorldState::translateLightPosX()
 {
 	previewLight.translateX(TRANSLATE_BY_UNIT);
 }
 
-void WorldState::translateLightNegX()
+void GLWorldState::translateLightNegX()
 {
 	previewLight.translateX(-TRANSLATE_BY_UNIT);
 }
 
-void WorldState::translateLightPosY()
+void GLWorldState::translateLightPosY()
 {
 	previewLight.translateY(TRANSLATE_BY_UNIT);
 }
 
-void WorldState::translateLightNegY()
+void GLWorldState::translateLightNegY()
 {
 	previewLight.translateY(-TRANSLATE_BY_UNIT);
 }
 
-void WorldState::translateLightPosZ()
+void GLWorldState::translateLightPosZ()
 {
 	previewLight.translateZ(TRANSLATE_BY_UNIT);
 }
 
-void WorldState::translateLightNegZ()
+void GLWorldState::translateLightNegZ()
 {
 	previewLight.translateZ(-TRANSLATE_BY_UNIT);
 }
 
-void WorldState::shiftGlobalLightHue()
+void GLWorldState::shiftGlobalLightHue()
 {
 	PointLight previewLight = this->getPreviewLight();
 	this->globalLightHue    = fmod(globalLightHue + HUE_UNIT, 360.0f);
 	previewLight.setColor(Color::fromHSV(this->globalLightHue, 0.75f, 1.0f));
 }
-
-///////////////////////////////////////////////////////////////////////////////

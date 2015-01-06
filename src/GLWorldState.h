@@ -6,10 +6,11 @@
  *
  * @file WorldState.h
  * @author Michael Woods
+ *
  ******************************************************************************/
 
-#ifndef GLSTATE_H
-#define GLSTATE_H
+#ifndef GL_WORLD_STATE_H
+#define GL_WORLD_STATE_H
 
 #include <list>
 #include <ostream>
@@ -18,9 +19,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "Config.h"
 #include "PointLight.h"
-#include "EnvironmentMap.h"
-
-///////////////////////////////////////////////////////////////////////////////
 
 #define TRANSLATE_BY_UNIT 0.5f
 //#define ROTATE_BY_UNIT 10.0f
@@ -35,14 +33,13 @@
 
 #define BRIGHTNESS_UNIT 0.05f
 
-///////////////////////////////////////////////////////////////////////////////
-// Data structures used to track the current world GL state
-///////////////////////////////////////////////////////////////////////////////
-
-class WorldState
+/*******************************************************************************
+ * Data structures used to track the current world GL state
+ ******************************************************************************/
+class GLWorldState
 {
 	protected:
-		const Configuration& config;
+		Graph graph;
 		Graph::iterator* iterator;
 
 		// Various flags and states:
@@ -57,36 +54,20 @@ class WorldState
 		// Global light hue
 		float globalLightHue;
 
-		// Environment map:
-		EnvironmentMap const * envMap;
-
-		void initialize();
-
 	public:
-		WorldState(const Configuration& config);
-		~WorldState();
+		GLWorldState(const Graph& graph);
+		~GLWorldState();
 
 		static const glm::vec3 DEFAULT_LIGHT_POSITION;
-
-		const Configuration& getConfiguration() { return this->config; }
 
 		// Preview lighting
 		const PointLight& getPreviewLight()                  { return this->previewLight; }
 		void setPreviewLight(const PointLight& previewLight) { this->previewLight = previewLight; }
 
-		// Environment map
-		EnvironmentMap const * getEnvironmentMap() const      { return this->envMap; }
-		void setEnvironmentMap(EnvironmentMap const * envMap) { this->envMap = envMap; }
-
-		// Rendered scene lighting
-		const std::list<Light*>& getLights() const   { return this->config.getLights(); }
-
 		// Node traversal operations:
 		GraphNode* gotoRoot();
 		GraphNode* getCurrentNode();
 		GraphNode* getNextNode();
-
-		///////////////////////////////////////////////////////////////////////
 
 		// Highlight next node:
 		void highlightNextNode();
@@ -137,6 +118,6 @@ class WorldState
 		void shiftGlobalLightHue();
 };
 
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/
 
 #endif

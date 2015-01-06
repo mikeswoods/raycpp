@@ -523,9 +523,8 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 		clog << "\tATTRIBUTE: " << attribute << endl;
 		#endif
 
-		// ====================================================================
 		if (attribute == "NODE") {
-		// --------------------------------------------------------------------
+
 			string name;
 			ss >> name;
 			#ifdef DEBUG
@@ -533,21 +532,22 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 			#endif
 			node = new GraphNode(name);
 			readNonEmptyLine = true;
-		// -------------------------------------------------------------------------
+
 		} else {
+
 			if (node == nullptr) {
 				throw runtime_error(attribute + ": NODE attribute must be defined first");
 			}
-			// ----------------------------------------------------------------
+
 			if (attribute == "TRANSLATION") {
-			// ----------------------------------------------------------------
+
 				float T[3] = { 0.0f, 0.0f, 0.0f };
 				ss >> T[0] >> T[1] >> T[2];
 				node->setTranslate(glm::vec3(T[0], T[1], T[2]));
 				readNonEmptyLine = true;
-			// ----------------------------------------------------------------
+
 			} else if (attribute == "ROTATION") {
-			// ----------------------------------------------------------------
+
 				float R[3] = { 0.0f, 0.0f, 0.0f };
 				ss >> R[0] >> R[1] >> R[2];
 				#ifdef GLM_FORCE_RADIANS
@@ -558,23 +558,23 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 					node->setRotate(glm::vec3(rx, ry, rz));
 				#endif
 				readNonEmptyLine = true;
-			// ----------------------------------------------------------------
+
 			} else if (attribute == "SCALE") {
-			// ----------------------------------------------------------------
+
 				float S[3] = { 0.0f, 0.0f, 0.0f };
 				ss >> S[0] >> S[1] >> S[2];
 				node->setScale(glm::vec3(S[0], S[1], S[2]));
 				readNonEmptyLine = true;
-			// ----------------------------------------------------------------
+
 			} else if (attribute == "CENTER") {
-			// ----------------------------------------------------------------
+
 				float C[3] = { 0.0f, 0.0f, 0.0f };
 				ss >> C[0] >> C[1] >> C[2];
 				node->setCenter(P(C[0], C[1], C[2]));
 				readNonEmptyLine = true;
-			// ----------------------------------------------------------------
+
 			} else if (attribute == "PARENT") {
-			// ----------------------------------------------------------------
+
 				string parentName;
 				ss >> parentName;
 				 // if parentName is null, then node is the scene graph's root
@@ -586,9 +586,9 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 					this->graphBuilder.linkNodes(parentName, node);
 				}
 				readNonEmptyLine = true;
-			// ----------------------------------------------------------------
+
 			} else if (attribute == "SHAPE") {
-			// ----------------------------------------------------------------
+
 				string shapeType;
 				ss >> shapeType;
 				if (shapeType == "null") {
@@ -605,17 +605,17 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 					throw runtime_error("parseNodeDefinition: Unsupported geometry type: " + shapeType);
 				}
 				readNonEmptyLine = true;
-			// ----------------------------------------------------------------
+
 			} else if (attribute == "FILE") {
-			// ----------------------------------------------------------------
+
 				ss >> objFileName;
 				// Get the basepath from the filename for obj file lookup:
 				string path = Utils::baseName(Utils::realPath(this->filename));
 				objFileName = path + DirSep + "obj" + DirSep + objFileName;
 				readNonEmptyLine = true;
-			// ----------------------------------------------------------------
+
 			} else if (attribute == "MAT") {
-			// ----------------------------------------------------------------
+
 				string matName;
 				ss >> matName;
 
@@ -631,11 +631,11 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 					node->setMaterial(material);
 				}
 				readNonEmptyLine = true;
-			// ----------------------------------------------------------------
+
 			} else {
+
 				clog << "parseNodeDefinition::Ignoring extra attribute: " << attribute << endl;
 			}
-			// ================================================================
 		}
 	}
 
@@ -695,29 +695,17 @@ SceneContext * Configuration::read()
 	string readToken;
 
 	while (is >> readToken) {
-		// ====================================================================
 		if (readToken == "CAMERA") { // Begin CAMERA section
-			// ----------------------------------------------------------------
 			this->parseCameraSection(is, readToken);
-			// ----------------------------------------------------------------
 		} else if (readToken == "ENVIRONMENT") { // Begin ENVIRONMENT section
-			// ----------------------------------------------------------------
 			this->parseEnvironmentSection(is, readToken);
-			// ----------------------------------------------------------------
 		} else if (readToken == "LIGHT") { // Begin LIGHT section
-			// ----------------------------------------------------------------
 			this->parsePointLightSection(is, readToken);
-			// ----------------------------------------------------------------
 		} else if (readToken == "MAT") { // Begin material definition
-			// ----------------------------------------------------------------
 			this->parseMaterialSection(is, readToken);
-			// ----------------------------------------------------------------
 		} else { // Begin graph node definition
-			// ----------------------------------------------------------------
 			this->parseNodeDefinition(is, readToken);
-			// ----------------------------------------------------------------
 		}
-		// ====================================================================
 	}
 
 	// Finally, set the scene graph's root node:

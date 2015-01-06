@@ -11,7 +11,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "GLGeometry.h"
-#include "WorldState.h"
+#include "GLWorldState.h"
 
 using namespace std;
 
@@ -112,7 +112,7 @@ void GLGeometry::upload(GLuint shaderProgram
     glBindVertexArray(0);
 }
 
-void GLGeometry::draw(WorldState* state
+void GLGeometry::draw(GLWorldState* state
 	                 ,GLuint shaderProgram
 					 ,GLint unifModel
 					 ,GLint unifModelInvT

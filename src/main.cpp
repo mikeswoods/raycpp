@@ -13,7 +13,7 @@
 
 #include "GLSL.h"
 #include "GLUtils.h"
-#include "WorldState.h"
+#include "GLWorldState.h"
 #include "SceneContext.h"
 #include "Config.h"
 #include "ObjReader.h"
@@ -25,23 +25,18 @@
 #include <EasyBMP/EasyBMP.h>
 //#include <chibi/eval.h>
 
-// Namespace ///////////////////////////////////////////////////////////////////
-
 using namespace std;
 
-// Raytracer related ///////////////////////////////////////////////////////////
-
+// Raytracer related 
 static Camera rayTraceCamera;
 static BMP output;
 
-// Attributes //////////////////////////////////////////////////////////////////
-
+// Attributes
 static GLint locationPos;
 static GLint locationCol;
 static GLint locationNor;
 
-// Uniforms ////////////////////////////////////////////////////////////////////
-
+// Uniforms
 static GLint unifModel;
 static GLint unifModelInvTr;
 static GLint unifViewProj;
@@ -49,12 +44,13 @@ static GLint unifEyePos;
 static GLint unifLightPos;
 static GLint unifLightColor;
 
-// Shaders /////////////////////////////////////////////////////////////////////
-
+// Shaders 
 static GLuint shaderProgram;
 
-// -- Vertex shader ------------------------------------------------------------
-const GLchar* vertexShader = GLSL(150,
+/*******************************************************************************
+ * Vertex shader
+ ******************************************************************************/
+const GLchar* vertexShader = GLSL(130,
 
 uniform vec4 u_EyePos;
 uniform mat4 u_Model;
@@ -85,14 +81,15 @@ void main()
     gl_Position = u_ViewProj * modelPosition;
 
     // Eye-to-vertex direction
-    //fs_V = modelPosition - u_EyePos;
     fs_V = modelPosition - u_EyePos;
 }
 );
 
-// -- Fragment shader ----------------------------------------------------------
+/*******************************************************************************
+ * Fragment shader
+ ******************************************************************************/
 
-const GLchar* fragmentShader = GLSL(150,
+const GLchar* fragmentShader = GLSL(130,
 
 uniform vec4 u_LightColor;
 
@@ -131,7 +128,7 @@ void main()
 
 // Scene state & render options ////////////////////////////////////////////////
 
-static WorldState * state          = nullptr;
+static GLWorldState * state        = nullptr;
 static SceneContext * sceneContext = nullptr;
 static TraceOptions* traceOptions  = nullptr;
 
@@ -262,15 +259,8 @@ const option::Descriptor usage[] =
  */
 static void runRaytracer(TraceOptions options, bool disablePreview = false)
 {
-    rayTrace(output
-            ,*sceneContext
-            ,rayTraceCamera
-            ,state->getConfiguration().getSceneGraph()
-            ,state->getConfiguration().RESO[0]
-            ,state->getConfiguration().RESO[1]
-            ,options);
+    rayTrace(output, *sceneContext, rayTraceCamera, options);
 
-    // Only generate output if a debug pixel has not been set:
     if (!options.enablePixelDebug) {
         string outputFile = Utils::cwd("output.bmp");
         output.WriteToFile(outputFile.c_str());
@@ -350,7 +340,7 @@ int main(int argc, char** argv)
     }
 
     // Create the world state object from the current configuration:
-    state = new WorldState(config);
+    state = new GLWorldState(sceneContext->getSceneGraph());
 
     // Configure options used during ray tracing
     traceOptions = new TraceOptions();
@@ -432,10 +422,10 @@ void initPreviewWindow(int argc, char** argv, const string& title)
     }
 
     // Force at least OpenGL 3.2 on Mac by using the "Core" profile:    
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     int windowWidth  = sceneContext->getResolution().x;
     int windowHeight = sceneContext->getResolution().y;
@@ -601,7 +591,7 @@ void uploadGeometry()
     clog << "- uploadGeometry()" << endl;
     #endif
 
-    GraphNode* root = state->getConfiguration().getSceneGraph().getRoot();
+    GraphNode* root = sceneContext->getSceneGraph().getRoot();
 
     if (root != nullptr) {
         walk(root, uploadNode, (void*)nullptr);
@@ -664,7 +654,7 @@ void display()
 
     // --- Render the scene ----------------------------------------------------
 
-    GraphNode* root = state->getConfiguration().getSceneGraph().getRoot();
+    GraphNode* root = sceneContext->getSceneGraph().getRoot();
 
     if (root != nullptr) {
         walk(root, drawGLGeometry, glm::mat4());
