@@ -125,7 +125,7 @@ void Mesh::buildVolume()
 	float radius = 0.0f;
 
 	// Iterate and sum over each vertex to compute the centroid of the mesh:
-	glm::vec3 center = accumulate(this->vertices_.begin(), this->vertices_.end(), glm::vec3(0.0f, 0.0f, 0.0f));
+	glm::vec3 center = accumulate(this->vertices_.begin(), this->vertices_.end(), glm::vec3());
 	center /= static_cast<float>(this->getVertexCount());
 
 	// Then, for every vertex, compute the distance to the center, updating radius to contain

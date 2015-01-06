@@ -396,9 +396,10 @@ int main(int argc, char** argv)
     }
 
     // Initialize raytracer code:
+    glm::vec2 reso = sceneContext->getResolution();
     initRaytrace(*state, rayTraceCamera);
     output.SetBitDepth(24);
-    output.SetSize(state->getWindowWidth(), state->getWindowHeight());
+    output.SetSize(reso.x, reso.y);
 
     if (options[PRINT_CAMERA]) {
         clog << rayTraceCamera << endl;
@@ -436,7 +437,10 @@ void initPreviewWindow(int argc, char** argv, const string& title)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    window = glfwCreateWindow(state->getWindowWidth(), state->getWindowHeight(), title.c_str(), nullptr, nullptr);
+    int windowWidth  = sceneContext->getResolution().x;
+    int windowHeight = sceneContext->getResolution().y;
+
+    window = glfwCreateWindow(windowWidth, windowHeight, title.c_str(), nullptr, nullptr);
     if (window == nullptr) {
         cerr << "glfwCreateWindow() failed" << endl;
         glfwTerminate();
@@ -470,7 +474,7 @@ void initPreviewWindow(int argc, char** argv, const string& title)
     // Send the geometry data to the GPU:
     uploadGeometry();
 
-    handleWindowResize(window, state->getWindowWidth(), state->getWindowHeight());
+    handleWindowResize(window, windowWidth, windowHeight);
 
     old_time = clock();
 
@@ -640,7 +644,7 @@ void display()
     // --- Export the uniforms -------------------------------------------------
 
     // Eye position
-    glm::vec3 eyePosition = state->getEyePosition();
+    glm::vec3 eyePosition = sceneContext->getEyePosition();
     glUniform4f(unifEyePos, x(eyePosition), y(eyePosition), z(eyePosition), 1.0f);
 
     // Eye position
@@ -682,14 +686,14 @@ void handleWindowResize(GLFWwindow* window, int width, int height)
 
     glViewport(0, 0, width, height);
 
-    glm::mat4 projection = glm::perspective(glm::radians(state->getFOVAngle())
-                                           ,state->getAspectRatio()
-                                           ,state->getZNear()
-                                           ,state->getZFar());
+    glm::mat4 projection = glm::perspective(glm::radians(sceneContext->getFOVAngle())
+                                           ,sceneContext->getAspectRatio()
+                                           ,sceneContext->getZNear()
+                                           ,sceneContext->getZFar());
 
-    glm::mat4 camera = glm::lookAt(state->getEyePosition()
-                                  ,state->getLookAtPosition()
-                                  ,state->getUpDirection());
+    glm::mat4 camera = glm::lookAt(sceneContext->getEyePosition()
+                                  ,sceneContext->getLookAtPosition()
+                                  ,sceneContext->getUpDir());
 
     projection *= camera;
 

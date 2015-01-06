@@ -43,10 +43,6 @@ class WorldState
 {
 	protected:
 		const Configuration& config;
-		glm::vec3 eye;
-		glm::vec3 viewDir;
-		glm::vec3 lookAt;
-		glm::vec3 up;
 		Graph::iterator* iterator;
 
 		// Various flags and states:
@@ -73,10 +69,6 @@ class WorldState
 		static const glm::vec3 DEFAULT_LIGHT_POSITION;
 
 		const Configuration& getConfiguration() { return this->config; }
-		const glm::vec3& getEyePosition()       { return this->eye; }
-		const glm::vec3& getViewDirection()     { return this->viewDir; }
-		const glm::vec3& getUpDirection()       { return this->up; }
-		const glm::vec3& getLookAtPosition()    { return this->lookAt; }
 
 		// Preview lighting
 		const PointLight& getPreviewLight()                  { return this->previewLight; }
@@ -88,14 +80,6 @@ class WorldState
 
 		// Rendered scene lighting
 		const std::list<Light*>& getLights() const   { return this->config.getLights(); }
-
-		// Window state queries and operations 
-		int getWindowWidth();
-		int getWindowHeight();
-		float getFOVAngle();
-		float getAspectRatio();
-		float getZNear();
-		float getZFar();
 
 		// Node traversal operations:
 		GraphNode* gotoRoot();

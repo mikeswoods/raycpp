@@ -9,75 +9,18 @@ const glm::vec3 WorldState::DEFAULT_LIGHT_POSITION = glm::vec3(0.0f, 9.0f, 0.0f)
 WorldState::WorldState(const Configuration& _config) :
 	config(_config)
 { 
-	this->initialize();
-
 	this->flagCycleLightHue = false;
 	this->flagRotateScene   = false;
 	this->polyModeIndex     = 0;
 	this->envMap            = nullptr;
+	this->iterator          = new Graph::pre_iterator(this->config.getSceneGraph(), true);
+	this->previewLight      = PointLight(DEFAULT_LIGHT_POSITION, Color::WHITE);
+	this->globalLightHue    = 0.0f;
 }
 
 WorldState::~WorldState() 
 { 
 	delete this->iterator;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void WorldState::initialize()
-{
-	this->eye = glm::vec3(this->config.EYEP[0]
-	                     ,this->config.EYEP[1]
-						 ,this->config.EYEP[2]);
-
-	this->viewDir = glm::vec3(this->config.VDIR[0]
-	                         ,this->config.VDIR[1]
-						     ,this->config.VDIR[2]);
-
-	this->up = Utils::fixUpVector(this->viewDir
-		                         ,glm::vec3(this->config.UVEC[0], this->config.UVEC[1], this->config.UVEC[2]));
-
-	//this->up = glm::normalize(this->up);
-
-	this->lookAt = this->eye + this->viewDir;
-
-	this->iterator = new Graph::pre_iterator(this->config.getSceneGraph(), true);
-
-	this->previewLight = PointLight(DEFAULT_LIGHT_POSITION, Color::WHITE);
-
-	this->globalLightHue = 0.0f;
-}
-
-// Window state queries and operations ////////////////////////////////////////
-
-int WorldState::getWindowWidth()
-{
-	return this->config.RESO[0];
-}
-
-int WorldState::getWindowHeight()
-{
-	return this->config.RESO[1];
-}
-
-float WorldState::getFOVAngle()
-{
-	return static_cast<float>(this->config.FOVY);
-}
-
-float WorldState::getAspectRatio()
-{
-	return static_cast<float>(this->config.RESO[0]) / static_cast<float>(this->config.RESO[1]);
-}
-
-float WorldState::getZNear()
-{
-	return 0.1f;
-}
-
-float WorldState::getZFar()
-{
-	return 100.0f;
 }
 
 // Node traversal operations //////////////////////////////////////////////////

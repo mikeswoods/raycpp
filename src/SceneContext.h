@@ -28,6 +28,7 @@ class SceneContext
         glm::vec2 resolution;
         glm::vec3 eyePosition;
         glm::vec3 viewDir;
+        glm::vec3 lookAtPosition;
         glm::vec3 upDir;
         float yFOV;
         EnvironmentMap const * envMap;
@@ -48,11 +49,17 @@ class SceneContext
         SceneContext(const SceneContext& other);
         ~SceneContext();
 
-        const glm::vec2& getResolution() const  { return this->resolution; }
-        const glm::vec3& getEyePosition() const { return this->eyePosition; }
-        const glm::vec3& getViewDir() const     { return this->viewDir; }
-        const glm::vec3& getUpDir() const       { return this->upDir; }
-        float getFOV() const                    { return this->yFOV; }
+        const glm::vec2& getResolution() const     { return this->resolution; }
+        const glm::vec3& getEyePosition() const    { return this->eyePosition; }
+        const glm::vec3& getLookAtPosition() const { return this->lookAtPosition; }
+        const glm::vec3& getViewDir() const        { return this->viewDir; }
+        const glm::vec3& getUpDir() const          { return this->upDir; }
+        float getFOVAngle() const                  { return static_cast<float>(this->yFOV); }
+        float getAspectRatio() const               { return static_cast<float>(this->resolution.x) / static_cast<float>(this->resolution.y); }
+        float getZNear() const                     { return 0.1f; }
+        float getZFar() const                      { return 100.0f; }
+
+
         EnvironmentMap const * getEnvironmentMap() const { return this->envMap; }
         const Graph& getSceneGraph() const      { return graph; }
         const std::map<std::string,Material*>& getMaterials() const { return this->materials; }

@@ -8,6 +8,7 @@
  ******************************************************************************/
 
 #include "SceneContext.h"
+ #include "Utils.h"
 
 SceneContext::SceneContext(const glm::vec2& _resolution
                           ,const glm::vec3& _eyePosition
@@ -21,7 +22,6 @@ SceneContext::SceneContext(const glm::vec2& _resolution
     resolution(_resolution),
     eyePosition(_eyePosition),
     viewDir(_viewDir),
-    upDir(_upDir),
     yFOV(_yFOV),
     envMap(_envMap),
     graph(_graph),
@@ -29,6 +29,8 @@ SceneContext::SceneContext(const glm::vec2& _resolution
     lights(_lights)
 {
 
+  this->upDir          = Utils::fixUpVector(this->viewDir, this->upDir);
+  this->lookAtPosition = this->eyePosition + this->viewDir;
 }
 
 SceneContext::SceneContext(const SceneContext& other) :
@@ -36,6 +38,7 @@ SceneContext::SceneContext(const SceneContext& other) :
     eyePosition(other.eyePosition),
     viewDir(other.viewDir),
     upDir(other.upDir),
+    lookAtPosition(other.lookAtPosition),
     yFOV(other.yFOV),
     envMap(other.envMap),
     graph(other.graph),
