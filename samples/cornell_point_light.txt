@@ -36,7 +36,7 @@ TRAN 0
 MAT mat3
 DIFF 0.0 0.0 0.0
 REFL 1.0 1.0 1.0
-EXPO 0
+EXPO 20
 IOR 1.33
 MIRR 1
 TRAN 1
@@ -113,11 +113,11 @@ MAT mat2
 
 NODE glass_sphere
 TRANSLATION 0 1.5 0
-ROTATION 0 0 0
-SCALE 1.5 1.5 1.5
+ROTATION 0 30 30
+SCALE 2 2 2 
 CENTER 0 0 0
 PARENT root
-SHAPE sphere
+SHAPE cube
 MAT mat3
 
 NODE mirror_sphere
@@ -136,8 +136,8 @@ SCALE 2 2 2
 CENTER 0 0 0
 PARENT root
 SHAPE mesh
-FILE cylinder.obj
-MAT mat5
+FILE cube.obj
+MAT mat3
 
 NODE specular_sphere
 TRANSLATION 2 5 -2

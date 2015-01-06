@@ -77,7 +77,7 @@ SCALE 2 2 2
 CENTER 0 0 0
 PARENT root
 SHAPE mesh
-FILE teapot.obj
+FILE cow.obj
 MAT cow_glass
 
 NODE mirror_sphere

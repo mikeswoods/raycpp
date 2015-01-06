@@ -83,13 +83,13 @@ Intersection Geometry::intersect(const glm::mat4 &T, const Ray& rayWorld) const
 		// Compute the hit position in local space:
 		isect.hitLocal = transform(invT, glm::vec4(isect.hitWorld.xyz, 1.0f));
 
-		//  Make sure the intersection surface normal always points toward (
+		// Make sure the intersection surface normal always points toward (
         // not away from) the incident ray's origin. Note: this should only
         // be done for instances in which the correctNormal flag on the
         // on the Intersection object is true
 		if (glm::dot(isect.normal, rayWorld.dir) > 0.0f) {
             
-            if (isect.correctNormal) {
+            if (isect.correctNormal || !rayWorld.isPrimaryRay()) {
                 isect.normal = -isect.normal;
             }
 			
