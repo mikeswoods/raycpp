@@ -54,8 +54,6 @@ Configuration::Configuration(const string& filename)
     this->UVEC[2] = 0.0f;
 
     this->FOVY    = 0.0f;
-
-	this->materialMap    = new map<string,Material*>();
 	this->environmentMap = nullptr;
 }
 
@@ -79,11 +77,10 @@ Configuration::Configuration(const Configuration& other)
     this->UVEC[2]  = other.UVEC[2];
 
     this->FOVY     = other.FOVY;
-
 	this->graph    = other.graph;
 
-	this->materialMap->insert(other.materialMap->begin(), other.materialMap->end());
-	this->lights   = other.lights;
+	this->materialMap    = other.materialMap;
+	this->lights         = other.lights;
 	this->environmentMap = other.environmentMap;
 }
 
@@ -107,7 +104,7 @@ ostream& operator<<(ostream& os, const Configuration& c)
 	   << endl;
 
 	os << "Materials { " << endl;
-	for (auto i=c.materialMap->begin(); i != c.materialMap->end(); i++) {
+	for (auto i=c.materialMap.begin(); i != c.materialMap.end(); i++) {
 		os << "  \"" << i->first << "\": " << *(i->second) << endl;
 	}
 	os << "}"
@@ -123,17 +120,17 @@ ostream& operator<<(ostream& os, const Configuration& c)
 
 void Configuration::registerMaterial(Material* material)
 {
-	(*this->materialMap)[material->getName()] = material;
+	this->materialMap[material->getName()] = material;
 }
 
 Material* Configuration::getMaterial(const std::string& name) const
 {
-	return (*this->materialMap)[name];
+	return this->materialMap.at(name);
 }
 
 bool Configuration::materialExists(const string& name) const
 {
-	return this->materialMap->find(name) != this->materialMap->end();
+	return this->materialMap.find(name) != this->materialMap.end();
 }
 
 void Configuration::registerEnvironmentMap(EnvironmentMap * envMap)
@@ -145,8 +142,6 @@ void Configuration::registerLight(Light* light)
 {
 	this->lights.push_back(light);
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Reads values from a "CAMERA" section using the following format:
@@ -684,12 +679,11 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-// Reads a configuration from the given stream, updating the 
-// corresponding member values of this instance
-
-void Configuration::read()
+/**
+ * Reads a configuration from the given stream, updating the corresponding 
+ * member values of this instance
+ */
+SceneContext * Configuration::read()
 {
 	ifstream is;
 	is.open(filename.c_str(), ifstream::in);
@@ -730,6 +724,16 @@ void Configuration::read()
 	this->graph = this->graphBuilder.build();
 
 	is.close();
+
+	return new  SceneContext(glm::vec2(this->RESO[0], this->RESO[1])
+		                    ,glm::vec3(this->EYEP[0], this->EYEP[1], this->EYEP[2])
+		                    ,glm::vec3(this->VDIR[0], this->VDIR[1], this->VDIR[2])
+		                    ,glm::vec3(this->UVEC[0], this->UVEC[1], this->UVEC[2])
+		                    ,this->FOVY
+		                    ,this->environmentMap
+		                    ,this->graph
+		                    ,this->materialMap
+		                    ,this->lights);
 }
 
-/*****************************************************************************/
+/******************************************************************************/

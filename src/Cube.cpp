@@ -232,7 +232,6 @@ glm::vec3 Cube::sampleImpl() const
 		point = glm::vec3(c1, -0.5f, c2);
 	}
 
-	// TODO: transform point to world space
 	return point;
 }
 

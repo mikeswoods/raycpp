@@ -4,6 +4,7 @@
  *
  * @file Intersection.h
  * @author Michael Woods
+ *
  ******************************************************************************/
 
 #ifndef INTERSECTION_H
@@ -15,7 +16,7 @@
 #include <glm/glm.hpp>
 #include "R3.h"
 
-////////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/
 
 // Have to forward declare this guy:
 class GraphNode;
@@ -41,14 +42,9 @@ struct Intersection
 	// Hit position in local space. Only valid if t >= 0
 	P hitLocal;
 
-	// Normal vector in local/object space. Only valid if t >= 0
-	V normalLocal;
-
-	// Flag to indicate if a UV mappign vector is present
-	bool hasUV;
-
-	// UV mapping vector
-	V uv;
+	// Flag to indicate if the normal's direction should be corrected 
+	// (i.e flipped) if it is pointing away from the ray's origin
+	bool correctNormal;
 
 	// Compare two intersections, returning the closet of the two
 	static Intersection getClosest(const Intersection& current, const Intersection& last)
@@ -65,7 +61,8 @@ struct Intersection
 	Intersection() : 
 		t(-1.0f),
 		node(nullptr),
-		inside(false)
+		inside(false),
+		correctNormal(true)
 	{ 
 		
 	}
@@ -75,19 +72,17 @@ struct Intersection
 		node(nullptr),
 		normal(_normal),
 		inside(false),
-		uv(glm::vec3()),
-		hasUV(false)
+		correctNormal(true)
 	{ 
 		
 	}
 
-	Intersection(float _t, V _normal, V _uv) : 
+	Intersection(float _t, V _normal, bool _correctNormal) : 
 		t(_t), 
 		node(nullptr),
 		normal(_normal),
 		inside(false),
-		uv(_uv),
-		hasUV(true)
+		correctNormal(_correctNormal)
 	{ 
 		
 	}
@@ -99,9 +94,7 @@ struct Intersection
 		inside(other.inside),
 		hitWorld(other.hitWorld),
 		hitLocal(other.hitLocal),
-		normalLocal(other.normalLocal),
-		uv(other.uv),
-		hasUV(other.hasUV)
+		correctNormal(other.correctNormal)
 	{ }
 
 	// Is the intersection a miss?
@@ -123,6 +116,6 @@ struct Intersection
 	}
 };
 
-////////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/
 
 #endif

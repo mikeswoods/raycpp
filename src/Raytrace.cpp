@@ -65,15 +65,14 @@ static Color trace(TraceOptions& options
 
 std::ostream& operator<<(std::ostream& s, const Intersection& isect)
 {
-	s << "Intersection {"                      << endl
-	  << "  t="           << isect.t           << endl
-	  << "  node="        << isect.node        << endl
-	  << "  inside="      << isect.inside      << endl
-	  << "  hitWorld="    << isect.hitWorld    << endl
-	  << "  hitLocal="    << isect.hitLocal    << endl
-	  << "  normal="      << isect.normal      << endl
-	  << "  normalLocal=" << isect.normalLocal << endl
-	  << "}"                                   << endl;
+	s << "Intersection {"                 << endl
+	  << "  t="         << isect.t        << endl
+	  << "  node="      << isect.node     << endl
+	  << "  inside="    << isect.inside   << endl
+	  << "  hitWorld="  << isect.hitWorld << endl
+	  << "  hitLocal="  << isect.hitLocal << endl
+	  << "  normal="    << isect.normal   << endl
+	  << "}"                              << endl;
 	return s;
 }
 
@@ -146,12 +145,18 @@ static std::ostream& debugPixel(string funcName, int depth, string output)
  *
  ******************************************************************************/
 
-void initRaytrace(const Configuration& config, WorldState& state, Camera& camera)
+void initRaytrace(WorldState& state, Camera& camera)
 {
-	P position = P(config.EYEP[0],config.EYEP[1],config.EYEP[2]);
-	V viewDir  = V(config.VDIR[0],config.VDIR[1],config.VDIR[2]);
-	V upVec    = Utils::fixUpVector(V(config.VDIR[0],config.VDIR[1],config.VDIR[2])
-		                           ,V(config.UVEC[0],config.UVEC[1],config.UVEC[2]));
+	float const * EYEP = state.getConfiguration().EYEP; 
+	float const * VDIR = state.getConfiguration().VDIR; 
+	float const * UVEC = state.getConfiguration().UVEC; 
+	int const * RESO   = state.getConfiguration().RESO;
+	float FOVY         = state.getConfiguration().FOVY;
+	EnvironmentMap const * envMap = state.getConfiguration().getEnvironmentMap();
+
+	P position = P(EYEP[0], EYEP[1], EYEP[2]);
+	V viewDir  = V(VDIR[0], VDIR[1], VDIR[2]);
+	V upVec    = Utils::fixUpVector(V(VDIR[0], VDIR[1], VDIR[2]), V(UVEC[0], UVEC[1], UVEC[2]));
 
 	// Camera
 	camera.setPosition(position);
@@ -160,13 +165,13 @@ void initRaytrace(const Configuration& config, WorldState& state, Camera& camera
 
 	// Divide this by 2 to match the FOV produced by glm::perspective(). 
 	// See Piazza post @374 for details.
-	camera.setFOV(config.FOVY / 2.0f);
+	camera.setFOV(FOVY / 2.0f);
 
 	// Resolution
-	camera.setAspectRatio(static_cast<float>(config.RESO[0]) / static_cast<float>(config.RESO[1]));
+	camera.setAspectRatio(static_cast<float>(RESO[0]) / static_cast<float>(RESO[1]));
 
 	// Environment map:
-	state.setEnvironmentMap(config.getEnvironmentMap());
+	state.setEnvironmentMap(envMap);
 }
 
 /******************************************************************************/
@@ -601,7 +606,7 @@ static Color computeShading(TraceOptions& options
 	if (mat->isTransparent()) {
 
 		refracted = traceRefract(options, graph, envMap, isect, I, N, n, lights, depth, isDebugPixel);
-	
+
 		#ifdef ENABLE_PIXEL_DEBUG
 		if (options.enablePixelDebug && isDebugPixel) {
 			debugPixel(__FUNCTION_NAME__ "/debug:trace-refract", depth, refracted);
@@ -914,7 +919,7 @@ void rayTrace(BMP& output
 
 	// If the given environment map is null, just use a simple color:
 	if (envMap == nullptr) {
-		envMap = new ColorEnvironmentMap(Color::DEBUG);
+		envMap = new ColorEnvironmentMap(Color::BLACK);
 	}
 
 	float fX = static_cast<float>(X);

@@ -14,6 +14,7 @@
 #include "GLSL.h"
 #include "GLUtils.h"
 #include "WorldState.h"
+#include "SceneContext.h"
 #include "Config.h"
 #include "ObjReader.h"
 #include "Camera.h"
@@ -130,8 +131,9 @@ void main()
 
 // Scene state & render options ////////////////////////////////////////////////
 
-static WorldState* state = nullptr;
-static TraceOptions* traceOptions = nullptr;
+static WorldState * state          = nullptr;
+static SceneContext * sceneContext = nullptr;
+static TraceOptions* traceOptions  = nullptr;
 
 // Animation/transformation stuff //////////////////////////////////////////////
 
@@ -336,7 +338,7 @@ int main(int argc, char** argv)
     // Parse configuration
     Configuration config(argv[argc-1]);
     try {
-        config.read();
+        sceneContext = config.read();
     } catch (std::runtime_error& e) {
         cerr << "[!] Configuration reader error: " << e.what() << endl;
         exit(EXIT_FAILURE);
@@ -394,7 +396,7 @@ int main(int argc, char** argv)
     }
 
     // Initialize raytracer code:
-    initRaytrace(config, *state, rayTraceCamera);
+    initRaytrace(*state, rayTraceCamera);
     output.SetBitDepth(24);
     output.SetSize(state->getWindowWidth(), state->getWindowHeight());
 
@@ -601,7 +603,6 @@ void uploadGeometry()
         walk(root, uploadNode, (void*)nullptr);
     }
 }
-
 
 /** 
  * Transforms the given affine matrix current according to the geometries
@@ -914,4 +915,3 @@ void handleKeyPress(GLFWwindow* window, int key, int scancode, int action, int m
             break;
     }
 }
-

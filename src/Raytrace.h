@@ -124,7 +124,7 @@ struct TraceContext
 /**
  * Raytracing code 
  */
-void initRaytrace(const Configuration& config, WorldState& state, Camera& camera);
+void initRaytrace(WorldState& state, Camera& camera);
 
 void rayTrace(BMP& output
 	         ,const WorldState& state

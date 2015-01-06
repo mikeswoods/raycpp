@@ -261,7 +261,7 @@ Intersection Mesh::intersectImpl(const Ray &ray) const
 	             + (W[1] * this->normals_[get<1>(VN)]) 
 	             + (W[2] * this->normals_[get<2>(VN)]);
 
-	return Intersection(t, glm::normalize(N));
+	return Intersection(t, glm::normalize(N), false);
 }
 
 glm::vec3 Mesh::sampleImpl() const

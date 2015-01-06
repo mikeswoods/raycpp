@@ -21,6 +21,7 @@
 #include "Light.h"
 #include "Material.h"
 #include "EnvironmentMap.h"
+#include "SceneContext.h"
 
 /*****************************************************************************/
 
@@ -39,7 +40,7 @@ class Configuration
 		std::string filename;
 		EnvironmentMap* environmentMap;
 		Graph graph;
-		std::map<std::string,Material*>* materialMap;
+		std::map<std::string,Material*> materialMap;
         std::list<Light*> lights;
 
 		void parseCameraSection(std::istream& is, const std::string& beginToken);
@@ -72,7 +73,7 @@ class Configuration
 
 		const std::string& getFileName() { return this->filename; }
 
-        void read();
+        SceneContext * read();
 
 		bool hasEnvironmentMap() const { return this->environmentMap != nullptr; }
 
