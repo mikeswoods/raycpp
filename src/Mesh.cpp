@@ -49,8 +49,6 @@ Mesh::Mesh(const vector<glm::vec3>& vertices
 
 	//this->tree = nullptr;
 	this->tree = new KDTree(this->triangles, new CycleAxisStrategy(), new MaxValuesPerLeaf(20));
-	//this->tree = new KDTree(this->triangles, new RandomAxisStrategy(), new MaxValuesPerLeaf(10));
-	//this->tree = new KDTree(this->triangles, new SurfaceAreaStrategy(), new MaxValuesPerLeaf(10));
 }
 
 Mesh::Mesh(const Mesh& other) :
@@ -60,7 +58,9 @@ Mesh::Mesh(const Mesh& other) :
 	tree(other.tree),
 	faces(other.faces),
 	triangles(other.triangles)
-{ }
+{ 
+
+}
 
 Mesh::~Mesh() 
 { 
@@ -219,8 +219,8 @@ Intersection Mesh::intersectImpl(const Ray &ray) const
 {
 	vector<Tri> collected;
 	float t  = -1.0f; // t distance
-	size_t I = 0;    // Index of closest triangle found in collected
-	glm::vec3 W;     // barycentric weights
+	size_t I = 0;     // Index of closest triangle found in collected
+	glm::vec3 W;      // barycentric weights
 
 	if (this->tree != nullptr) { // Yes
 

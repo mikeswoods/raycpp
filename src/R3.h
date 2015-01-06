@@ -35,9 +35,6 @@ V operator/(const V& v, float s);
 class P
 {
     public:
-		// Point at infinity
-        const static P AT_INFINITY;
-
 		// xyz position in R^3 space
         glm::vec3 xyz; 
 
@@ -66,10 +63,6 @@ float y(const P& p);
 float z(const P& p);
 glm::vec3 toVec3(const P& p);
 
-float dist(const P& p1, const P& p2);
-P relative(const P& p, const P& center);
-int traverse(float stepSize, float offset, const P& start, const P& end, P& X, V& N);
-
 bool operator==(const P& p, const P& q);
 bool operator!=(const P& p, const P& q);
 
@@ -87,6 +80,8 @@ P operator-(const P& p, float mu);
  */
 glm::vec3 transform(glm::mat4 T, glm::vec4 pointOrVector);
 
-////////////////////////////////////////////////////////////////////////////////
+int steps(float stepSize, float offset, const P& start, const P& end, P& X, V& N);
+
+/******************************************************************************/
 
 #endif
