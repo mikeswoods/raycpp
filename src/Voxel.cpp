@@ -401,13 +401,13 @@ RayPath rayMarch(const VoxelBuffer& vb
 
 			Light* light = *li;
 
-			int stepsToLight = steps(stepSize, offset, center, light->getPosition(), LX, LN);
+			int stepsToLight = steps(stepSize, offset, center, light->fromSampledPoint(center), LX, LN);
 
 			if (voxel->light[k] < 0.0f) {
 				voxel->light[k] = Q(vb, kappa, stepSize, stepsToLight, LX, LN);
 			}
 
-			accumColor += light->getColor() * 
+			accumColor += light->getColor(center) * 
 						  Color::WHITE * 
 						  attenuation * 
 						  T * 

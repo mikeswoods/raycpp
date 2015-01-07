@@ -24,6 +24,7 @@ Cube::Cube() :
     this->buildGeometry();
 	this->computeCentroid();
 	this->buildVolume();
+    this->computeAABB();
 }
 
 Cube::Cube(const Cube& other) :
@@ -32,7 +33,9 @@ Cube::Cube(const Cube& other) :
 	p2(other.p2),
 	centroid(other.centroid),
 	volume(other.volume)
-{ }
+{ 
+
+}
 
 Cube::~Cube() 
 {
@@ -44,9 +47,19 @@ const BoundingVolume& Cube::getVolume() const
 	return this->volume;
 }
 
+const AABB& Cube::getAABB() const
+{
+    return this->aabb;
+}
+
 void Cube::computeCentroid()
 {
 	this->centroid = P((this->p1.xyz + this->p2.xyz) / 2.0f);
+}
+
+void Cube::computeAABB()
+{
+    this->aabb = AABB(this->p1, this->p2);
 }
 
 void Cube::buildVolume()

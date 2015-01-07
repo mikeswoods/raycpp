@@ -18,6 +18,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "Color.h"
+#include "AABB.h"
 #include "Intersection.h"
 #include "Ray.h"
 #include "BoundingVolume.h"
@@ -76,6 +77,9 @@ class Geometry
 
 		// Returns the centroid of the geometric object
 		virtual const P& getCentroid() const = 0;
+
+		// Returns the axis-aligned bounding box of the object
+		virtual const AABB& getAABB() const = 0;
 
 		// Generates vec3 color instances for every vertex 
 		// based on the supplied Color instance

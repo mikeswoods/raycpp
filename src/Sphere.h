@@ -4,6 +4,7 @@
  *
  * @file Sphere.h
  * @author Michael Woods
+ *
  ******************************************************************************/
 
 #ifndef SPHERE_H
@@ -11,7 +12,7 @@
 
 #include "Geometry.h"
 
-////////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/
 
 class Sphere : public Geometry
 {
@@ -19,6 +20,10 @@ class Sphere : public Geometry
 		P center_;
 		float radius_;
 		BoundingSphere volume;
+		AABB aabb;
+
+		void buildVolume();
+		void computeAABB();
 
 	protected:
 		virtual Intersection intersectImpl(const Ray &ray) const;
@@ -31,10 +36,11 @@ class Sphere : public Geometry
 
 		virtual const BoundingVolume& getVolume() const;
 		virtual const P& getCentroid() const;
+		virtual const AABB& getAABB() const;
 		virtual void buildGeometry();
 		virtual void repr(std::ostream& s) const;
 };
 
-////////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/
 
 #endif

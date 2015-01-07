@@ -1,27 +1,28 @@
-/*****************************************************************************
+/*******************************************************************************
  *
  * Simple axis-aligned bounding box (AABB) implementation
  *
  * @file Raytrace.h
  * @author Michael Woods
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <algorithm>
 #include <iostream>
+#include "R3.h"
 #include "AABB.h"
 #include "Utils.h"
 
 using namespace std;
 
-/*****************************************************************************/
+/******************************************************************************/
 
 AABB::AABB() :
-	v1(P(0.0f, 0.0f, 0.0f)),
-	v2(P(0.0f, 0.0f, 0.0f)),
-	C(P(0.0f, 0.0f, 0.0f))
+	v1(P(0, 0, 0)),
+	v2(P(0, 0, 0)),
+	C(P(0, 0, 0))
 { 
 	
 }
@@ -97,18 +98,47 @@ bool AABB::intersected(const Ray& ray) const
 	return true;
 }
 
-// Computes the area of the AABB
+/**
+ * Returns the width (x) of the AABB
+ */
+float AABB::width() const
+{
+    return max(x(this->v1), x(this->v2)) - min(x(this->v1), x(this->v2)); 
+}
+
+/**
+ * Returns the height (y) of the AABB
+ */
+float AABB::height() const
+{
+    return max(y(this->v1), y(this->v2)) - min(y(this->v1), y(this->v2));
+}
+
+/**
+ * Returns the depth (z) of the AABB
+ */
+float AABB::depth() const
+{
+    return max(z(this->v1), z(this->v2)) -  min(z(this->v1), z(this->v2));
+}
+
+/**
+ * Computes the area of the AABB
+ */
 float AABB::area() const
 {
-	float xMin = min(x(this->v1), x(this->v2));
-	float xMax = max(x(this->v1), x(this->v2));
-	float yMin = min(y(this->v1), y(this->v2));
-	float yMax = max(y(this->v1), y(this->v2));
-	float zMin = min(z(this->v1), z(this->v2));
-	float zMax = max(z(this->v1), z(this->v2));
-
-	return (xMax - xMin) * (yMax - yMin) * (zMax - zMin);
+	return this->width() * this->height() * this->depth();
 }
+
+AABB& AABB::operator+=(const AABB &other)
+{
+    AABB t = *this + other;
+    this->v1 = t.v1;
+    this->v2 = t.v2;
+    return *this;
+}
+
+/******************************************************************************/
 
 ostream& operator<<(ostream& s, const AABB& aabb)
 {
@@ -117,15 +147,8 @@ ostream& operator<<(ostream& s, const AABB& aabb)
 
 const AABB operator+(const AABB& p, const AABB& q)
 {
-	float xMin = min(min(x(p.v1), x(p.v2)), min(x(q.v1), x(q.v2)));
-	float yMin = min(min(y(p.v1), y(p.v2)), min(y(q.v1), y(q.v2)));
-	float zMin = min(min(z(p.v1), z(p.v2)), min(z(q.v1), z(q.v2)));
-
-	float xMax = max(max(x(p.v1), x(p.v2)), max(x(q.v1), x(q.v2)));
-	float yMax = max(max(y(p.v1), y(p.v2)), max(y(q.v1), y(q.v2)));
-	float zMax = max(max(z(p.v1), z(p.v2)), max(z(q.v1), z(q.v2)));
-
-	return AABB(P(xMin, yMin, zMin), P(xMax, yMax, zMax));
+    return AABB(minimum(minimum(p.v1, p.v2), minimum(q.v1, q.v2))
+               ,maximum(maximum(p.v1, p.v2), maximum(q.v1, q.v2)));
 }
 
-/*****************************************************************************/
+/******************************************************************************/

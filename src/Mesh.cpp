@@ -30,6 +30,13 @@ ostream& operator<<(ostream& s, const VNIndex& vnIndex)
 	return s;
 }
 
+ostream& operator<<(ostream& os, const Face& face)
+{
+	return os << "{ v=<" << face.v[0] << "," << face.v[1] << "," << face.v[2] << ">; "
+	          << "t=<" << face.t[0] << "," << face.t[1] << "," << face.t[2] << ">; "
+			  << "n=<" << face.n[0] << "," << face.n[1] << "," << face.n[2] << "> }";
+}
+
 /******************************************************************************/
 
 Mesh::Mesh(const vector<glm::vec3>& vertices
@@ -46,6 +53,7 @@ Mesh::Mesh(const vector<glm::vec3>& vertices
 	this->buildGeometry();
 	this->buildVolume();
 	this->computeCentroid();
+	this->computeAABB();
 
 	//this->tree = nullptr;
 	this->tree = new KDTree(this->triangles, new CycleAxisStrategy(), new MaxValuesPerLeaf(20));
@@ -71,13 +79,6 @@ Mesh::~Mesh()
 	this->tree = nullptr;
 }
 
-ostream& operator<<(ostream& os, const Face& face)
-{
-	return os << "{ v=<" << face.v[0] << "," << face.v[1] << "," << face.v[2] << ">; "
-	          << "t=<" << face.t[0] << "," << face.t[1] << "," << face.t[2] << ">; "
-			  << "n=<" << face.n[0] << "," << face.n[1] << "," << face.n[2] << "> }";
-}
-
 void Mesh::repr(std::ostream& s) const
 {
 	s << "Mesh {"      << endl;
@@ -100,23 +101,26 @@ void Mesh::repr(std::ostream& s) const
 
 void Mesh::computeCentroid()
 {
-	float cx = 0.0f;
-	float cy = 0.0f;
-	float cz = 0.0f;
-	float N  = static_cast<float>(this->vertices_.size());
+	this->centroid = mean(this->vertices_);
+}
 
-	for (auto i=this->vertices_.begin(); i != this->vertices_.end(); i++) {
-		cx += i->x;
-		cy += i->y;
-		cz += i->z;
+void Mesh::computeAABB()
+{
+	this->aabb = AABB();
+
+	for (auto i=this->triangles.begin(); i != this->triangles.end(); i++) {
+		this->aabb += i->getAABB();
 	}
-
-	this->centroid = P(cx / N, cy / N, cz / N);
 }
 
 const P& Mesh::getCentroid() const
 {
 	return this->centroid;
+}
+
+const AABB& Mesh::getAABB() const
+{
+    return this->aabb;
 }
 
 void Mesh::buildVolume()

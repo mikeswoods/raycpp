@@ -32,13 +32,26 @@ class AABB
 		// Returns the centroid of the AABB
 		const P& centroid() const { return this->C; }
 
+		// Returns the width (x) of the AABB
+		float width() const;
+
+		// Returns the height (y) of the AABB
+		float height() const;
+
+		// Returns the depth (z) of the AABB
+		float depth() const;
+
 		// Computes the area of the AABB
 		float area() const;
+
+
 
 		// Tests if the given ray intersects the AABB
 		bool intersected(const Ray& ray) const;
 
         friend std::ostream& operator<<(std::ostream& s, const AABB& aabb);		
+
+        AABB& operator+=(const AABB &other);
 
 		// AABBs can be added: The sum of two AABBs P and Q a new
 		// AABB large enough to contain the AABB

@@ -1,28 +1,29 @@
+/******************************************************************************
+ *
+ * Sphere geometry definition
+ *
+ * @file Sphere.h
+ * @author Michael Woods
+ *
+ ******************************************************************************/
+
 #define _USE_MATH_DEFINES
 #include <algorithm>
 #include <cmath>
 #include "Sphere.h"
 #include "Utils.h"
 
-////////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/
 
-void Sphere::repr(std::ostream& s) const
-{
-	s << "Sphere<radius=" << this->radius_ 
-	  << ", center="      << this->center_ 
-	  << ">";
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Creates a unit sphere.
+// Creates a unit sphere centered about the world origin
 Sphere::Sphere() :
     Geometry(SPHERE),
     center_(P(0.f, 0.f, 0.f)),
     radius_(1.0f)
 {
     this->buildGeometry();
-	this->volume = BoundingSphere(this->center_, this->radius_ + Utils::EPSILON);
+	this->buildVolume();
+    this->computeAABB();
 }
 
 Sphere::Sphere(const P& _center, float _radius) :
@@ -38,6 +39,24 @@ Sphere::~Sphere()
 
 }
 
+void Sphere::repr(std::ostream& s) const
+{
+    s << "Sphere<radius=" << this->radius_ 
+      << ", center="      << this->center_ 
+      << ">";
+}
+
+void Sphere::buildVolume()
+{
+    this->volume = BoundingSphere(this->center_, this->radius_ + Utils::EPSILON);
+}
+
+void Sphere::computeAABB()
+{
+    this->aabb = AABB(P(x(this->center_) - this->radius_, y(this->center_) - this->radius_, z(this->center_) - this->radius_)
+                     ,P(x(this->center_) + this->radius_, y(this->center_) + this->radius_, z(this->center_) + this->radius_));
+}
+
 const P& Sphere::getCentroid() const
 {
 	return this->center_;
@@ -46,6 +65,11 @@ const P& Sphere::getCentroid() const
 const BoundingVolume& Sphere::getVolume() const
 {
 	return this->volume;
+}
+
+const AABB& Sphere::getAABB() const
+{
+    return this->aabb;
 }
 
 void Sphere::buildGeometry()

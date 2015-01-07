@@ -135,8 +135,9 @@ ROTATION 45 0 45
 SCALE 1 1 1
 CENTER 0 0 0
 PARENT root
-SHAPE sphere
-MAT mat3
+SHAPE mesh
+FILE cow.obj
+MAT mat4
 
 NODE specular_sphere
 TRANSLATION 2 5 -2

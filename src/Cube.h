@@ -18,8 +18,10 @@ class Cube : public Geometry
 {
 	private:
 		BoundingSphere volume;
+		AABB aabb;
 		void buildVolume();
 		void computeCentroid();
+		void computeAABB();
 
 	protected:
 		P p1, p2, centroid;
@@ -33,6 +35,7 @@ class Cube : public Geometry
 
 		virtual const BoundingVolume& getVolume() const;
 		virtual const P& getCentroid() const;
+		virtual const AABB& getAABB() const;
 		virtual void buildGeometry();
 		virtual void repr(std::ostream& s) const;
 };

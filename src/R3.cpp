@@ -1,12 +1,20 @@
+/*******************************************************************************
+ *
+ * This file defines operations over point and vector data types in R^3 space
+ *
+ * @file R3.h
+ * @author Michael Woods
+ *
+ ******************************************************************************/
+
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <algorithm>
 #include <iostream>
 #include <limits>
 #include "R3.h"
 
-////////////////////////////////////////////////////////////////////////////////
-// Vector type in R3 space
-////////////////////////////////////////////////////////////////////////////////
+using namespace std;
 
 float x(const V& v) 
 {
@@ -24,7 +32,7 @@ float z(const V& v)
 }
 
 // Get a string representation of a vector:
-std::ostream& operator<<(std::ostream &s, const V &v)
+ostream& operator<<(ostream &s, const V &v)
 {
     return s << "<" << v.x << "," << v.y << "," << v.z << ">";
 }
@@ -88,7 +96,7 @@ glm::vec3 toVec3(const P& p)
 /**
  * Get a string representation of a point
  */
-std::ostream& operator<<(std::ostream &s, const P &p)
+ostream& operator<<(ostream &s, const P &p)
 {
     return s << "[" << x(p) << "," << y(p) << "," << z(p) << "]";
 }
@@ -130,7 +138,9 @@ P& P::operator-=(const V &v)
     return *this;
 }
 
-// Subtracting a point and a point yields a vector:
+/**
+ * Subtracting a point and a point yields a vector
+ */
 V operator-(const P &p1, const P &p2)
 {
     return V(x(p1) - x(p2), y(p1) - y(p2), z(p1) - z(p2));
@@ -169,3 +179,118 @@ int steps(float stepSize, float offset, const P& start, const P& end, P& X, V& N
     X = start + (D * offset);
     return static_cast<int>(ceil(glm::distance(start.xyz, end.xyz) / stepSize));
 }
+
+int steps(float stepSize, float offset, const P& start, const V& along, P& X, V& N)
+{
+    return steps(stepSize, offset, start, start + along, X, N);
+}
+
+/**
+ * Computes the centroid point between the two given points
+ */
+glm::vec3 mean(const glm::vec3& p, const glm::vec3& q)
+{
+    return glm::vec3((p.x + q.x) / 2.0f, (p.y + q.y) / 2.0f, (p.z + q.z) / 2.0f);
+}
+
+glm::vec3 mean(const std::vector<glm::vec3>& ps)
+{
+    glm::vec3 T;
+    size_t N = ps.size();
+    for (auto i=ps.begin(); i != ps.end(); i++) {
+        T += *i;
+    }
+    return glm::vec3(T.x / N, T.y / N, T.z / N);
+}
+
+P mean(const P& p, const P& q)
+{
+    return P(mean(p.xyz, q.xyz));
+}
+
+P mean(const std::vector<P>& ps)
+{
+    glm::vec3 T;
+    size_t N = ps.size();
+    for (auto i=ps.begin(); i != ps.end(); i++) {
+        T += i->xyz;
+    }
+    return P(T.x / N, T.y / N, T.z / N);
+}
+
+/**
+ * Given two points, this function returns a new point consisting of 
+ * the components with overall maximum values
+ */
+glm::vec3 maximum(const glm::vec3& p, const glm::vec3& q)
+{
+    return glm::vec3(max(p.x, q.x), max(p.y, q.y), max(p.z, q.z));
+}
+
+glm::vec3 maximum(const std::vector<glm::vec3>& ps)
+{
+    float tx, ty, tz;
+    tx = ty = tz = -numeric_limits<float>::infinity();
+    for (auto i=ps.begin(); i != ps.end(); i++) {
+        tx = max(tx, i->x);
+        ty = max(ty, i->y);
+        tz = max(tz, i->z);
+    }
+    return glm::vec3(tx, ty, tz);
+}
+
+P maximum(const P& p, const P& q)
+{
+    return P(maximum(p.xyz, q.xyz));
+}
+
+P maximum(const std::vector<P>& ps)
+{
+    float tx, ty, tz;
+    tx = ty = tz = -numeric_limits<float>::infinity();
+    for (auto i=ps.begin(); i != ps.end(); i++) {
+        tx = max(tx, x(*i));
+        ty = max(ty, y(*i));
+        tz = max(tz, z(*i));
+    }
+    return P(tx, ty, tz);
+}
+
+/**
+ * Given two points, this function returns a new point consisting of 
+ * the components with overall minimum values
+ */
+glm::vec3 minimum(const glm::vec3& p, const glm::vec3& q)
+{
+    return glm::vec3(min(p.x, q.x), min(p.y, q.y), min(p.z, q.z));
+}
+
+glm::vec3 minimum(const std::vector<glm::vec3>& ps)
+{
+    float tx, ty, tz;
+    tx = ty = tz = -numeric_limits<float>::infinity();
+    for (auto i=ps.begin(); i != ps.end(); i++) {
+        tx = max(tx, i->x);
+        ty = max(ty, i->y);
+        tz = max(tz, i->z);
+    }
+    return glm::vec3(tx, ty, tz);
+}
+
+P minimum(const P& p, const P& q)
+{
+    return P(minimum(p.xyz, q.xyz));
+}
+
+P minimum(const std::vector<P>& ps)
+{
+    float tx, ty, tz;
+    tx = ty = tz = -numeric_limits<float>::infinity();
+    for (auto i=ps.begin(); i != ps.end(); i++) {
+        tx = max(tx, x(*i));
+        ty = max(ty, y(*i));
+        tz = max(tz, z(*i));
+    }
+    return P(tx, ty, tz);
+}
+

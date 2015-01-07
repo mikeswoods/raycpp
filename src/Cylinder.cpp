@@ -28,6 +28,7 @@ Cylinder::Cylinder() :
 {
     this->buildGeometry();
 	this->buildVolume();
+    this->computeAABB();
 }
 
 Cylinder::Cylinder(const Cylinder& other) :
@@ -63,9 +64,20 @@ const BoundingVolume& Cylinder::getVolume() const
 	return this->volume;
 }
 
+const AABB& Cylinder::getAABB() const
+{
+    return this->aabb;
+}
+
 void Cylinder::buildVolume()
 {
 	this->volume = BoundingSphere(this->center_, (this->center_.xyz.y + this->height_) + Utils::EPSILON);
+}
+
+void Cylinder::computeAABB()
+{
+    this->aabb = AABB(P(x(this->center_) - this->radius_, y(this->center_) - this->height_, z(this->center_) - this->radius_)
+                     ,P(x(this->center_) + this->radius_, y(this->center_) + this->height_, z(this->center_) + this->radius_));
 }
 
 void Cylinder::buildGeometry()

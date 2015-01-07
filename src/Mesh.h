@@ -30,9 +30,11 @@ class Mesh : public Geometry
 	private:
 		P centroid;
 		TrivialVolume volume;
+		AABB aabb;
 		KDTree* tree;
 
 		void computeCentroid();
+		void computeAABB();
 		void buildVolume();
 
 	protected:
@@ -63,6 +65,7 @@ class Mesh : public Geometry
 
 		virtual const P& getCentroid() const;
 		virtual const BoundingVolume& getVolume() const;
+		virtual const AABB& getAABB() const;
 		virtual void buildGeometry();
 		virtual void repr(std::ostream& s) const;
 
