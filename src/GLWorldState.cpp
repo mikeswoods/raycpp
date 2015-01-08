@@ -10,26 +10,32 @@
  ******************************************************************************/
 
 #define _USE_MATH_DEFINES
+#include <memory>
 #include <cmath>
 #include "GLWorldState.h"
 
+using namespace std;
+
+/******************************************************************************/
 
 const glm::vec3 GLWorldState::DEFAULT_LIGHT_POSITION = glm::vec3(0.0f, 9.0f, 0.0f);
 
+/******************************************************************************/
 
-GLWorldState::GLWorldState(const Graph& _graph)
+GLWorldState::GLWorldState(const Graph& _graph) :
+	flagCycleLightHue(false),
+	flagRotateScene(false),
+	polyModeIndex(0),
+	iterator(unique_ptr<Graph::iterator>(new Graph::pre_iterator(_graph, true))),
+	previewLight(PointLight(DEFAULT_LIGHT_POSITION, Color::WHITE)),
+	globalLightHue(0.0f)
 { 
-	this->flagCycleLightHue = false;
-	this->flagRotateScene   = false;
-	this->polyModeIndex     = 0;
-	this->iterator          = new Graph::pre_iterator(_graph, true);
-	this->previewLight      = PointLight(DEFAULT_LIGHT_POSITION, Color::WHITE);
-	this->globalLightHue    = 0.0f;
+
 }
 
 GLWorldState::~GLWorldState() 
 { 
-	delete this->iterator;
+
 }
 
 // Node traversal operations //////////////////////////////////////////////////

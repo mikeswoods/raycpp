@@ -145,9 +145,8 @@ static LightsAndMatrix collectAreaLight(GraphNode* node, LightsAndMatrix current
 	if (node->getMaterial() != nullptr && node->getMaterial()->isEmissive()) {
 
 		list<Light*>* areaLights = current.first;
-		AreaLight* areaLight     = new AreaLight(node, nextT);
 
-		areaLights->push_back(areaLight);
+		areaLights->push_back(new AreaLight(node, nextT));
 	}
 
 	return make_pair(current.first, nextT);

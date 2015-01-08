@@ -4,29 +4,35 @@
 #include <ctime>
 #include <iostream>
 #include <vector>
-#include <utility>
+#include <tuple>
 #include "Ray.h"
 #include "Tri.h"
 #include "AABB.h"
 
-/******************************************************************************
+/*******************************************************************************
  *
  * K dimensional tree implementation for spatial indexing an intersection
  * test acceleration
  *
  * @file KDTree.h
  * @author Michael Woods
- *****************************************************************************/
+ *
+ ******************************************************************************/
 
 // Safety measure to prevent the stack + heap from blowing up
 #define DEEPEST_DEPTH_ALLOWED 45
 
 // Forward declarations
 class NodeChild;
+class SplitStrategy;
 
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/
+
+typedef std::tuple<SplitStrategy*, SplitStrategy*> Split;
+
+/******************************************************************************/
+
 // Define various splitting strategies
-///////////////////////////////////////////////////////////////////////////////
 
 /**
  * Abstract splitting strategy base class
@@ -45,7 +51,7 @@ class SplitStrategy
 
 		// Divide the splitter state into two new instances for
 		// the left and right subtrees to recurse on
-		virtual std::pair<SplitStrategy*, SplitStrategy*> divide() const = 0;
+		virtual Split divide() const = 0;
 };
 
 /**
@@ -57,15 +63,18 @@ class CycleAxisStrategy : public SplitStrategy
 		int axis;
 
 	public:
-		CycleAxisStrategy(int _axis = 0);
-		CycleAxisStrategy(const CycleAxisStrategy& other);
+		CycleAxisStrategy(int _axis = 0) :
+			SplitStrategy(),
+			axis(_axis)
+		{ }
+
 		virtual ~CycleAxisStrategy() { }
 
-		virtual std::string getName() const;
+		virtual std::string getName() const { return "CycleAxisStrategy"; }
 
 		virtual int nextAxis(const std::vector<Tri>& _data);
 		
-		virtual std::pair<SplitStrategy*, SplitStrategy*> divide() const;
+		virtual Split divide() const;
 };
 
 /**
@@ -74,15 +83,16 @@ class CycleAxisStrategy : public SplitStrategy
 class RandomAxisStrategy : public SplitStrategy
 {
 	public:
-		RandomAxisStrategy() { }
-		RandomAxisStrategy(const RandomAxisStrategy& other);
+		RandomAxisStrategy() : 
+			SplitStrategy() 
+		{ }
 		virtual ~RandomAxisStrategy() { }
 
-		virtual std::string getName() const;
+		virtual std::string getName() const { return "RandomAxisStrategy"; }
 
 		virtual int nextAxis(const std::vector<Tri>& _data);
 		
-		virtual std::pair<SplitStrategy*, SplitStrategy*> divide() const;
+		virtual Split divide() const;
 };
 
 /**
@@ -91,20 +101,20 @@ class RandomAxisStrategy : public SplitStrategy
 class SurfaceAreaStrategy : public SplitStrategy
 {
 	public:
-		SurfaceAreaStrategy() { }
-		SurfaceAreaStrategy(const SurfaceAreaStrategy& other);
+		SurfaceAreaStrategy() :
+			SplitStrategy()
+		{ }
 		virtual ~SurfaceAreaStrategy() { }
 
-		virtual std::string getName() const;
+		virtual std::string getName() const { return "SurfaceAreaStrategy"; }
 
 		virtual int nextAxis(const std::vector<Tri>& _data);
 		
-		virtual std::pair<SplitStrategy*, SplitStrategy*> divide() const;
+		virtual Split divide() const;
 };
 
-///////////////////////////////////////////////////////////////////////////////
+
 // Define various leaf storage strategies
-///////////////////////////////////////////////////////////////////////////////
 
 /**
  * Basic storage strategy
@@ -155,8 +165,6 @@ class MaxValuesPerLeaf : public StorageStrategy
 			return count <= this->maxCount || depth >= DEEPEST_DEPTH_ALLOWED;
 		}
 };
-
-///////////////////////////////////////////////////////////////////////////////
 
 /**
  * Tree leaves contain the actual data to be looked up
@@ -326,10 +334,10 @@ class KDTree
 
 std::ostream& operator<<(std::ostream& s, const KDTree& tree);
 
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/
 
 void debugIntersectAll(std::ostream& s, KDTree const * tree, const Ray& ray);
 
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/
 
 #endif

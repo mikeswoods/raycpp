@@ -40,7 +40,7 @@ class GLWorldState
 {
 	protected:
 		Graph graph;
-		Graph::iterator* iterator;
+		std::unique_ptr<Graph::iterator> iterator;
 
 		// Various flags and states:
 		bool flagRotateScene;

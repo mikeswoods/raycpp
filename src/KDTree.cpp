@@ -1,7 +1,18 @@
+/*******************************************************************************
+ *
+ * K dimensional tree implementation for spatial indexing an intersection
+ * test acceleration
+ *
+ * @file KDTree.h
+ * @author Michael Woods
+ *
+ ******************************************************************************/
+
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <cassert>
 #include <cstring>
+#include <memory>
 #include <algorithm>
 #include <iterator>
 #include <limits>
@@ -19,73 +30,42 @@ static NodeChild const * build(const std::vector<Tri>& triangles
 			 	              ,SplitStrategy* splitStrategy
 					          ,StorageStrategy* storageStrategy);
 
-/******************************************************************************
+/*******************************************************************************
  * CycleAxisStrategy -- Basic axis-cycling strategy: 0->1,1->2,2->0
- *****************************************************************************/
-
-CycleAxisStrategy::CycleAxisStrategy(int _axis) :
-	SplitStrategy(),
-	axis(_axis)
-{ }
-
-CycleAxisStrategy::CycleAxisStrategy(const CycleAxisStrategy& other) :
-	axis(other.axis)
-{ }
-
-string CycleAxisStrategy::getName() const 
-{ 
-	return "CycleAxisStrategy"; 
-}
+ ******************************************************************************/
 
 int CycleAxisStrategy::nextAxis(const std::vector<Tri>& _data)
 {
-	// Ingore data and cycle the axis
+	// Ignore data and cycle the axis
 	int currentAxis = this->axis;
 	this->axis = (this->axis + 1)  % 3; // For 3 dimensions
 	return currentAxis;
 }
 		
-pair<SplitStrategy*, SplitStrategy*> CycleAxisStrategy::divide() const
+Split CycleAxisStrategy::divide() const
 {
-	return make_pair(new CycleAxisStrategy(*this), new CycleAxisStrategy(*this));
+	return Split(new CycleAxisStrategy(*this)
+		            , new CycleAxisStrategy(*this));
 }
 
-/******************************************************************************
+/*******************************************************************************
  * RandomAxisStrategy -- choose an axis at random
- *****************************************************************************/
-
-RandomAxisStrategy::RandomAxisStrategy(const RandomAxisStrategy& other) :
-	SplitStrategy()
-{ }
-
-string RandomAxisStrategy::getName() const
-{
-	return "RandomAxisStrategy";
-}
+ ******************************************************************************/
 
 int RandomAxisStrategy::nextAxis(const std::vector<Tri>& data)
 {
 	return static_cast<int>(Utils::randInRange(0, 2));
 }
 
-std::pair<SplitStrategy*, SplitStrategy*> RandomAxisStrategy::divide() const
+Split RandomAxisStrategy::divide() const
 {
-	return make_pair(new RandomAxisStrategy(), new RandomAxisStrategy());
+	return Split(new RandomAxisStrategy(), new RandomAxisStrategy());
 }
 
-/******************************************************************************
+/*******************************************************************************
  * SurfaceAreaStrategy -- Chooses the axis with the least surface area cost
  * Adapted from http://www.flipcode.com/archives/Raytracing_Topics_Techniques-Part_7_Kd-Trees_and_More_Speed.shtml
- *****************************************************************************/
-
-SurfaceAreaStrategy::SurfaceAreaStrategy(const SurfaceAreaStrategy& other) :
-	SplitStrategy()
-{ }
-
-string SurfaceAreaStrategy::getName() const
-{
-	return "SurfaceAreaStrategy";
-}
+ ******************************************************************************/
 
 int SurfaceAreaStrategy::nextAxis(const std::vector<Tri>& data)
 {
@@ -165,9 +145,9 @@ int SurfaceAreaStrategy::nextAxis(const std::vector<Tri>& data)
 	return minAxis;
 }
 		
-std::pair<SplitStrategy*, SplitStrategy*> SurfaceAreaStrategy::divide() const
+Split SurfaceAreaStrategy::divide() const
 {
-	return make_pair(new SurfaceAreaStrategy(), new SurfaceAreaStrategy());
+	return Split(new SurfaceAreaStrategy(), new SurfaceAreaStrategy());
 }
 
 /******************************************************************************
@@ -195,7 +175,7 @@ ostream& Leaf::repr(ostream& s
 	}
 
 	s << "Leaf@" << this;
-	if (annotate != NULL) {
+	if (annotate != nullptr) {
 		s << "<";
 		annotate(s, this, data);
 		s << ">: ";
@@ -236,14 +216,14 @@ std::ostream& NodeChild::repr(std::ostream& s
 {
 	if (this->isLeaf()) {
 		Leaf const * leaf = this->asLeaf();
-		if (leaf == NULL) {
+		if (leaf == nullptr) {
 			s << "*empty*";
 		} else {
 			leaf->repr(s, annotateLeaf, data);
 		}
 	} else {
 		Node const * node = this->asNode();
-		if (node == NULL) {
+		if (node == nullptr) {
 			s << "*empty*";
 		} else {
 			node->repr(s, annotateNode, annotateLeaf, data);
@@ -291,7 +271,7 @@ ostream& Node::repr(ostream& s
 	}
 
 	s << "Node@" << this;
-	if (annotateNode != NULL) {
+	if (annotateNode != nullptr) {
 		s << "<";
 		annotateNode(s, this, data);
 		s << ">: ";
@@ -303,11 +283,11 @@ ostream& Node::repr(ostream& s
 	  << " }";
 	s << endl;
 
-	if (this->left != NULL) {
+	if (this->left != nullptr) {
 		this->left->repr(s, annotateNode, annotateLeaf, data);
 	}
 
-	if (this->right != NULL) {
+	if (this->right != nullptr) {
 		this->right->repr(s, annotateNode, annotateLeaf, data);
 	}
 
@@ -344,14 +324,14 @@ std::ostream& KDTree::repr(std::ostream& s
 						  ,void* data) const
 {
 	s << "KDTree@" << this;
-	if (annotateTree != NULL) {
+	if (annotateTree != nullptr) {
 		s << "<";
 		annotateTree(s, this, data);
 		s << ">: ";
 	}
 	s << endl;
 
-	if (this->root != NULL) {
+	if (this->root != nullptr) {
 		s << endl;
 		this->root->repr(s, annotateNode, annotateLeaf, data);
 	} else {
@@ -368,7 +348,7 @@ ostream& operator<<(ostream& s, const KDTree& tree)
 
 int KDTree::countInNode(NodeChild const * root) const
 {
-	if (root == NULL) {
+	if (root == nullptr) {
 		return 0;
 	}
 
@@ -395,7 +375,7 @@ bool KDTree::intersectWalk(const Ray& ray, NodeChild const * root, vector<Tri>& 
 		NodeChild const * head = Q.front();
 		Q.pop();
 
-		if (head == NULL) {
+		if (head == nullptr) {
 			continue;
 		}
 
@@ -415,11 +395,11 @@ bool KDTree::intersectWalk(const Ray& ray, NodeChild const * root, vector<Tri>& 
 				NodeChild const * right = node->getRightChild();
 				hit = true;
 
-				if (left != NULL) {
+				if (left != nullptr) {
 					Q.push(left);
 				}
 
-				if (right != NULL) {
+				if (right != nullptr) {
 					Q.push(right);
 				}
 			}
@@ -529,7 +509,7 @@ NodeChild const * build(const std::vector<Tri>& triangles
 			return new NodeChild(new Leaf(triangles, extent, currentDepth));
 		}
 
-		return NULL;
+		return nullptr;
 	}
 
 	P splitPoint = extent.centroid();
@@ -539,7 +519,7 @@ NodeChild const * build(const std::vector<Tri>& triangles
 	assert (axis >= 0 && axis <= 2);
 
 	// Component getter:
-	float (*axisValue)(const P& p) = NULL;
+	float (*axisValue)(const P& p) = nullptr;
 
 	switch (axis) {
 		case 0:
@@ -576,18 +556,18 @@ NodeChild const * build(const std::vector<Tri>& triangles
 		} 
 	}
 
-	pair<SplitStrategy*, SplitStrategy*> S = splitStrategy->divide();
+	Split S = splitStrategy->divide();
 
 	NodeChild const * N =
-		new NodeChild(new Node(left.size() > 0 ? build(left, currentDepth + 1, S.first, storageStrategy) : NULL
-			                  ,right.size() > 0 ? build(right, currentDepth + 1, S.second, storageStrategy) : NULL
+		new NodeChild(new Node(left.size() > 0 
+								? build(left, currentDepth + 1, get<0>(S), storageStrategy) 
+								: nullptr
+			                  ,right.size() > 0 
+			                  	? build(right, currentDepth + 1, get<1>(S), storageStrategy) 
+			                  	: nullptr
 							  ,extent
 							  ,currentDepth
 					          ,axis));
-
-	// Finally, clean up:
-	delete S.first;
-	delete S.second;
 
 	return N;
 }
@@ -597,7 +577,7 @@ NodeChild const * build(const std::vector<Tri>& triangles
 void __intersectNode(std::ostream& s, Node const * node, void* data)
 {
 	Ray* ray = reinterpret_cast<Ray*>(data);
-	if (ray != NULL) {
+	if (ray != nullptr) {
 		AABB aabb = node->getAABB();
 		if (aabb.intersected(*ray)) {
 			s << "N(*)@" << node;
@@ -610,7 +590,7 @@ void __intersectNode(std::ostream& s, Node const * node, void* data)
 void __intersectLeaf(std::ostream& s, Leaf const * leaf, void* data)
 {
 	Ray* ray = reinterpret_cast<Ray*>(data);
-	if (ray != NULL) {
+	if (ray != nullptr) {
 		AABB aabb = leaf->getAABB();
 		if (aabb.intersected(*ray)) {
 			s << "L(*)@" << leaf;
@@ -623,7 +603,7 @@ void __intersectLeaf(std::ostream& s, Leaf const * leaf, void* data)
 void debugIntersectAll(ostream& s, KDTree const * tree, const Ray& ray)
 {
 	s << "RAY: " << ray << endl << endl;
-	tree->repr(s, NULL, __intersectNode, __intersectLeaf, (void*)&ray);
+	tree->repr(s, nullptr, __intersectNode, __intersectLeaf, (void*)&ray);
 }
 
 /**
@@ -665,7 +645,7 @@ void generateSummary(KDTree const * tree
 		NodeChild const * head = Q.front();
 		Q.pop();
 
-		if (head == NULL) {
+		if (head == nullptr) {
 			continue;
 		}
 
@@ -716,11 +696,11 @@ void generateSummary(KDTree const * tree
 			NodeChild const * left  = node->getLeftChild();
 			NodeChild const * right = node->getRightChild();
 
-			if (left != NULL) {
+			if (left != nullptr) {
 				Q.push(left);
 			}
 
-			if (right != NULL) {
+			if (right != nullptr) {
 				Q.push(right);
 			}
 		}
