@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <iostream>
+#include <memory>
 #include <vector>
 #include <tuple>
 #include "Ray.h"
@@ -28,7 +29,7 @@ class SplitStrategy;
 
 /******************************************************************************/
 
-typedef std::tuple<SplitStrategy*, SplitStrategy*> Split;
+typedef std::tuple<std::unique_ptr<SplitStrategy>, std::unique_ptr<SplitStrategy>> Split;
 
 /******************************************************************************/
 
@@ -307,7 +308,9 @@ class KDTree
 		NodeChild const * root;
 
 	public:
-		KDTree(const std::vector<Tri>& data, SplitStrategy* splitStrategy, StorageStrategy* storageStrategy);
+		KDTree(const std::vector<Tri>& data
+			  ,SplitStrategy* splitStrategy
+			  ,StorageStrategy* storageStrategy);
 
 		// Count the number of primitives/triangles indexed in the tree
 		int count() const { return this->countInNode(this->root); }

@@ -15,6 +15,7 @@
 #include <memory>
 #include <algorithm>
 #include <iterator>
+#include <utility>
 #include <limits>
 #include <queue>
 #include "KDTree.h"
@@ -27,7 +28,7 @@ static AABB findExtent(const std::vector<Tri>& triangles);
 
 static NodeChild const * build(const std::vector<Tri>& triangles
 	                          ,int currentDepth
-			 	              ,SplitStrategy* splitStrategy
+			 	              ,unique_ptr<SplitStrategy> splitHalf
 					          ,StorageStrategy* storageStrategy);
 
 /*******************************************************************************
@@ -44,8 +45,8 @@ int CycleAxisStrategy::nextAxis(const std::vector<Tri>& _data)
 		
 Split CycleAxisStrategy::divide() const
 {
-	return Split(new CycleAxisStrategy(*this)
-		            , new CycleAxisStrategy(*this));
+	return Split(unique_ptr<SplitStrategy>(new CycleAxisStrategy(*this))
+		        ,unique_ptr<SplitStrategy>(new CycleAxisStrategy(*this)));
 }
 
 /*******************************************************************************
@@ -59,7 +60,8 @@ int RandomAxisStrategy::nextAxis(const std::vector<Tri>& data)
 
 Split RandomAxisStrategy::divide() const
 {
-	return Split(new RandomAxisStrategy(), new RandomAxisStrategy());
+	return Split(unique_ptr<SplitStrategy>(new RandomAxisStrategy(*this))
+		        ,unique_ptr<SplitStrategy>(new RandomAxisStrategy(*this)));
 }
 
 /*******************************************************************************
@@ -121,7 +123,7 @@ int SurfaceAreaStrategy::nextAxis(const std::vector<Tri>& data)
 		// cost = #triangles(left) * area(left) + #triangles(right) * area(right)
 
 		cost[axis] = (left.area() * static_cast<float>(countL)) + 
-				        (right.area() * static_cast<float>(countR));
+				     (right.area() * static_cast<float>(countR));
 	}
 
 	// Finally, examine the computed cost per axis and return the minimum:
@@ -147,7 +149,8 @@ int SurfaceAreaStrategy::nextAxis(const std::vector<Tri>& data)
 		
 Split SurfaceAreaStrategy::divide() const
 {
-	return Split(new SurfaceAreaStrategy(), new SurfaceAreaStrategy());
+	return Split(unique_ptr<SplitStrategy>(new SurfaceAreaStrategy(*this))
+		        ,unique_ptr<SplitStrategy>(new SurfaceAreaStrategy(*this)));
 }
 
 /******************************************************************************
@@ -303,13 +306,18 @@ ostream& operator<<(ostream& s, const Node& node)
  * KDTree 
  *****************************************************************************/
 
-KDTree::KDTree(const vector<Tri>& data, SplitStrategy* splitStrategy, StorageStrategy* storageStrategy)
+KDTree::KDTree(const vector<Tri>& data
+	          ,SplitStrategy* splitStrategy
+	          ,StorageStrategy* storageStrategy)
 { 
 	// Start timing
 	clock_t start = clock(); 
 
 	// Build the tree
-	this->root = build(data, 0, splitStrategy, storageStrategy);
+	this->root = build(data
+		              ,0
+		              ,unique_ptr<SplitStrategy>(splitStrategy)
+		              ,storageStrategy);
 
 	// End timing
 	this->msBuildTime = (clock() - start) * 1000 / CLOCKS_PER_SEC;
@@ -494,7 +502,7 @@ static AABB findExtent(const std::vector<Tri>& triangles)
  */
 NodeChild const * build(const std::vector<Tri>& triangles
 	                   ,int currentDepth
-				       ,SplitStrategy* splitStrategy
+				       ,unique_ptr<SplitStrategy> splitStrategy
 					   ,StorageStrategy* storageStrategy)
 {
 	// Compute the AABB needed to contain all triangle corners
@@ -560,10 +568,10 @@ NodeChild const * build(const std::vector<Tri>& triangles
 
 	NodeChild const * N =
 		new NodeChild(new Node(left.size() > 0 
-								? build(left, currentDepth + 1, get<0>(S), storageStrategy) 
+								? build(left, currentDepth + 1, move(get<0>(S)), storageStrategy) 
 								: nullptr
 			                  ,right.size() > 0 
-			                  	? build(right, currentDepth + 1, get<1>(S), storageStrategy) 
+			                  	? build(right, currentDepth + 1, move(get<1>(S)), storageStrategy) 
 			                  	: nullptr
 							  ,extent
 							  ,currentDepth
