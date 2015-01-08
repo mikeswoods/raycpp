@@ -895,7 +895,7 @@ void rayTrace(BMP& output, const SceneContext& sc, const Camera& C, TraceOptions
 	}
 
 	// Environment map:
-	EnvironmentMap const * envMap = sc.getEnvironmentMap();
+	EnvironmentMap const * envMap = &sc.getEnvironmentMap();
 
 	// If the given environment map is null, just use a simple color:
 	if (envMap == nullptr) {

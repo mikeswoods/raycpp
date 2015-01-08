@@ -11,6 +11,7 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
+#include <memory>
 #include <iostream>
 #include <map>
 #include <list>
@@ -31,14 +32,13 @@ class Configuration
 		bool materialExists(const std::string& name) const;
 		Material* getMaterial(const std::string& name) const;
 		void registerMaterial(Material* material);
-		void registerEnvironmentMap(EnvironmentMap* envMap);
 		void registerLight(Light* light);
 
     protected:
         GraphBuilder graphBuilder;
 
 		std::string filename;
-		EnvironmentMap* environmentMap;
+		std::unique_ptr<EnvironmentMap> envMap;
 		Graph graph;
 		std::map<std::string,Material*> materialMap;
         std::list<Light*> lights;
@@ -68,20 +68,11 @@ class Configuration
         float FOVY;
 
         Configuration(const std::string& filename);
-		Configuration(const Configuration& other);
-		~Configuration();
+		virtual ~Configuration();
 
 		const std::string& getFileName() { return this->filename; }
 
-        SceneContext * read();
-
-		bool hasEnvironmentMap() const { return this->environmentMap != nullptr; }
-
-		EnvironmentMap const * getEnvironmentMap() const { return this->environmentMap; }
-
-        const Graph& getSceneGraph() const { return this->graph; };
-
-        const std::list<Light*>& getLights() const { return this->lights; };
+        std::unique_ptr<SceneContext> read();
 
         friend std::ostream& operator<<(std::ostream& os, const Configuration& c);
 };

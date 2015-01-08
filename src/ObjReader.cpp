@@ -23,21 +23,20 @@ using namespace std;
 
 /*****************************************************************************/
 
-ObjReader::ObjReader(const string& objFile)
+ObjReader::ObjReader(const string& _objFile) :
+	objFile(_objFile),
+	vertices(unique_ptr<vector<glm::vec3>>(new vector<glm::vec3>())),
+	normals(unique_ptr<vector<glm::vec3>>(new vector<glm::vec3>())),
+	uv(unique_ptr<vector<glm::vec2>>(new vector<glm::vec2>())),
+	faces(unique_ptr<vector<Face>>(new vector<Face>())),
+	maxVComp(-numeric_limits<float>::infinity())
 {
-	this->objFile  = objFile;
-	this->vertices = new vector<glm::vec3>();
-	this->normals  = new vector<glm::vec3>();
-	this->uv       = new vector<glm::vec2>();
-	this->faces    = new vector<Face>();
-	this->maxVComp = -numeric_limits<float>::infinity();
+
 }
 
 ObjReader::~ObjReader()
 {
-	delete this->vertices;
-	delete this->normals;
-	delete this->faces;
+
 }
 
 void ObjReader::reset()

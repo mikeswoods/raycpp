@@ -112,7 +112,7 @@ void GLGeometry::upload(GLuint shaderProgram
     glBindVertexArray(0);
 }
 
-void GLGeometry::draw(GLWorldState* state
+void GLGeometry::draw(const GLWorldState& state
 	                 ,GLuint shaderProgram
 					 ,GLint unifModel
 					 ,GLint unifModelInvT

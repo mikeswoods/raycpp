@@ -77,7 +77,7 @@ class GLGeometry
 				   ,GLint locationNor
 				   ,GLint locationCol);
 
-		void draw(GLWorldState* state
+		void draw(const GLWorldState& state
 			     ,GLuint shaderProgram
 				 ,GLint unifModel
 				 ,GLint unifModelInvT

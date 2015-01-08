@@ -15,10 +15,9 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-
+#include <memory>
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
- 
 #include "Face.h"
 #include "Mesh.h"
 
@@ -37,10 +36,11 @@ class ObjReader
 
 	protected:
 		std::string objFile;
-		std::vector<glm::vec3>* vertices;
-		std::vector<glm::vec3>* normals;
-		std::vector<glm::vec2>* uv;
-		std::vector<Face>* faces;
+
+		std::unique_ptr<std::vector<glm::vec3>> vertices;
+		std::unique_ptr<std::vector<glm::vec3>> normals;
+		std::unique_ptr<std::vector<glm::vec2>> uv;
+		std::unique_ptr<std::vector<Face>> faces;
 
 		// Maximum vertex component in either X, Y, or Z
 		float maxVComp;

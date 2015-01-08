@@ -16,6 +16,12 @@ using namespace std;
  * Voxel
  ******************************************************************************/
 
+Voxel::Voxel(float _density) :
+	density(_density)
+{ 
+    fill(this->light, this->light + MAX_LIGHTS, -1.0f);
+};
+
 ostream& operator<<(ostream &s, const Voxel &v)
 {
 	return s << "{ light = "   << v.light 
@@ -26,23 +32,21 @@ ostream& operator<<(ostream &s, const Voxel &v)
  * Voxel buffer
  ******************************************************************************/
 
-VoxelBuffer::VoxelBuffer(int xDim, int yDim, int zDim, Geometry const * geometry)
+VoxelBuffer::VoxelBuffer(int x, int y, int z, Geometry const * geometry) :
+	_x(x),
+	_y(y),
+	_z(z),
+	buffer(unique_ptr<Voxel[]>(new Voxel[x * y * z])),
+	aabb(geometry->getAABB())
 {
-	this->xDim   = xDim;
-	this->yDim   = yDim;
-	this->zDim   = zDim;
-	this->buffer = new Voxel[this->xDim * this->yDim * this->zDim];
-	this->aabb   = geometry->getAABB();
-
-	this->vWidth  = static_cast<float>(this->aabb.width() / this->xDim);
-	this->vHeight = static_cast<float>(this->aabb.height() / this->yDim);
-	this->vDepth  = static_cast<float>(this->aabb.depth() / this->zDim);
+	this->voxelWidth  = static_cast<float>(this->aabb.width() / x);
+	this->voxelHeight = static_cast<float>(this->aabb.height() / y);
+	this->voxelDepth  = static_cast<float>(this->aabb.depth() / z);
 }
 
 VoxelBuffer::~VoxelBuffer()
 {
-	delete this->buffer;
-	this->buffer = nullptr;
+
 }
 
 Voxel* VoxelBuffer::operator() (int i, int j, int k) const 
@@ -94,21 +98,18 @@ bool VoxelBuffer::center(const P& p, P& center) const
 	if (!this->positionToIndex(p, i, j, k)) {
 		return false;
 	}
-	/*
-	P p1 = this->bounds.getP1();
-	P p2 = this->bounds.getP2();
 
-	float dx  = (x(p2) - x(p1)) / static_cast<float>(this->xDim);
-	float dy  = (y(p2) - y(p1)) / static_cast<float>(this->yDim);
-	float dz  = (z(p2) - z(p1)) / static_cast<float>(this->zDim);
+	float dx  = (this->aabb.width()) / static_cast<float>(this->_x);
+	float dy  = (this->aabb.height()) / static_cast<float>(this->_y);
+	float dz  = (this->aabb.depth()) / static_cast<float>(this->_z);
 	float dx2 = 0.5f * dx; 
 	float dy2 = 0.5f * dy;
 	float dz2 = 0.5f * dz; 
 
-	center = P(x(p1) + dx2 + (dx * static_cast<float>(i))
-			  ,y(p1) + dy2 + (dy * static_cast<float>(j))
-			  ,z(p1) + dz2 + (dz * static_cast<float>(k)));
-	*/
+	center = P(x(get<0>(this->aabb.vertices())) + dx2 + (dx * static_cast<float>(i))
+			  ,y(get<0>(this->aabb.vertices())) + dy2 + (dy * static_cast<float>(j))
+			  ,z(get<0>(this->aabb.vertices())) + dz2 + (dz * static_cast<float>(k)));
+
 	return true;
 }
 
@@ -120,15 +121,18 @@ bool VoxelBuffer::positionToIndex(const P& p, int& i, int& j, int& k) const
 {
 	float dx, dy, dz;
 	int xCell, yCell, zCell;
-	/*
-	P p1 = this->bounds.getP1();
-	P p2 = this->bounds.getP2();
 
-	dx = Utils::unitRange(x(p), x(p1), x(p2));
-	dy = Utils::unitRange(y(p), y(p1), y(p2));
-	dz = Utils::unitRange(z(p), z(p1), z(p2));
+	dx = Utils::unitRange(x(p)
+		                 ,x(get<0>(this->aabb.vertices()))
+		                 ,x(get<1>(this->aabb.vertices())));
+	dy = Utils::unitRange(y(p)
+		                 ,y(get<0>(this->aabb.vertices()))
+		                 ,y(get<1>(this->aabb.vertices())));
+	dz = Utils::unitRange(z(p)
+		                 ,z(get<0>(this->aabb.vertices()))
+		                 ,z(get<1>(this->aabb.vertices())));
 
-	float threshold = 1.0e-6f;
+	float threshold = Utils::EPSILON;
 
 	// Needed for rounding errors: if the number is smaller than the threshold,
 	// it just becomes 0.0f
@@ -142,9 +146,9 @@ bool VoxelBuffer::positionToIndex(const P& p, int& i, int& j, int& k) const
 		dz = 0.0f;
 	}
 
-	float xLoc = dx * ((static_cast<float>(this->xDim)) - this->getVoxelWidth());
-	float yLoc = dy * ((static_cast<float>(this->yDim)) - this->getVoxelHeight());
-	float zLoc = dz * ((static_cast<float>(this->zDim)) - this->getVoxelDepth());
+	float xLoc = dx * ((static_cast<float>(this->_x)) - this->getVoxelWidth());
+	float yLoc = dy * ((static_cast<float>(this->_y)) - this->getVoxelHeight());
+	float zLoc = dz * ((static_cast<float>(this->_z)) - this->getVoxelDepth());
 	xCell = static_cast<int>(floor(xLoc));
 	yCell = static_cast<int>(floor(yLoc));
 	zCell = static_cast<int>(floor(zLoc));
@@ -156,7 +160,7 @@ bool VoxelBuffer::positionToIndex(const P& p, int& i, int& j, int& k) const
 	i = xCell;
 	j = yCell;
 	k = zCell;
-	*/
+
 	return true;
 }
 
@@ -173,25 +177,28 @@ float VoxelBuffer::getInterpolatedDensity(const P& p) const
 {
 	float dx, dy, dz;
 	int x1, x2, y1, y2, z1, z2;
-	/*
-	P p1 = this->bounds.getP1();
-	P p2 = this->bounds.getP2();
 
-	dx = Utils::unitRange(x(p), x(p1), x(p2));
-	dy = Utils::unitRange(y(p), y(p1), y(p2));
-	dz = Utils::unitRange(z(p), z(p1), z(p2));
+	dx = Utils::unitRange(x(p)
+		                 ,x(get<0>(this->aabb.vertices()))
+		                 ,x(get<1>(this->aabb.vertices())));
+	dy = Utils::unitRange(y(p)
+		                 ,y(get<0>(this->aabb.vertices()))
+		                 ,y(get<1>(this->aabb.vertices())));
+	dz = Utils::unitRange(z(p)
+		                 ,z(get<0>(this->aabb.vertices()))
+		                 ,z(get<1>(this->aabb.vertices())));
 
-	float xLoc    = dx * ((float)this->xDim - 1);
+	float xLoc    = dx * ((float)this->_x - 1);
 	float xWeight = xLoc - floor(xLoc); 
 	x1 = static_cast<int>(floor(xLoc));
 	x2 = static_cast<int>(ceil(xLoc));
 
-	float yLoc = dy * ((float)this->yDim - 1);
+	float yLoc = dy * ((float)this->_y - 1);
 	float yWeight = yLoc - floor(yLoc); 
 	y1 = static_cast<int>(floor(yLoc));
 	y2 = static_cast<int>(ceil(yLoc));    
 
-	float zLoc = dz * ((float)this->zDim - 1);
+	float zLoc = dz * ((float)this->_z - 1);
 	float zWeight = zLoc - floor(zLoc); 
 	z1 = static_cast<int>(floor(zLoc));
 	z2 = static_cast<int>(ceil(zLoc));
@@ -242,7 +249,7 @@ float VoxelBuffer::getInterpolatedDensity(const P& p) const
 
 	return Utils::trilerp(xWeight, yWeight, zWeight, x1y1z1D, x1y1z2D, x1y2z1D,
 						  x1y2z2D, x2y1z1D, x2y1z2D, x2y2z1D, x2y2z2D) / 3.0f;
-	*/
+
 	return 1.0f;
 }
 
@@ -251,7 +258,7 @@ float VoxelBuffer::getInterpolatedDensity(const P& p) const
  */
 int VoxelBuffer::sub2ind(int i, int j, int k) const
 {
-	return i + (j * this->xDim) + k * (this->xDim * this->yDim);
+	return i + (j * this->_x) + k * (this->_x * this->_y);
 }
 
 /**
@@ -259,9 +266,9 @@ int VoxelBuffer::sub2ind(int i, int j, int k) const
  */
 void VoxelBuffer::ind2sub(int w, int& i, int& j, int& k) const
 {
-	i = w % this->xDim;
-	j = (w / this->xDim) % this->yDim;
-	k = w / (this->yDim * this->xDim); 
+	i = w % this->_x;
+	j = (w / this->_x) % this->_y;
+	k = w / (this->_y * this->_x); 
 }
 
 /**
@@ -269,21 +276,21 @@ void VoxelBuffer::ind2sub(int w, int& i, int& j, int& k) const
  */
 bool VoxelBuffer::valid(int i, int j, int k) const
 {
-	return (i >= 0 && i < this->xDim) &&
-		   (j >= 0 && j < this->yDim) &&
-		   (k >= 0 && k < this->zDim);
+	return (i >= 0 && i < this->_x) &&
+		   (j >= 0 && j < this->_y) &&
+		   (k >= 0 && k < this->_z);
 }
 
 ostream& operator<<(ostream &s, const VoxelBuffer &vb)
 {
-	s << "VoxelBuffer[" << vb.xDim << "]"   <<
-					"[" << vb.yDim << "]"   <<
-					"[" << vb.zDim << "] {" << endl;
+	s << "VoxelBuffer[" << vb._x << "]"   <<
+					"[" << vb._y << "]"   <<
+					"[" << vb._z << "] {" << endl;
 	int q = 0, w = 0;
 
-	for (int k=0; k<vb.zDim; k++) {
-		for (int j=0; j<vb.yDim; j++) {
-			for (int i=0; i<vb.xDim; i++) {
+	for (int k=0; k<vb._z; k++) {
+		for (int j=0; j<vb._y; j++) {
+			for (int i=0; i<vb._x; i++) {
 
 				int ii,jj,kk;
 				w = vb.sub2ind(i,j,k);

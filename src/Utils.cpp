@@ -26,7 +26,9 @@ using namespace std;
  * Numeric functions
  ******************************************************************************/
 
-// Almost equal
+/**
+ * Almost equal
+ */
 float Utils::almostEqual(float a, float b, float epsilon)
 {
     // assume small positive epsilon
@@ -50,50 +52,84 @@ float Utils::almostEqual(float a, float b, float epsilon)
     return false;
 }
 
-// Clamp values to a given range
+/** 
+ * Clamp values to a given range
+ */
 float Utils::clamp(float n, float lo, float hi)
 {
     return min(max(n,lo),hi); 
 }
 
-// Clamp values to the range [0,1]
+/**
+ * Clamp values to the range [0,1]
+ */
 float Utils::unitClamp(float n)
 {
     return min(max(n, 0.0f), 1.0f); 
 }
 
-// Convert one range to another while preserving proportionality
+/** 
+ * Convert one range to another while preserving proportionality
+ */
 float Utils::reRange(float value, float a0, float a1, float b0, float b1)
 {
     // Adapted from http://stackoverflow.com/a/12413880
     return ((value - a0) / (a1 - a0)) * (b1 - b0) + b0;
 }
 
-// Convert one range to [0,1] while preserving proportionality
+/** 
+ * Convert one range to [0,1] while preserving proportionality
+ */
 float Utils::unitRange(float value, float lo, float hi)
 {
     return reRange(value, lo, hi, 0.0f, 1.0f);
 }
 
-// Linearly interpolate between two values
+/**
+ * Linearly interpolate between two values
+ */
 float Utils::lerp(float v1, float v2, float t)
 {
     return ((1.0f - t) * v1) + (t * v2);   
 }
 
-// Generate a random float in the range [0,1]
+/**
+ * Trilinear interpolation
+ */
+float Utils::trilerp(float xd, float yd, float zd
+                    ,float v000, float v001
+                    ,float v010, float v011
+                    ,float v100, float v101
+                    ,float v110, float v111)
+{
+    float c00 = lerp(v000, v100, xd);
+    float c10 = lerp(v010, v110, xd);
+    float c01 = lerp(v001, v101, xd);
+    float c11 = lerp(v011, v111, xd);
+    float c0  = lerp(c00, c10, yd);
+    float c1  = lerp(c01, c11, yd);
+    return lerp(c0, c1, zd);
+}
+
+/**
+ * Generate a random float in the range [0,1]
+ */
 float Utils::unitRand()
 {
 	return static_cast<float>(rand()) / (static_cast<float>(RAND_MAX));
 }
 
-// Generate a random float in the range [lo,hi]
+/**
+ * Generate a random float in the range [lo,hi]
+ */
 float Utils::randInRange(float lo, float hi)
 {
 	return lo + static_cast<float>(rand()) /(static_cast<float>(RAND_MAX / (hi - lo)));
 }
 
-// Returns the smallest of two values >= zero
+/**
+ * Returns the smallest of two values >= zero
+ */
 bool Utils::leastGreaterThanZero(float x, float y, float& smallest)
 {
 	if (x > 0.0f && y > 0.0f) {
@@ -114,19 +150,25 @@ bool Utils::leastGreaterThanZero(float x, float y, float& smallest)
  * Vector functions
  ******************************************************************************/
 
-// Test if two vectors are orthogonal
+/**
+ * Test if two vectors are orthogonal
+ */
 bool Utils::orthogonal(glm::vec3 v1, glm::vec3 v2)
 {
     return abs(glm::dot(v1, v2) / (glm::length(v1) * glm::length(v2))) < static_cast<float>(EPSILON);
 }
 
-// Test if two vectors are parallel
+/**
+ * Test if two vectors are parallel
+ */
 bool Utils::parallel(glm::vec3 v1, glm::vec3 v2)
 {
     return abs(glm::dot(v1, v2) / (glm::length(v1) * glm::length(v2))) > 1.0f - static_cast<float>(EPSILON);
 }
 
-// Fixes degenerate "up" vector cases
+/**
+ * Fixes degenerate "up" vector cases
+ */
 glm::vec3 Utils::fixUpVector(const glm::vec3& viewDir, const glm::vec3& up)
 {
     if (Utils::parallel(viewDir, up)) {
@@ -140,7 +182,9 @@ glm::vec3 Utils::fixUpVector(const glm::vec3& viewDir, const glm::vec3& up)
  * Geometry functions
  ******************************************************************************/
 
-// Tests if the given ray intersects the specified plane
+/**
+ * Tests if the given ray intersects the specified plane
+ */
 float Utils::hitsPlane(const glm::vec3& origin
                       ,const glm::vec3& dir
                       ,const glm::vec3& center
@@ -163,8 +207,10 @@ float Utils::hitsPlane(const glm::vec3& origin
  * Text functions
  ******************************************************************************/
 
-// Return the current working directory. This solution was adapted from
-// the answer on Stackoverflow at http://stackoverflow.com/a/145309
+/**
+ * Return the current working directory. This solution was adapted from
+ * the answer on Stackoverflow at http://stackoverflow.com/a/145309
+ */
 string Utils::cwd(const std::string& relFile)
 {
     // Determine the current working directory. Any texture files will be
@@ -186,7 +232,9 @@ string Utils::cwd(const std::string& relFile)
     }
 }
 
-// Returns the absolute realpath of the given relative path
+/**
+ * Returns the absolute realpath of the given relative path
+ */
 std::string Utils::realPath(const std::string& relPath)
 {
     char buffer[FILENAME_MAX];
@@ -200,7 +248,9 @@ std::string Utils::realPath(const std::string& relPath)
     return string(buffer);
 }
 
-// Returns the base component of a filename
+/**
+ * Returns the base component of a filename
+ */
 std::string Utils::baseName(const std::string& path)
 {
     size_t pos = path.find_last_of(DirSep);
@@ -215,7 +265,9 @@ std::string Utils::baseName(const std::string& path)
     }
 }
 
-// Adapted from http://www.toptip.ca/2010/03/trim-leading-or-trailing-white-spaces.html
+/**
+ * Adapted from http://www.toptip.ca/2010/03/trim-leading-or-trailing-white-spaces.html
+ */
 string Utils::trim(const string& s)
 {
     string sCopy(s);
@@ -231,21 +283,27 @@ string Utils::trim(const string& s)
     return sCopy;
 }
 
-// Convert s to upper case
+/**
+ * Convert the given string to upper case
+ */
 string Utils::uppercase(string s)
 {
 	transform(s.begin(), s.end(), s.begin(), ::toupper);
 	return s;
 }
 
-// Convert s to upper case
+/**
+ * Convert the given string to upper case
+ */
 string Utils::lowercase(string s)
 {
 	transform(s.begin(), s.end(), s.begin(), ::tolower);
 	return s;
 }
 
-// Convert the input i to a string
+/**
+ * Convert the input i to a string
+ */
 string Utils::S(int i)
 {
     ostringstream out;
@@ -278,7 +336,9 @@ string Utils::S(vector<string> i)
     return out.str();
 }
 
-// Courtesy of http://stackoverflow.com/a/16286297
+/** 
+ * Courtesy of http://stackoverflow.com/a/16286297
+ */
 vector<string> Utils::split(string str, string delim)
 {
     string s   = string(str);
@@ -303,10 +363,12 @@ vector<string> Utils::split(string str, string delim)
     return tokens;
 }
 
-// Parses a numeric pair specifier string like "123,45" into its component 
-// floats and sets the values of x and y. If this this function returns true, 
-// then the string was successfully parsed, otherwise false is returned 
-// and x and y are not updated
+/** 
+ * Parses a numeric pair specifier string like "123,45" into its component 
+ * floats and sets the values of x and y. If this this function returns true, 
+ * then the string was successfully parsed, otherwise false is returned 
+ * and x and y are not updated
+ */
 bool Utils::parseTuple(string str, float& x, float& y)
 {
 	vector<string> parts = split(str, string(","));
@@ -325,7 +387,9 @@ bool Utils::parseTuple(string str, float& x, float& y)
 	return good1 && good2;
 }
 
-// Read a text file into a string
+/**
+ * Read a text file into a string
+ */
 std::string Utils::textFileRead(const char* filename)
 {
     // http://insanecoding.blogspot.com/2011/11/how-to-read-in-file-in-c.html

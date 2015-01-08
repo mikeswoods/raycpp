@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include <list>
+#include <memory>
 #include "Color.h"
 #include "Geometry.h"
 #include "Ray.h"
@@ -15,18 +16,14 @@
  * Voxel buffer element
  ******************************************************************************/
 
-typedef struct Voxel
+class Voxel
 {
-    float light[MAX_LIGHTS];
-    float density;
+    public:
+        float light[MAX_LIGHTS];
+        float density;
 
-    Voxel(float density = 0.0f)
-    { 
-        this->density = density;
-        std::fill(this->light, this->light + MAX_LIGHTS, -1.0f);
-    };
-
-} Voxel;
+        Voxel(float density = 0.0f);
+};
 
 /*******************************************************************************
  * Voxel element
@@ -40,22 +37,18 @@ class VoxelBuffer
         bool valid(int i, int j, int k) const;
 
     protected:
-        int xDim, yDim, zDim;
-        float vWidth, vHeight, vDepth;
-        Voxel* buffer;
+        int _x, _y, _z;
+        float voxelWidth, voxelHeight, voxelDepth;
+        std::unique_ptr<Voxel[]> buffer;
         AABB aabb;
 
     public:
         VoxelBuffer(int x, int y, int z, Geometry const * geometry);
         ~VoxelBuffer();
 
-        int getX() const { return this->xDim; }
-        int getY() const { return this->yDim; }
-        int getZ() const { return this->zDim; }
-
-        float getVoxelWidth()  const { return this->vWidth; }
-        float getVoxelHeight() const { return this->vHeight; }
-        float getVoxelDepth()  const { return this->vDepth; }
+        float getVoxelWidth()  const { return this->voxelWidth; }
+        float getVoxelHeight() const { return this->voxelHeight; }
+        float getVoxelDepth()  const { return this->voxelDepth; }
 
         bool center(const P& p, P& center) const;
         bool positionToIndex(const P& p, int& i, int& j, int& k) const;
@@ -72,22 +65,27 @@ class VoxelBuffer
         friend std::ostream& operator<<(std::ostream &s, const VoxelBuffer& b);
 };
 
-////////////////////////////////////////////////////////////////////////////////
+/*******************************************************************************
+ * Type defining the result of a ray march through a volume
+ ******************************************************************************/
+class RayPath 
+{
+    public:
+        Color color;
+        float transmittance;
 
-typedef struct RayPath {
+        RayPath() : 
+            transmittance(0.0f)
+        { 
 
-    Color color;
-    float transmittance;
+        };
+        RayPath(Color _color, float _transmittance) : 
+            color(_color), 
+            transmittance(_transmittance)
+        { 
 
-    RayPath() : 
-        transmittance(0.0f)
-    { };
-    RayPath(Color _color, float _transmittance) : 
-        color(_color), 
-        transmittance(_transmittance)
-    { };
-
-} RayPath;
+        };
+};
 
 RayPath rayMarch(const VoxelBuffer& vb
                 ,const P& start

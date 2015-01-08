@@ -12,10 +12,10 @@
 #include <stdexcept>
 #include <fstream>
 #include <sstream>
+#include <utility>
 #include <ctime>
 #include "Utils.h"
 #include "Config.h"
-
 #include "Sphere.h"
 #include "Cube.h"
 #include "Cylinder.h"
@@ -34,54 +34,16 @@ using namespace std;
 
 /*****************************************************************************/
 
-Configuration::Configuration(const string& filename)
+Configuration::Configuration(const string& _filename) :
+	filename(_filename),
+	RESO{0,0},
+	EYEP{0.0f, 0.0f, 0.0f},
+	VDIR{0.0f, 0.0f, 0.0f},
+	UVEC{0.0f, 0.0f, 0.0f},
+	FOVY(0.0f),
+	envMap(unique_ptr<EnvironmentMap>(nullptr))
 {
-	this->filename = filename;
 
-    this->RESO[0] = 0;
-    this->RESO[1] = 0;
-
-    this->EYEP[0] = 0.0f;
-    this->EYEP[1] = 0.0f;
-    this->EYEP[2] = 0.0f;
-
-    this->VDIR[0] = 0.0f;
-    this->VDIR[1] = 0.0f;
-    this->VDIR[2] = 0.0f;
-
-    this->UVEC[0] = 0.0f;
-    this->UVEC[1] = 0.0f;
-    this->UVEC[2] = 0.0f;
-
-    this->FOVY    = 0.0f;
-	this->environmentMap = nullptr;
-}
-
-Configuration::Configuration(const Configuration& other)
-{
-	this->filename = other.filename;
-
-    this->RESO[0]  = other.RESO[0];
-    this->RESO[1]  = other.RESO[1];
-
-    this->EYEP[0]  = other.EYEP[0];
-    this->EYEP[1]  = other.EYEP[1];
-    this->EYEP[2]  = other.EYEP[2];
-
-    this->VDIR[0]  = other.VDIR[0];
-    this->VDIR[1]  = other.VDIR[1];
-    this->VDIR[2]  = other.VDIR[2];
-
-    this->UVEC[0]  = other.UVEC[0];
-    this->UVEC[1]  = other.UVEC[1];
-    this->UVEC[2]  = other.UVEC[2];
-
-    this->FOVY     = other.FOVY;
-	this->graph    = other.graph;
-
-	this->materialMap    = other.materialMap;
-	this->lights         = other.lights;
-	this->environmentMap = other.environmentMap;
 }
 
 Configuration::~Configuration() 
@@ -112,7 +74,7 @@ ostream& operator<<(ostream& os, const Configuration& c)
 	   << endl;
 
 	os << "Graph {"                 << endl 
-	   << "  " << c.getSceneGraph() << endl
+	   << "  " << c.graph << endl
 	   << "}"                       << endl;
 
 	return os;
@@ -131,11 +93,6 @@ Material* Configuration::getMaterial(const std::string& name) const
 bool Configuration::materialExists(const string& name) const
 {
 	return this->materialMap.find(name) != this->materialMap.end();
-}
-
-void Configuration::registerEnvironmentMap(EnvironmentMap * envMap)
-{
-	this->environmentMap = envMap;
 }
 
 void Configuration::registerLight(Light* light)
@@ -224,7 +181,6 @@ void Configuration::parseEnvironmentSection(istream& is, const string& beginToke
 	string SHAPE           = "";
 	string envMapFile      = "";
 	string basePath        = Utils::baseName(Utils::realPath(this->filename));
-	EnvironmentMap* envMap = nullptr;
 
 	#ifdef DEBUG
 	clog << "parseEnvironmentSection:MAT:" << endl;
@@ -265,9 +221,7 @@ void Configuration::parseEnvironmentSection(istream& is, const string& beginToke
 		}
 	}
 
-	envMap = new TextureEnvironmentMap(envMapFile, Utils::uppercase(SHAPE));
-
-	this->registerEnvironmentMap(envMap);
+	this->envMap = unique_ptr<EnvironmentMap>(new TextureEnvironmentMap(envMapFile, Utils::uppercase(SHAPE)));
 }
 
 /**
@@ -683,7 +637,7 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
  * Reads a configuration from the given stream, updating the corresponding 
  * member values of this instance
  */
-SceneContext * Configuration::read()
+unique_ptr<SceneContext> Configuration::read()
 {
 	ifstream is;
 	is.open(filename.c_str(), ifstream::in);
@@ -713,15 +667,16 @@ SceneContext * Configuration::read()
 
 	is.close();
 
-	return new  SceneContext(glm::vec2(this->RESO[0], this->RESO[1])
-		                    ,glm::vec3(this->EYEP[0], this->EYEP[1], this->EYEP[2])
-		                    ,glm::vec3(this->VDIR[0], this->VDIR[1], this->VDIR[2])
-		                    ,glm::vec3(this->UVEC[0], this->UVEC[1], this->UVEC[2])
-		                    ,this->FOVY
-		                    ,this->environmentMap
-		                    ,this->graph
-		                    ,this->materialMap
-		                    ,this->lights);
+	return unique_ptr<SceneContext>(
+		new SceneContext(glm::vec2(this->RESO[0], this->RESO[1])
+                        ,glm::vec3(this->EYEP[0], this->EYEP[1], this->EYEP[2])
+                        ,glm::vec3(this->VDIR[0], this->VDIR[1], this->VDIR[2])
+                        ,glm::vec3(this->UVEC[0], this->UVEC[1], this->UVEC[2])
+                        ,this->FOVY
+                        ,move(this->envMap)
+                        ,this->graph
+                        ,this->materialMap
+                        ,this->lights));
 }
 
 /******************************************************************************/

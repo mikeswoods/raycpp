@@ -18,9 +18,23 @@
 
 class AABB
 {
+	private:
+		// Returns the width (x) of the AABB
+		float computeWidth() const;
+
+		// Returns the height (y) of the AABB
+		float computeHeight() const;
+
+		// Returns the depth (z) of the AABB
+		float computeDepth() const;
+
+		// Computes the area of the AABB
+		float computeArea() const;
+
 	protected:
 		std::tuple<P,P> Vs; // Vertices defining the AABB
 		P C;                // The centroid of the AABB
+		float _width, _height, _depth, _area;
 
 	public:
 		AABB();
@@ -34,16 +48,16 @@ class AABB
 		const P& centroid() const { return this->C; }
 
 		// Returns the width (x) of the AABB
-		float width() const;
+		float width() const { return this->_width; };
 
 		// Returns the height (y) of the AABB
-		float height() const;
+		float height() const { return this->_height; };
 
 		// Returns the depth (z) of the AABB
-		float depth() const;
+		float depth() const { return this->_depth; };
 
 		// Computes the area of the AABB
-		float area() const;
+		float area() const { return this->_area; }
 
 		// Tests if the given ray intersects the AABB
 		bool intersected(const Ray& ray) const;

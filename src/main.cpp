@@ -4,6 +4,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <fstream>
+#include <memory>
+#include <utility>
 #include <iostream>
 #include <string>
 #include <stdexcept>
@@ -128,8 +130,8 @@ void main()
 
 // Scene state & render options ////////////////////////////////////////////////
 
-static GLWorldState * state        = nullptr;
-static SceneContext * sceneContext = nullptr;
+static unique_ptr<GLWorldState> state(nullptr);
+static unique_ptr<SceneContext> sceneContext(nullptr);
 static TraceOptions* traceOptions  = nullptr;
 
 // Animation/transformation stuff //////////////////////////////////////////////
@@ -328,7 +330,7 @@ int main(int argc, char** argv)
     // Parse configuration
     Configuration config(argv[argc-1]);
     try {
-        sceneContext = config.read();
+        sceneContext = move(config.read());
     } catch (std::runtime_error& e) {
         cerr << "[!] Configuration reader error: " << e.what() << endl;
         exit(EXIT_FAILURE);
@@ -340,7 +342,7 @@ int main(int argc, char** argv)
     }
 
     // Create the world state object from the current configuration:
-    state = new GLWorldState(sceneContext->getSceneGraph());
+    state = unique_ptr<GLWorldState>(new GLWorldState(sceneContext->getSceneGraph()));
 
     // Configure options used during ray tracing
     traceOptions = new TraceOptions();
@@ -493,11 +495,6 @@ void cleanup()
     #endif
 
     glDeleteProgram(shaderProgram);
-
-    if (state != nullptr) {
-        delete state;
-        state = nullptr;
-    }
 }
 
 /**
@@ -614,7 +611,7 @@ static glm::mat4 drawGLGeometry(GraphNode* node, glm::mat4 current, int depth)
     GLGeometry* instance = node->getInstance();
 
     if (instance != nullptr) {
-        instance->draw(state, shaderProgram, unifModel, unifModelInvTr, next);
+        instance->draw(*state, shaderProgram, unifModel, unifModelInvTr, next);
     }
 
     return next;

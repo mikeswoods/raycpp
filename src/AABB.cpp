@@ -21,20 +21,32 @@ using namespace std;
 
 AABB::AABB() :
 	Vs(tuple<P,P>(P(), P())),
-	C(P())
+	C(P()),
+    _width(this->computeWidth()),
+    _height(this->computeHeight()),
+    _depth(this->computeDepth()),
+    _area(this->computeArea())
 { 
-	
+
 }
 
 AABB::AABB(const P& v1, const P& v2) :
-    Vs(tuple<P,P>(v1, v2))
+    Vs(tuple<P,P>(v1, v2)),
+    _width(this->computeWidth()),
+    _height(this->computeHeight()),
+    _depth(this->computeDepth()),
+    _area(this->computeArea())
 {
     this->C = mean(get<0>(this->Vs), get<1>(this->Vs));
 }
 
 AABB::AABB(const AABB& other) :
     Vs(other.Vs),
-    C(other.C)
+    C(other.C),
+    _width(other._width),
+    _height(other._height),
+    _depth(other._depth),
+    _area(other._area)
 {
 
 }
@@ -89,7 +101,7 @@ bool AABB::intersected(const Ray& ray) const
 /**
  * Returns the width (x) of the AABB
  */
-float AABB::width() const
+float AABB::computeWidth() const
 {
     return max(x(get<0>(this->Vs)), x(get<1>(this->Vs))) - 
            min(x(get<0>(this->Vs)), x(get<1>(this->Vs))); 
@@ -98,7 +110,7 @@ float AABB::width() const
 /**
  * Returns the height (y) of the AABB
  */
-float AABB::height() const
+float AABB::computeHeight() const
 {
     return max(y(get<0>(this->Vs)), y(get<1>(this->Vs))) - 
            min(y(get<0>(this->Vs)), y(get<1>(this->Vs)));
@@ -107,7 +119,7 @@ float AABB::height() const
 /**
  * Returns the depth (z) of the AABB
  */
-float AABB::depth() const
+float AABB::computeDepth() const
 {
     return max(z(get<0>(this->Vs)), z(get<1>(this->Vs))) -  
            min(z(get<0>(this->Vs)), z(get<1>(this->Vs)));
@@ -116,7 +128,7 @@ float AABB::depth() const
 /**
  * Computes the area of the AABB
  */
-float AABB::area() const
+float AABB::computeArea() const
 {
 	return this->width() * this->height() * this->depth();
 }

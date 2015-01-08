@@ -69,12 +69,12 @@ SurfaceMap::SurfaceMap(const string& _filename, MapType _type) :
 	iWidth(0),
 	iHeight(0),
 	filename(_filename),
-	type(_type)
+	type(_type),
+	bitmap(unique_ptr<BMP>(new BMP()))
 {
-	this->bitmap   = new BMP();
 	this->loadBitmap(_filename);
 }
-
+/*
 SurfaceMap::SurfaceMap(const SurfaceMap& other) :
 	fWidth(other.fWidth),
 	fHeight(other.fHeight),
@@ -84,6 +84,7 @@ SurfaceMap::SurfaceMap(const SurfaceMap& other) :
 	type(other.type),
 	bitmap(other.bitmap)
 { }
+*/
 
 SurfaceMap::~SurfaceMap()
 {
@@ -175,7 +176,7 @@ TextureMap::TextureMap(const string& filename) :
 
 TextureMap::~TextureMap()
 {
-	delete this->bitmap;
+
 }
 
 /**

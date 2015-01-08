@@ -60,6 +60,13 @@ namespace Utils
     // Linear interpolation
     float lerp(float v1, float v2, float t);
 
+    // Trilinear interpolation
+    float trilerp(float xd, float yd, float zd
+                 ,float v000, float v001
+                 ,float v010, float v011
+                 ,float v100, float v101
+                 ,float v110, float v111);
+
 	// Generate a random float in the range [0,1]
 	float unitRand();
 

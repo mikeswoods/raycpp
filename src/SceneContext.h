@@ -11,6 +11,7 @@
 #define SCENE_CONTEXT_H
 
 #define GLM_FORCE_RADIANS
+#include <memory>
 #include <glm/glm.hpp>
 #include <map>
 #include <list>
@@ -31,7 +32,7 @@ class SceneContext
         glm::vec3 lookAtPosition;
         glm::vec3 upDir;
         float yFOV;
-        EnvironmentMap const * envMap;
+        std::unique_ptr<EnvironmentMap> envMap;
         Graph graph;
         std::map<std::string,Material*> materials;
         std::list<Light*> lights;
@@ -42,11 +43,10 @@ class SceneContext
                     ,const glm::vec3& viewDir
                     ,const glm::vec3& upDir
                     ,float yFOV
-                    ,EnvironmentMap const * envMap
+                    ,std::unique_ptr<EnvironmentMap> envMap
                     ,const Graph& graph
                     ,const std::map<std::string,Material*>& materials
                     ,const std::list<Light*>& lights);
-        SceneContext(const SceneContext& other);
         ~SceneContext();
 
         const glm::vec2& getResolution() const     { return this->resolution; }
@@ -60,7 +60,7 @@ class SceneContext
         float getZFar() const                      { return 100.0f; }
 
 
-        EnvironmentMap const * getEnvironmentMap() const { return this->envMap; }
+        const EnvironmentMap& getEnvironmentMap() const { return *this->envMap; }
         const Graph& getSceneGraph() const      { return graph; }
         const std::map<std::string,Material*>& getMaterials() const { return this->materials; }
         const std::list<Light*>& getLights() const { return this->lights; }

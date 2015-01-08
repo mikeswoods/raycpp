@@ -12,11 +12,10 @@
 #define SURFACE_MAP_H
 
 #include <iostream>
-
+#include <memory>
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <EasyBMP/EasyBMP.h>
- 
 #include "Color.h"
 #include "R3.h"
 #include "Geometry.h"
@@ -41,7 +40,7 @@ class SurfaceMap
 
 	protected:
 		MapType type;
-		BMP* bitmap;
+		std::unique_ptr<BMP> bitmap;
 		int iWidth, iHeight;
 		float fWidth, fHeight;
 		std::string filename;
@@ -62,7 +61,6 @@ class SurfaceMap
 
 	public:
 		SurfaceMap(const std::string& filename, MapType type);
-		SurfaceMap(const SurfaceMap& other);
 		virtual ~SurfaceMap();
 
 		// Given u and v coordinates, this function computes 4 weights
