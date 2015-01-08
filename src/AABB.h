@@ -10,6 +10,7 @@
 #ifndef AABB_H
 #define AABB_H
 
+#include <tuple>
 #include "R3.h"
 #include "Ray.h"
 
@@ -18,16 +19,16 @@
 class AABB
 {
 	protected:
-		P v1, v2; // Extrema defining the AABB
-		P C;      // The centroid of the AABB
-
-		// Computes the centroid of the AABB
-		P computeCentroid() const;
+		std::tuple<P,P> Vs; // Vertices defining the AABB
+		P C;                // The centroid of the AABB
 
 	public:
 		AABB();
 		AABB(const P& v1, const P& v2);
 		AABB(const AABB& other);
+
+		// Get the pair of vertices comprising the AABB
+		const std::tuple<P,P>& vertices() const { return this->Vs; }
 
 		// Returns the centroid of the AABB
 		const P& centroid() const { return this->C; }
@@ -43,8 +44,6 @@ class AABB
 
 		// Computes the area of the AABB
 		float area() const;
-
-
 
 		// Tests if the given ray intersects the AABB
 		bool intersected(const Ray& ray) const;

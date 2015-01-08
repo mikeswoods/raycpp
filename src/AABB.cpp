@@ -20,35 +20,23 @@ using namespace std;
 /******************************************************************************/
 
 AABB::AABB() :
-	v1(P(0, 0, 0)),
-	v2(P(0, 0, 0)),
-	C(P(0, 0, 0))
+	Vs(tuple<P,P>(P(), P())),
+	C(P())
 { 
 	
 }
 
-AABB::AABB(const P& _v1, const P& _v2) :
-	v1(_v1),
-	v2(_v2)
-{ 
-	this->C = this->computeCentroid();		
+AABB::AABB(const P& v1, const P& v2) :
+    Vs(tuple<P,P>(v1, v2))
+{
+    this->C = mean(get<0>(this->Vs), get<1>(this->Vs));
 }
 
 AABB::AABB(const AABB& other) :
-	v1(other.v1),
-	v2(other.v2)	
-{ 
-	this->C = this->computeCentroid();	
-}
-
-/**
- * Internal method: computes the centroid (averaged center point) of the AABB
- */
-P AABB::computeCentroid() const
+    Vs(other.Vs),
+    C(other.C)
 {
-	return P((x(this->v1) + x(this->v2)) / 2.0f
-		    ,(y(this->v1) + y(this->v2)) / 2.0f
-			,(z(this->v1) + z(this->v2)) / 2.0f);
+
 }
 
 /**
@@ -71,12 +59,12 @@ bool AABB::intersected(const Ray& ray) const
         zd = eps;
     }
 
-    float x1 = (x(this->v1) - x(ray.orig)) / xd;
-    float x2 = (x(this->v2) - x(ray.orig)) / xd;
-    float y1 = (y(this->v1) - y(ray.orig)) / yd;
-    float y2 = (y(this->v2) - y(ray.orig)) / yd;
-    float z1 = (z(this->v1) - z(ray.orig)) / zd;
-    float z2 = (z(this->v2) - z(ray.orig)) / zd;
+    float x1 = (x(get<0>(this->Vs)) - x(ray.orig)) / xd;
+    float x2 = (x(get<1>(this->Vs)) - x(ray.orig)) / xd;
+    float y1 = (y(get<0>(this->Vs)) - y(ray.orig)) / yd;
+    float y2 = (y(get<1>(this->Vs)) - y(ray.orig)) / yd;
+    float z1 = (z(get<0>(this->Vs)) - z(ray.orig)) / zd;
+    float z2 = (z(get<1>(this->Vs)) - z(ray.orig)) / zd;
 
     if (x1 > x2) {
 		swap(x1,x2);
@@ -103,7 +91,8 @@ bool AABB::intersected(const Ray& ray) const
  */
 float AABB::width() const
 {
-    return max(x(this->v1), x(this->v2)) - min(x(this->v1), x(this->v2)); 
+    return max(x(get<0>(this->Vs)), x(get<1>(this->Vs))) - 
+           min(x(get<0>(this->Vs)), x(get<1>(this->Vs))); 
 }
 
 /**
@@ -111,7 +100,8 @@ float AABB::width() const
  */
 float AABB::height() const
 {
-    return max(y(this->v1), y(this->v2)) - min(y(this->v1), y(this->v2));
+    return max(y(get<0>(this->Vs)), y(get<1>(this->Vs))) - 
+           min(y(get<0>(this->Vs)), y(get<1>(this->Vs)));
 }
 
 /**
@@ -119,7 +109,8 @@ float AABB::height() const
  */
 float AABB::depth() const
 {
-    return max(z(this->v1), z(this->v2)) -  min(z(this->v1), z(this->v2));
+    return max(z(get<0>(this->Vs)), z(get<1>(this->Vs))) -  
+           min(z(get<0>(this->Vs)), z(get<1>(this->Vs)));
 }
 
 /**
@@ -133,8 +124,8 @@ float AABB::area() const
 AABB& AABB::operator+=(const AABB &other)
 {
     AABB t = *this + other;
-    this->v1 = t.v1;
-    this->v2 = t.v2;
+    get<0>(this->Vs) = get<0>(t.Vs);
+    get<1>(this->Vs) = get<1>(t.Vs);
     return *this;
 }
 
@@ -142,13 +133,19 @@ AABB& AABB::operator+=(const AABB &other)
 
 ostream& operator<<(ostream& s, const AABB& aabb)
 {
-	return s << "<[" << aabb.v1 << ", " << aabb.v2 << "]>";
+	return s << "<[" 
+             << get<0>(aabb.Vs) 
+             << ", " 
+             << get<0>(aabb.Vs) 
+             << "]>";
 }
 
 const AABB operator+(const AABB& p, const AABB& q)
 {
-    return AABB(minimum(minimum(p.v1, p.v2), minimum(q.v1, q.v2))
-               ,maximum(maximum(p.v1, p.v2), maximum(q.v1, q.v2)));
+    return AABB(minimum(minimum(get<0>(p.Vs), get<1>(p.Vs))
+                       ,minimum(get<0>(q.Vs), get<1>(q.Vs)))
+               ,maximum(maximum(get<0>(p.Vs), get<1>(p.Vs))
+                       ,maximum(get<0>(q.Vs), get<1>(q.Vs))));
 }
 
 /******************************************************************************/

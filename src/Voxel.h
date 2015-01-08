@@ -43,6 +43,7 @@ class VoxelBuffer
         int xDim, yDim, zDim;
         float vWidth, vHeight, vDepth;
         Voxel* buffer;
+        AABB aabb;
 
     public:
         VoxelBuffer(int x, int y, int z, Geometry const * geometry);
@@ -57,7 +58,6 @@ class VoxelBuffer
         float getVoxelDepth()  const { return this->vDepth; }
 
         bool center(const P& p, P& center) const;
-        bool center(int i, int j, int k, P& center) const;
         bool positionToIndex(const P& p, int& i, int& j, int& k) const;
         Voxel* positionToVoxel(const P& p) const;
         float getInterpolatedDensity(const P& p) const;

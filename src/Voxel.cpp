@@ -32,14 +32,11 @@ VoxelBuffer::VoxelBuffer(int xDim, int yDim, int zDim, Geometry const * geometry
 	this->yDim   = yDim;
 	this->zDim   = zDim;
 	this->buffer = new Voxel[this->xDim * this->yDim * this->zDim];
+	this->aabb   = geometry->getAABB();
 
-	//this->vWidth  = (float)this->bounds.width() / this->xDim;
-	//this->vHeight = (float)this->bounds.height() / this->yDim;
-	//this->vDepth  = (float)this->bounds.depth() / this->zDim;
-
-	this->vWidth  = 1.0f;
-	this->vHeight = 1.0f;
-	this->vDepth  = 1.0f;
+	this->vWidth  = static_cast<float>(this->aabb.width() / this->xDim);
+	this->vHeight = static_cast<float>(this->aabb.height() / this->yDim);
+	this->vDepth  = static_cast<float>(this->aabb.depth() / this->zDim);
 }
 
 VoxelBuffer::~VoxelBuffer()
@@ -95,33 +92,6 @@ bool VoxelBuffer::center(const P& p, P& center) const
 	int i,j,k;
 
 	if (!this->positionToIndex(p, i, j, k)) {
-		return false;
-	}
-	/*
-	P p1 = this->bounds.getP1();
-	P p2 = this->bounds.getP2();
-
-	float dx  = (x(p2) - x(p1)) / static_cast<float>(this->xDim);
-	float dy  = (y(p2) - y(p1)) / static_cast<float>(this->yDim);
-	float dz  = (z(p2) - z(p1)) / static_cast<float>(this->zDim);
-	float dx2 = 0.5f * dx; 
-	float dy2 = 0.5f * dy;
-	float dz2 = 0.5f * dz; 
-
-	center = P(x(p1) + dx2 + (dx * static_cast<float>(i))
-			  ,y(p1) + dy2 + (dy * static_cast<float>(j))
-			  ,z(p1) + dz2 + (dz * static_cast<float>(k)));
-	*/
-	return true;
-}
-
-/**
- * Sets center to the center point of the voxel the point p falls within.
- * If this method returns false, the voxel at (i,j,k) does not exist
- */
-bool VoxelBuffer::center(int i, int j, int k, P& center) const
-{
-	if (!this->valid(i, j, k)) {
 		return false;
 	}
 	/*
