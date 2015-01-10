@@ -10,6 +10,7 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
+#include <memory>
 #include <iostream>
 #include "Color.h"
 #include "SurfaceMap.h"
@@ -47,10 +48,10 @@ class Material
 		float ambient;
 
 		// Texture map
-		TextureMap const * textureMap;
+		std::shared_ptr<TextureMap> textureMap;
 
 		// Bump map
-		BumpMap const * bumpMap;
+		std::shared_ptr<BumpMap> bumpMap;
 
 	public:
 
@@ -66,25 +67,25 @@ class Material
 				,bool tran
 				,bool emit
 				,float ambient
-				,TextureMap const * textureMap = nullptr
-				,BumpMap const * bumpMap = nullptr);
+				,std::shared_ptr<TextureMap> textureMap = std::shared_ptr<TextureMap>(nullptr)
+				,std::shared_ptr<BumpMap> bumpMap = std::shared_ptr<BumpMap>(nullptr));
 		Material(const Material& other);
 
         friend std::ostream& operator<<(std::ostream& os, const Material& m);
 
-		const std::string& getName() const       { return this->name; }
-		const Color& getDiffuseColor() const     { return this->diff; }
-		const Color& getReflectColor() const     { return this->refl; }
-		float getSpecularExponent() const        { return this->expo; }
-		float getIndexOfRefraction() const       { return this->ior; }
-		bool isMirror() const                    { return this->mirr; }
-		bool isTransparent() const               { return this->tran; }
-		bool isEmissive() const                  { return this->emit; }
-		float getAmbientCoeff() const            { return this->ambient; } 
-		TextureMap const * getTextureMap() const { return this->textureMap; } 
-		bool hasTextureMap() const               { return this->textureMap != nullptr; }
-		BumpMap const * getBumpMap() const       { return this->bumpMap; } 
-		bool hasBumpMap() const                  { return this->bumpMap != nullptr; }
+		const std::string& getName() const                { return this->name; }
+		const Color& getDiffuseColor() const              { return this->diff; }
+		const Color& getReflectColor() const              { return this->refl; }
+		float getSpecularExponent() const                 { return this->expo; }
+		float getIndexOfRefraction() const                { return this->ior; }
+		bool isMirror() const                             { return this->mirr; }
+		bool isTransparent() const                        { return this->tran; }
+		bool isEmissive() const                           { return this->emit; }
+		float getAmbientCoeff() const                     { return this->ambient; } 
+		std::shared_ptr<TextureMap> getTextureMap() const { return this->textureMap; } 
+		bool hasTextureMap() const                        { return this->textureMap != nullptr; }
+		std::shared_ptr<BumpMap> getBumpMap() const       { return this->bumpMap; } 
+		bool hasBumpMap() const                           { return this->bumpMap != nullptr; }
 
 		// "Smart" color function will return the correct color based on
 		// assigned material attributes:

@@ -27,7 +27,9 @@ Material::Material() :
 	ambient(DEFAULT_AMBIENT_COEFF),
 	textureMap(nullptr),
 	bumpMap(nullptr)
-{ }
+{ 
+
+}
 
 Material::Material(string _name
 	              ,Color _diff
@@ -38,8 +40,8 @@ Material::Material(string _name
 				  ,bool _tran
 				  ,bool _emit
 				  ,float _ambient
-				  ,TextureMap const * _textureMap
-				  ,BumpMap const * _bumpMap) :
+				  ,shared_ptr<TextureMap> _textureMap
+				  ,shared_ptr<BumpMap> _bumpMap) :
 	name(_name),
 	diff(_diff),
 	refl(_refl),

@@ -24,7 +24,7 @@
 #include "Options.h"
 
 #include <EasyBMP/EasyBMP.h>
-//#include <CImg.h>
+#include <CImg.h>
 //#include <chibi/eval.h>
 
 using namespace std;

@@ -347,14 +347,14 @@ void Configuration::parseMaterialSection(istream& is, const string& beginToken)
 		throw runtime_error("Material name cannot be empty");
 	}
 
-	TextureMap const * textureMap = nullptr;
+	shared_ptr<TextureMap> textureMap(nullptr);
 	if (textureMapFile != "") {
-		textureMap = new TextureMap(textureMapFile);
+		textureMap = shared_ptr<TextureMap>(make_shared<TextureMap>(textureMapFile));
 	}
 
-	BumpMap const * bumpMap = nullptr;
+	shared_ptr<BumpMap> bumpMap(nullptr);
 	if (bumpMapFile != "") {
-		bumpMap = new BumpMap(bumpMapFile);
+		bumpMap = shared_ptr<BumpMap>(make_shared<BumpMap>(bumpMapFile));
 	}
 
 	shared_ptr<Material> 
