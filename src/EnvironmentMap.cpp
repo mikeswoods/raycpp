@@ -21,9 +21,16 @@ using namespace std;
 EnvironmentMap::EnvironmentMap(const std::string& mapType, float radius)
 {
 	this->mapType = this->stringToType(mapType);
-	this->sphere  = new Sphere();
-	this->cube    = new Cube();
-	this->T       = glm::scale(glm::mat4(1.0f), glm::vec3(radius));
+	this->T       = glm::scale(glm::mat4(), glm::vec3(radius));
+}
+
+EnvironmentMap::EnvironmentMap(const EnvironmentMap& other) :
+	mapType(other.mapType),
+	T(other.T),
+	sphere(other.sphere),
+	cube(other.cube)
+{
+
 }
 
 EnvironmentMap::MappingType EnvironmentMap::stringToType(const std::string& name) const
@@ -53,20 +60,22 @@ EnvironmentMap::MappingType EnvironmentMap::stringToType(const std::string& name
 	return mapType;
 }
 
-Color EnvironmentMap::getColor(const Ray& ray) const
+Color EnvironmentMap::getColor(const Ray& ray, shared_ptr<SceneContext> scene) const
 {
 	Intersection isect;
+
+	//return Color::DEBUG;
 
 	switch (this->mapType) {
 		case SPHERE:
 			{
-				isect = this->sphere->intersect(this->T, ray);
+				isect = this->sphere.intersect(this->T, ray, scene);
 			}
 			break;
 		case CUBE:
 		default:
 			{
-				isect = this->cube->intersect(this->T, ray);
+				isect = this->cube.intersect(this->T, ray, scene);
 			}
 			break;
 	}

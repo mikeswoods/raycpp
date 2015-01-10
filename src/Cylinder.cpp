@@ -161,7 +161,7 @@ void Cylinder::buildGeometry()
     }
 }
 
-Intersection Cylinder::intersectImpl(const Ray &ray) const
+Intersection Cylinder::intersectImpl(const Ray &ray, shared_ptr<SceneContext> scene) const
 {
 	float inf   = numeric_limits<float>::infinity();
     float r2    = this->radius_ * this->radius_;

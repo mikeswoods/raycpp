@@ -18,15 +18,15 @@ SceneContext::SceneContext(const glm::vec2& _resolution
                           ,const glm::vec3& _viewDir
                           ,const glm::vec3& _upDir
                           ,float _yFOV
-                          ,unique_ptr<EnvironmentMap> _envMap
                           ,const Graph& _graph
-                          ,const map<string,Material*>& _materials
-                          ,const list<Light*>& _lights) :
+                          ,shared_ptr<EnvironmentMap> _envMap
+                          ,shared_ptr<MATERIALS> _materials
+                          ,shared_ptr<LIGHTS> _lights) :
     resolution(_resolution),
     eyePosition(_eyePosition),
     viewDir(_viewDir),
     yFOV(_yFOV),
-    envMap(move(_envMap)),
+    envMap(_envMap),
     graph(_graph),
     materials(_materials),
     lights(_lights)

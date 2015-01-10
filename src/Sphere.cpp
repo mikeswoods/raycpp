@@ -13,6 +13,8 @@
 #include "Sphere.h"
 #include "Utils.h"
 
+using namespace std;
+
 /******************************************************************************/
 
 // Creates a unit sphere centered about the world origin
@@ -39,7 +41,7 @@ Sphere::~Sphere()
 
 }
 
-void Sphere::repr(std::ostream& s) const
+void Sphere::repr(ostream& s) const
 {
     s << "Sphere<radius=" << this->radius_ 
       << ", center="      << this->center_ 
@@ -161,7 +163,7 @@ void Sphere::buildGeometry()
     indices_.push_back(offset);
 }
 
-Intersection Sphere::intersectImpl(const Ray &ray) const
+Intersection Sphere::intersectImpl(const Ray &ray, shared_ptr<SceneContext> scene) const
 {
 	// Page 266 in the notes
 	glm::vec3 oc = ray.orig - this->center_;
@@ -178,8 +180,8 @@ Intersection Sphere::intersectImpl(const Ray &ray) const
 	float q = (b < 0.0f ? -b + sqrt(D) : -b - sqrt(D)) / 2.0f;
 	float m = q / a; 
 	float n = c / q;
-	float u = std::min(m, n);
-	float v = std::max(m, n);
+	float u = min(m, n);
+	float v = max(m, n);
 	float t = u < 0.0f ? v : u;
 
 	glm::vec3 p = ray.orig + (ray.dir * t);

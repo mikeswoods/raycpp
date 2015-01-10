@@ -12,7 +12,7 @@
 
 #include "Geometry.h"
 
-/*****************************************************************************/
+/******************************************************************************/
 
 class Cube : public Geometry
 {
@@ -25,7 +25,7 @@ class Cube : public Geometry
 
 	protected:
 		P p1, p2, centroid;
-		virtual Intersection intersectImpl(const Ray &ray) const;
+		virtual Intersection intersectImpl(const Ray &ray, std::shared_ptr<SceneContext> scene) const;
 		virtual glm::vec3 sampleImpl() const;
 
 	public:
@@ -40,6 +40,6 @@ class Cube : public Geometry
 		virtual void repr(std::ostream& s) const;
 };
 
-/*****************************************************************************/
+/******************************************************************************/
 
 #endif

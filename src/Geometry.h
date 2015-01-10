@@ -14,6 +14,7 @@
 
 #include <vector>
 #include <tuple>
+#include <memory>
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -22,6 +23,11 @@
 #include "Intersection.h"
 #include "Ray.h"
 #include "BoundingVolume.h"
+
+/******************************************************************************/
+
+// Forward declarations
+class SceneContext;
 
 /******************************************************************************/
 
@@ -38,6 +44,7 @@ class Geometry
 			,SPHERE
 			,CYLINDER
 			,MESH
+			,VOLUME
 		};
 
 	protected:
@@ -51,9 +58,6 @@ class Geometry
 
 		// OpenGl index buffer data
 		std::vector<unsigned int> indices_;
-
-		// Compute an intersection with an OBJECT-LOCAL-space ray.
-		virtual Intersection intersectImpl(const Ray &ray) const = 0;
 
 		// Sample a point on the object's surface in OBJECT-LOCAL-space ray.
 		virtual glm::vec3 sampleImpl() const = 0;
@@ -71,6 +75,9 @@ class Geometry
 		// Function for building vertex data, i.e. vertices, normals, and indices.
 		// Implemented in Sphere and Cylinder.
 		virtual void buildGeometry() = 0;
+
+		// Compute an intersection with an OBJECT-LOCAL-space ray.
+		virtual Intersection intersectImpl(const Ray &ray, std::shared_ptr<SceneContext> scene) const = 0;
 
 		// Return the bounding volume used to contain this geometric object
 		virtual const BoundingVolume& getVolume() const { return this->volume; }
@@ -96,7 +103,7 @@ class Geometry
 		Type getGeometryType() const { return this->type; };
 
 		// Compute an intersection with a WORLD-space ray.
-		Intersection intersect(const glm::mat4& T, const Ray& rayWorld) const;
+		Intersection intersect(const glm::mat4& T, const Ray& rayWorld, std::shared_ptr<SceneContext> scene) const;
 
 		// Returns a sample point from the surface of the object in WORLD-space
 		glm::vec3 sample(const glm::mat4& T) const;

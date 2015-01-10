@@ -11,7 +11,8 @@
 #define RAYTRACE_H
 
 #include <iostream>
- 
+#include <memory>
+#include <utility> 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <EasyBMP/EasyBMP.h>
@@ -84,61 +85,80 @@ class TraceOptions
  * A representation of the current raytracing state/context state during
  * rendering
  */
-struct TraceContext
+class TraceContext
 {
-	// Current ray
-	Ray ray;
+	public:
+		// Scene context
+		std::shared_ptr<SceneContext> scene;
 
-	// Current transformation matrix
-	glm::mat4 T;
+		// Current ray
+		Ray ray;
 
-	// Current closest intersection
-	Intersection closestIsect;
+		// Current transformation matrix
+		glm::mat4 T;
 
-	TraceContext() :
-		T(glm::mat4()),
-		closestIsect(Intersection::miss())
-	{ 
+		// Current closest intersection
+		Intersection closestIsect;
 
-	}
+		TraceContext(std::shared_ptr<SceneContext> _scene) :
+			scene(_scene),
+			T(glm::mat4()),
+			closestIsect(Intersection::miss())
+		{ 
 
-	TraceContext(const Ray& _ray) :
-		ray(_ray),
-		T(glm::mat4()),
-		closestIsect(Intersection::miss())
-	{ 
+		}
 
-	}
+		TraceContext(std::shared_ptr<SceneContext> _scene
+			        ,const Ray& _ray) :
+			scene(_scene),
+			ray(_ray),
+			T(glm::mat4()),
+			closestIsect(Intersection::miss())
+		{ 
 
-	TraceContext(const Ray& _ray, const glm::mat4& _T) :
-		ray(_ray),
-		T(_T),
-		closestIsect(Intersection::miss())
-	{ 
+		}
 
-	}
+		TraceContext(std::shared_ptr<SceneContext> _scene
+			        ,const Ray& _ray
+			        ,const glm::mat4& _T) :
+			scene(_scene),
+			ray(_ray),
+			T(_T),
+			closestIsect(Intersection::miss())
+		{ 
 
-	TraceContext(const Ray& _ray, const glm::mat4& _T, const Intersection& _closestIsect) :
-		ray(_ray),
-		T(_T),
-		closestIsect(_closestIsect)
-	{ 
+		}
 
-	}
+		TraceContext(std::shared_ptr<SceneContext> _scene
+			        ,const Ray& _ray
+			        ,const glm::mat4& _T
+			        ,const Intersection& _closestIsect) :
+			scene(_scene),
+			ray(_ray),
+			T(_T),
+			closestIsect(_closestIsect)
+		{ 
 
-	TraceContext(const TraceContext& other) :
-		ray(other.ray),
-		T(other.T),
-		closestIsect(other.closestIsect)
-	{
+		}
 
-	}
+		TraceContext(const TraceContext& other) :
+			scene(other.scene),
+			ray(other.ray),
+			T(other.T),
+			closestIsect(other.closestIsect)
+		{
+
+		}
 };
 
 /**
  * Raytracing code 
  */
-void initRaytrace(const SceneContext&, Camera&);
-void rayTrace(BMP&, const SceneContext&, const Camera&, TraceOptions&);
+void initRaytrace(Camera&, std::shared_ptr<SceneContext> scene);
+
+void rayTrace(BMP&
+	         ,const Camera&
+	         ,std::shared_ptr<SceneContext>
+	         ,std::shared_ptr<TraceOptions>);
 
 #endif

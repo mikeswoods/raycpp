@@ -41,7 +41,9 @@ Configuration::Configuration(const string& _filename) :
 	VDIR{0.0f, 0.0f, 0.0f},
 	UVEC{0.0f, 0.0f, 0.0f},
 	FOVY(0.0f),
-	envMap(unique_ptr<EnvironmentMap>(nullptr))
+	envMap(shared_ptr<EnvironmentMap>(nullptr)),
+	materials(shared_ptr<MATERIALS>(make_shared<MATERIALS>())),
+	lights(shared_ptr<LIGHTS>(make_shared<LIGHTS>()))
 {
 
 }
@@ -60,13 +62,13 @@ ostream& operator<<(ostream& os, const Configuration& c)
        << "  VDIR      = <"  << c.VDIR[0]  << "," << c.VDIR[1] << "," << c.VDIR[2] << ">" << endl
        << "  UVEC      = <"  << c.UVEC[0]  << "," << c.UVEC[1] << "," << c.UVEC[2] << ">" << endl
        << "  FOVY      = "   << c.FOVY            << endl
-       << "  |light|   = "   << c.lights.size()   << endl
+       << "  |light|   = "   << c.lights->size()   << endl
        << "}"
 	   << endl 
 	   << endl;
 
 	os << "Materials { " << endl;
-	for (auto i=c.materialMap.begin(); i != c.materialMap.end(); i++) {
+	for (auto i=c.materials->begin(); i != c.materials->end(); i++) {
 		os << "  \"" << i->first << "\": " << *(i->second) << endl;
 	}
 	os << "}"
@@ -80,24 +82,24 @@ ostream& operator<<(ostream& os, const Configuration& c)
 	return os;
 }
 
-void Configuration::registerMaterial(Material* material)
+void Configuration::registerMaterial(shared_ptr<Material> material)
 {
-	this->materialMap[material->getName()] = material;
+	(*this->materials)[material->getName()] = material;
 }
 
-Material* Configuration::getMaterial(const std::string& name) const
+shared_ptr<Material> Configuration::getMaterial(const string& name) const
 {
-	return this->materialMap.at(name);
+	return this->materials->at(name);
 }
 
 bool Configuration::materialExists(const string& name) const
 {
-	return this->materialMap.find(name) != this->materialMap.end();
+	return this->materials->find(name) != this->materials->end();
 }
 
-void Configuration::registerLight(Light* light)
+void Configuration::registerLight(shared_ptr<Light> light)
 {
-	this->lights.push_back(light);
+	this->lights->push_back(light);
 }
 
 /**
@@ -221,7 +223,7 @@ void Configuration::parseEnvironmentSection(istream& is, const string& beginToke
 		}
 	}
 
-	this->envMap = unique_ptr<EnvironmentMap>(new TextureEnvironmentMap(envMapFile, Utils::uppercase(SHAPE)));
+	this->envMap = shared_ptr<EnvironmentMap>(make_shared<TextureEnvironmentMap>(envMapFile, Utils::uppercase(SHAPE)));
 }
 
 /**
@@ -355,17 +357,12 @@ void Configuration::parseMaterialSection(istream& is, const string& beginToken)
 		bumpMap = new BumpMap(bumpMapFile);
 	}
 
-	Material* material = new Material(name
-		                             ,Color(DIFF)
-		                             ,Color(REFL)
-									 ,EXPO
-									 ,IOR
-									 ,MIRR != 0
-									 ,TRAN != 0
-									 ,EMIT != 0
-									 ,AMBIENT
-									 ,textureMap
-									 ,bumpMap);
+	shared_ptr<Material> 
+		material(make_shared<Material>(
+			 name
+			,Color(DIFF), Color(REFL), EXPO, IOR 
+			,MIRR != 0, TRAN != 0, EMIT != 0, AMBIENT, textureMap, bumpMap));
+
 	this->registerMaterial(material);
 }
 
@@ -422,8 +419,8 @@ void Configuration::parsePointLightSection(istream& is, const string& beginToken
 		// ====================================================================
 	}
 
-	Light* light = new PointLight(P(LPOS[0], LPOS[1], LPOS[2])
-		                         ,Color(LCOL[0], LCOL[1], LCOL[2]));
+	auto light = make_shared<PointLight>(P(LPOS[0], LPOS[1], LPOS[2])
+		                                ,Color(LCOL[0], LCOL[1], LCOL[2]));
 	this->registerLight(light);
 }
 
@@ -577,8 +574,8 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 					if (!this->materialExists(matName)) {
 						throw runtime_error("parseNodeDefinition: Material not defined: " + matName);
 					}
-					Material* material = this->getMaterial(matName);
-					if (material == nullptr) {
+					shared_ptr<Material> material = this->getMaterial(matName);
+					if (!material) {
 						// This should never happen:
 						throw runtime_error("No material instance found for name: " + matName);
 					}
@@ -673,9 +670,9 @@ unique_ptr<SceneContext> Configuration::read()
                         ,glm::vec3(this->VDIR[0], this->VDIR[1], this->VDIR[2])
                         ,glm::vec3(this->UVEC[0], this->UVEC[1], this->UVEC[2])
                         ,this->FOVY
-                        ,move(this->envMap)
                         ,this->graph
-                        ,this->materialMap
+                        ,this->envMap
+                        ,this->materials
                         ,this->lights));
 }
 

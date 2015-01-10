@@ -12,7 +12,7 @@
 
 using namespace std;
 
-/*****************************************************************************/
+/******************************************************************************/
 
 // Creates a unit cube centered at (0, 0, 0)
 Cube::Cube() :
@@ -140,7 +140,7 @@ void Cube::buildGeometry()
 	indices_.push_back(2); indices_.push_back(6); indices_.push_back(7);
 }
 
-Intersection Cube::intersectImpl(const Ray &ray) const
+Intersection Cube::intersectImpl(const Ray &ray, shared_ptr<SceneContext> scene) const
 {
 	float xd  = x(ray.dir);
     float yd  = y(ray.dir);
@@ -248,4 +248,4 @@ glm::vec3 Cube::sampleImpl() const
 	return point;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/

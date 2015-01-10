@@ -1,6 +1,7 @@
 #define _USE_MATH_DEFINES
 #include <cassert>
 #include <cmath>
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <limits>
@@ -32,16 +33,26 @@ ostream& operator<<(ostream &s, const Voxel &v)
  * Voxel buffer
  ******************************************************************************/
 
-VoxelBuffer::VoxelBuffer(int x, int y, int z, Geometry const * geometry) :
+VoxelBuffer::VoxelBuffer(int x, int y, int z, const AABB& _aabb) :
 	_x(x),
 	_y(y),
 	_z(z),
 	buffer(unique_ptr<Voxel[]>(new Voxel[x * y * z])),
-	aabb(geometry->getAABB())
+	aabb(_aabb)
 {
 	this->voxelWidth  = static_cast<float>(this->aabb.width() / x);
 	this->voxelHeight = static_cast<float>(this->aabb.height() / y);
 	this->voxelDepth  = static_cast<float>(this->aabb.depth() / z);
+}
+
+VoxelBuffer::VoxelBuffer(const VoxelBuffer& other) :
+	_x(other._x),
+	_y(other._y),
+	_z(other._z),
+	buffer(unique_ptr<Voxel[]>(new Voxel[other._x * other._y * other._z])),
+	aabb(other.aabb)
+{
+	memcpy(&this->buffer[0], &other.buffer[0], sizeof(this->buffer[0]) * other._x * other._y * other._z);
 }
 
 VoxelBuffer::~VoxelBuffer()
@@ -281,23 +292,23 @@ bool VoxelBuffer::valid(int i, int j, int k) const
 		   (k >= 0 && k < this->_z);
 }
 
-ostream& operator<<(ostream &s, const VoxelBuffer &vb)
+ostream& operator<<(ostream &s, const VoxelBuffer& buffer)
 {
-	s << "VoxelBuffer[" << vb._x << "]"   <<
-					"[" << vb._y << "]"   <<
-					"[" << vb._z << "] {" << endl;
+	s << "VoxelBuffer[" << buffer._x << "]"   <<
+					"[" << buffer._y << "]"   <<
+					"[" << buffer._z << "] {" << endl;
 	int q = 0, w = 0;
 
-	for (int k=0; k<vb._z; k++) {
-		for (int j=0; j<vb._y; j++) {
-			for (int i=0; i<vb._x; i++) {
+	for (int k=0; k<buffer._z; k++) {
+		for (int j=0; j<buffer._y; j++) {
+			for (int i=0; i<buffer._x; i++) {
 
 				int ii,jj,kk;
-				w = vb.sub2ind(i,j,k);
-				vb.ind2sub(w, ii, jj, kk);
+				w = buffer.sub2ind(i,j,k);
+				buffer.ind2sub(w, ii, jj, kk);
 				s << q++ << "\t[(" << i << "," << j << "," << k << ")" 
 						 <<  " => (" << ii << "," << jj << "," << kk <<")"
-						 << " => " << vb.buffer[w] 
+						 << " => " << buffer.buffer[w] 
 				  << endl;
 			}
 		}
@@ -326,14 +337,13 @@ static float Q(const VoxelBuffer& buffer, float kappa, float step, int iters
  * Perform ray marching through the volume accumulating density and 
  * transmittance values
  */
-RayPath rayMarch(const VoxelBuffer& vb
+RayPath rayMarch(const VoxelBuffer& buffer
 				,const P& start
-				,const P& end
+				,const V& dir
 				,float stepSize
 				,bool interpolate
-				,const list<Light*>& lights
-				,float (*densityFunction)(Voxel* voxel, const P& X, void* densityData)
-				,void* densityData)
+				,shared_ptr<list<shared_ptr<Light>>> lights
+				,float (*densityFunction)(Voxel* voxel, const P& X))
 {
 	float kappa      = 1.0f;
 	float T          = 1.0f;
@@ -342,21 +352,21 @@ RayPath rayMarch(const VoxelBuffer& vb
 
 	P X;
 	V N;
-	int iterations = steps(stepSize, FLT_EPSILON, start, end, X, N);
+	int iterations = steps(stepSize, FLT_EPSILON, start, dir, X, N);
 
 	for (int i=0; i<iterations; i++, X += N) {
 
-		if (!(voxel = vb.positionToVoxel(X))) {
+		if (!(voxel = buffer.positionToVoxel(X))) {
 			break;
 		}
 
 		// If the density function is provided, use it
 		float density = densityFunction == nullptr 
 			? voxel->density 
-			: densityFunction(voxel, X, densityData);
+			: densityFunction(voxel, X);
 		
 		if (interpolate) {
-			density = vb.getInterpolatedDensity(X);
+			density = buffer.getInterpolatedDensity(X);
 		}
 
 		float deltaT      = exp(-kappa * stepSize * density);
@@ -365,23 +375,23 @@ RayPath rayMarch(const VoxelBuffer& vb
 		T *= deltaT;
 
 		P center;
-		vb.center(X, center);
+		buffer.center(X, center);
 
 		P LX;
 		V LN;
 		float offset = (2.0f * stepSize) + FLT_EPSILON;
 
 		// For every light in the scene:
-		auto li = lights.begin();
+		auto li = lights->begin();
 
-		for (int k=0; li != lights.end(); li++, k++) {
+		for (int k=0; li != lights->end(); li++, k++) {
 
-			Light* light = *li;
+			auto light = *li;
 
 			int stepsToLight = steps(stepSize, offset, center, light->fromSampledPoint(center), LX, LN);
 
 			if (voxel->light[k] < 0.0f) {
-				voxel->light[k] = Q(vb, kappa, stepSize, stepsToLight, LX, LN);
+				voxel->light[k] = Q(buffer, kappa, stepSize, stepsToLight, LX, LN);
 			}
 
 			accumColor += light->getColor(center) * 

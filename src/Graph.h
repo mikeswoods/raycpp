@@ -18,6 +18,7 @@
 #include <list>
 #include <stack>
 #include <queue>
+#include <memory>
 #include "R3.h"
 #include "Color.h"
 #include "Material.h"
@@ -58,7 +59,7 @@ class GraphNode
 		P center;
 
 		// Surface material
-		Material* material;
+		std::shared_ptr<Material> material;
 
 	public:
 		GraphNode(const std::string& name);
@@ -114,8 +115,8 @@ class GraphNode
 		const P& getCenter() const      { return this->center; }
 		void setCenter(const P& center) { this->center = center; }
 
-		Material* getMaterial() const        { return this->material; }
-		void setMaterial(Material* material) { this->material = material; }
+		std::shared_ptr<Material> getMaterial() const { return this->material; }
+		void setMaterial(std::shared_ptr<Material> material) { this->material = material; }
 
 		friend std::ostream& operator<<(std::ostream& os, const GraphNode& node);
 };
@@ -290,7 +291,7 @@ class Graph
 		void setRoot(GraphNode* root) { this->root = root; }
 
 		// Collect all of the area lights in the scene graph
-		void addAreaLights(std::list<Light*>* lights) const;
+		std::unique_ptr<std::list<std::shared_ptr<Light>>> areaLights() const;
 
 		pre_iterator begin() const { return pre_iterator(this->getRoot(), false); }
 

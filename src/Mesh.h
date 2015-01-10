@@ -50,7 +50,7 @@ class Mesh : public Geometry
 		// Triangle vertex normal indices
 		std::vector<VNIndex> vnIndex;
 
-		virtual Intersection intersectImpl(const Ray &ray) const;
+		virtual Intersection intersectImpl(const Ray &ray, std::shared_ptr<SceneContext> scene) const;
 		virtual glm::vec3 sampleImpl() const;
 
 	public:

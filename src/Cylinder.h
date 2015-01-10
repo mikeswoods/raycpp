@@ -27,7 +27,7 @@ class Cylinder : public Geometry
 		void computeAABB();
 
 	protected:
-		virtual Intersection intersectImpl(const Ray &ray) const;
+		virtual Intersection intersectImpl(const Ray &ray, std::shared_ptr<SceneContext> scene) const;
 		virtual glm::vec3 sampleImpl() const;
 
 	public:

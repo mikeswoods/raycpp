@@ -6,7 +6,7 @@
 #include <list>
 #include <memory>
 #include "Color.h"
-#include "Geometry.h"
+#include "AABB.h"
 #include "Ray.h"
 #include "Light.h"
 
@@ -43,7 +43,8 @@ class VoxelBuffer
         AABB aabb;
 
     public:
-        VoxelBuffer(int x, int y, int z, Geometry const * geometry);
+        VoxelBuffer(int x, int y, int z, const AABB& aabb);
+        VoxelBuffer(const VoxelBuffer& other);
         ~VoxelBuffer();
 
         float getVoxelWidth()  const { return this->voxelWidth; }
@@ -87,14 +88,13 @@ class RayPath
         };
 };
 
-RayPath rayMarch(const VoxelBuffer& vb
+RayPath rayMarch(const VoxelBuffer& buffer
                 ,const P& start
-                ,const P& end
+                ,const V& dir
                 ,float step
                 ,bool interpolate
-                ,const std::list<Light*>& lights
-                ,float (*densityFunction)(Voxel* voxel, const P& X, void* densityData)
-                ,void* densityData);
+                ,std::shared_ptr<std::list<std::shared_ptr<Light>>> lights
+                ,float (*densityFunction)(Voxel* voxel, const P& X) = nullptr);
 
 /******************************************************************************/
 

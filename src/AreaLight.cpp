@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <memory>
 #include "AreaLight.h"
 
 using namespace std;
@@ -78,9 +79,8 @@ V AreaLight::fromSampledPoint(const P& from, float& cosineAngle) const
 
 Color AreaLight::getColor(const P& from) const
 {
-	Material* mat = this->node->getMaterial();
-	assert(mat != nullptr);
-
+	shared_ptr<Material> mat = this->node->getMaterial();
+	assert(!!mat);
 	return mat->getDiffuseColor();
 }
 

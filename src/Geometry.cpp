@@ -24,6 +24,8 @@ ostream& operator<<(ostream& s, const Geometry& geometry)
     return s;
 }
 
+/******************************************************************************/
+
 Geometry::Geometry(Type _type) :
     type(_type)
 { 
@@ -37,15 +39,19 @@ Geometry::~Geometry()
     indices_.clear();
 }
 
-// Generates vec3 color instances for every vertex 
-// based on the supplied Color instance
+/**
+ * Generates vec3 color instances for every vertex  based on the supplied 
+ * Color instance
+ */
 vector<glm::vec3> Geometry::getColors(const Color& color) const
 {
 	return vector<glm::vec3>(this->getVertexCount()
 							,glm::vec3(color.fR(), color.fG(), color.fB()));
 }
 
-Intersection Geometry::intersect(const glm::mat4 &T, const Ray& rayWorld) const
+Intersection Geometry::intersect(const glm::mat4 &T
+                                ,const Ray& rayWorld
+                                ,shared_ptr<SceneContext> scene) const
 {
 	Ray rayNormal  = Ray(rayWorld.orig, glm::normalize(rayWorld.dir));
 	glm::mat4 invT = glm::inverse(T);
@@ -61,7 +67,7 @@ Intersection Geometry::intersect(const glm::mat4 &T, const Ray& rayWorld) const
 	}
 
     // Compute the intersection in LOCAL-space.
-    Intersection isect = this->intersectImpl(rayLocal);
+    Intersection isect = this->intersectImpl(rayLocal, scene);
 
     if (isect.isHit()) {
 

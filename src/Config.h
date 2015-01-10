@@ -24,24 +24,24 @@
 #include "EnvironmentMap.h"
 #include "SceneContext.h"
 
-/*****************************************************************************/
+/******************************************************************************/
 
 class Configuration
 {
 	private:
 		bool materialExists(const std::string& name) const;
-		Material* getMaterial(const std::string& name) const;
-		void registerMaterial(Material* material);
-		void registerLight(Light* light);
+		std::shared_ptr<Material> getMaterial(const std::string& name) const;
+		void registerMaterial(std::shared_ptr<Material> material);
+		void registerLight(std::shared_ptr<Light> light);
 
     protected:
         GraphBuilder graphBuilder;
 
 		std::string filename;
-		std::unique_ptr<EnvironmentMap> envMap;
+		std::shared_ptr<EnvironmentMap> envMap;
 		Graph graph;
-		std::map<std::string,Material*> materialMap;
-        std::list<Light*> lights;
+		std::shared_ptr<MATERIALS> materials;
+        std::shared_ptr<LIGHTS> lights;
 
 		void parseCameraSection(std::istream& is, const std::string& beginToken);
 		void parseEnvironmentSection(std::istream& is, const std::string& beginToken);

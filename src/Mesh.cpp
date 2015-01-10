@@ -219,7 +219,7 @@ static bool closestTriangle(const Ray& ray, const vector<Tri>& tris
 	return true;
 }
 
-Intersection Mesh::intersectImpl(const Ray &ray) const
+Intersection Mesh::intersectImpl(const Ray &ray, shared_ptr<SceneContext> scene) const
 {
 	vector<Tri> collected;
 	float t  = -1.0f; // t distance

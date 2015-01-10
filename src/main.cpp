@@ -21,11 +21,10 @@
 #include "ObjReader.h"
 #include "Camera.h"
 #include "Raytrace.h"
-#include "tests.h"
 #include "Options.h"
 
 #include <EasyBMP/EasyBMP.h>
-#include <CImg.h>
+//#include <CImg.h>
 //#include <chibi/eval.h>
 
 using namespace std;
@@ -131,9 +130,9 @@ void main()
 
 // Scene state & render options ////////////////////////////////////////////////
 
-static unique_ptr<GLWorldState> state(nullptr);
-static unique_ptr<SceneContext> sceneContext(nullptr);
-static TraceOptions* traceOptions  = nullptr;
+static shared_ptr<GLWorldState> state(nullptr);
+static shared_ptr<SceneContext> sceneContext(nullptr);
+static shared_ptr<TraceOptions> traceOptions(nullptr);
 
 // Animation/transformation stuff //////////////////////////////////////////////
 
@@ -155,13 +154,15 @@ static void handleError(int error, const char* description);
 static void handleKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 /**
- *
+ * Initiates actual raytracing
  */
-static void runRaytracer(TraceOptions options, bool disablePreview = false)
+static void runRaytracer(bool disablePreview = false)
 {
-    rayTrace(output, *sceneContext, rayTraceCamera, options);
+    assert((!!sceneContext) && (!!traceOptions));
 
-    if (!options.enablePixelDebug) {
+    rayTrace(output, rayTraceCamera, sceneContext, traceOptions);
+
+    if (!traceOptions->enablePixelDebug) {
         string outputFile = Utils::cwd("output.bmp");
         output.WriteToFile(outputFile.c_str());
         cout << "Output written to " << outputFile << endl;
@@ -172,15 +173,6 @@ static void runRaytracer(TraceOptions options, bool disablePreview = false)
             finish();
         }
     }
-}
-
-/**
- *
- */
-static void runTestsAndQuit()
-{
-    RunTests();
-    exit(EXIT_SUCCESS);
 }
 
 /**
@@ -220,11 +212,6 @@ int main(int argc, char** argv)
     // Seed PRNG
     srand((unsigned int)time(nullptr));
 
-    // Run tests
-    if (options[RUN_TESTS_AND_QUIT]) {
-        runTestsAndQuit();
-    }
-
     // Parse configuration
     Configuration config(argv[argc-1]);
     try {
@@ -243,7 +230,7 @@ int main(int argc, char** argv)
     state = unique_ptr<GLWorldState>(new GLWorldState(sceneContext->getSceneGraph()));
 
     // Configure options used during ray tracing
-    traceOptions = new TraceOptions();
+    traceOptions = shared_ptr<TraceOptions>(new TraceOptions());
 
     // Samples per pixel:
     if (options[SAMPLES_PER_PIXEL].count() > 0) {
@@ -287,7 +274,7 @@ int main(int argc, char** argv)
 
     // Initialize raytracer code:
     glm::vec2 reso = sceneContext->getResolution();
-    initRaytrace(*sceneContext, rayTraceCamera);
+    initRaytrace(rayTraceCamera, sceneContext);
     output.SetBitDepth(24);
     output.SetSize(reso.x, reso.y);
 
@@ -297,7 +284,7 @@ int main(int argc, char** argv)
 
     // If no preview, rendering starts immediately:
     if (options[DISABLE_PREVIEW]) {
-        runRaytracer(*traceOptions, true);
+        runRaytracer(true);
     } else {
         initPreviewWindow(argc, argv, "OpenGL Preview");
     }
@@ -609,7 +596,7 @@ void handleKeyPress(GLFWwindow* window, int key, int scancode, int action, int m
         case GLFW_KEY_P:
             {
                 if (action == GLFW_PRESS) {
-                    runRaytracer(*traceOptions, true);
+                    runRaytracer(true);
                 }
             }
             break;

@@ -1,10 +1,13 @@
 #include <algorithm>
 #include <iterator>
+#include <tuple>
 #include <string>
 #include "Graph.h"
 #include "AreaLight.h"
+#include "SceneContext.h"
 
 using namespace std;
+using namespace glm;
 
 /*****************************************************************************/
 
@@ -15,9 +18,9 @@ GraphNode::GraphNode(const string& name)
 	this->instance = nullptr;
 	this->material = nullptr;
 	this->geometry = nullptr;
-	this->T        = glm::vec3(0.0f, 0.0f, 0.0f);
-	this->R        = glm::vec3(0.0f, 0.0f, 0.0f);
-	this->S        = glm::vec3(1.0f, 1.0f, 1.0f);
+	this->T        = vec3(0.0f, 0.0f, 0.0f);
+	this->R        = vec3(0.0f, 0.0f, 0.0f);
+	this->S        = vec3(1.0f, 1.0f, 1.0f);
 }
 
 GraphNode::GraphNode(const GraphNode& other)
@@ -58,13 +61,9 @@ void GraphNode::detachFromParent()
  */
 bool GraphNode::isAreaLight() const
 {
-	Material const * mat = this->getMaterial();
+	shared_ptr<Material> mat = this->getMaterial();
 
-	if (mat == nullptr) {
-		return false;
-	}
-
-	return mat->isEmissive();
+	return !mat ? false : mat->isEmissive();
 }
 
 ostream& operator<<(ostream& os, const GraphNode& node)
@@ -79,7 +78,7 @@ ostream& operator<<(ostream& os, const GraphNode& node)
 	return os;
 }
 
-ostream& operator<<(ostream& os, const glm::mat4 M)
+ostream& operator<<(ostream& os, const mat4 M)
 {
 	os << "[ ";
 	for (int i=0; i<4; i++) {
@@ -95,28 +94,28 @@ ostream& operator<<(ostream& os, const glm::mat4 M)
 // Based on the parameters of the given node, this function will apply 
 // the given transformation matrix T, yielding a new transformation matrix T'
 
-glm::mat4 applyTransform(GraphNode* node, glm::mat4 current)
+mat4 applyTransform(GraphNode* node, mat4 current)
 {
-	glm::vec3 T = node->getTranslate();
-	glm::vec3 R = node->getRotate();
-	glm::vec3 S = node->getScale();
+	vec3 T = node->getTranslate();
+	vec3 R = node->getRotate();
+	vec3 S = node->getScale();
 
 	// Assume the "identity" matrix we are using is centered about 
 	// node->getCenter() initially:
-	glm::mat4 I  = glm::translate(glm::mat4(), toVec3(node->getCenter()));
+	mat4 I  = translate(mat4(), toVec3(node->getCenter()));
 
 	float xAngle = R[0];
 	float yAngle = R[1];
 	float zAngle = R[2];
 
 	// Construct the rotation matrix about XYZ in that order
-	glm::mat4 RM = glm::rotate(I, xAngle, glm::vec3(1.0f, 0.0f, 0.0f));
-	RM           = glm::rotate(RM, yAngle, glm::vec3(0.0f, 1.0f, 0.0f));
-	RM           = glm::rotate(RM, zAngle, glm::vec3(0.0f, 0.0f, 1.0f));
+	mat4 RM = rotate(I, xAngle, vec3(1.0f, 0.0f, 0.0f));
+	RM           = rotate(RM, yAngle, vec3(0.0f, 1.0f, 0.0f));
+	RM           = rotate(RM, zAngle, vec3(0.0f, 0.0f, 1.0f));
 
 	// Multiply in reverse order to actuall apply in the desired order of
 	// transformation: scale => rotate-X => rotate-Y => rotate-Z => translate
-	return current * (glm::translate(I, T) * RM * glm::scale(I, S));
+	return current * (translate(I, T) * RM * scale(I, S));
 }
 
 /*****************************************************************************/
@@ -137,16 +136,15 @@ Graph::Graph(GraphNode* root)
  * Accumulator function used to fold over the scene graph collecting
  * all graph nodes that are emissive by getAllAreaLights()
  */
-static LightsAndMatrix collectAreaLight(GraphNode* node, LightsAndMatrix current)
+static pair<LIGHTS*, mat4> collectAreaLight(GraphNode* node, pair<LIGHTS*, mat4> current)
 {
-	glm::mat4 nextT = applyTransform(node, current.second);
+	mat4 nextT = applyTransform(node, current.second);
 
 	// Found a node with an emissive material assigned to it:
 	if (node->getMaterial() != nullptr && node->getMaterial()->isEmissive()) {
 
-		list<Light*>* areaLights = current.first;
-
-		areaLights->push_back(new AreaLight(node, nextT));
+		list<shared_ptr<Light>>* areaLights = current.first;
+		areaLights->push_back(make_shared<AreaLight>(node, nextT));
 	}
 
 	return make_pair(current.first, nextT);
@@ -155,17 +153,24 @@ static LightsAndMatrix collectAreaLight(GraphNode* node, LightsAndMatrix current
 /**
  * Dummy visit function used by getAllAreaLights()
  */
-static LightsAndMatrix returnCurrent(LightsAndMatrix current, LightsAndMatrix last)
+static pair<LIGHTS*, mat4> returnCurrent(pair<LIGHTS*, mat4> current, pair<LIGHTS*, mat4> last)
 {
 	return current;
 }
 
-void Graph::addAreaLights(std::list<Light*>* lights) const
+/**
+ * Gather all of the objects that are emissive, returning them in a list
+ * as AreaLight instances
+ */
+unique_ptr<LIGHTS> Graph::areaLights() const
 {
-	glm::mat4 I                          = glm::mat4();
-	pair<list<Light*>*, glm::mat4> init  = make_pair(lights, I);
-	//pair<list<Light*>*, glm::mat4> final = fold(*this, collectAreaLight, returnCurrent, init);
+	auto lights = new list<shared_ptr<Light>>();
+	mat4 I      = mat4();
+	auto init   = make_pair(lights, I);
+
 	fold(*this, collectAreaLight, returnCurrent, init);
+
+	return unique_ptr<list<shared_ptr<Light>>>(lights);
 }
 
 /*****************************************************************************/

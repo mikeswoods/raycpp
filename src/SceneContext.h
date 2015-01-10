@@ -23,6 +23,12 @@
 
 /******************************************************************************/
 
+// Shorthand type declarations
+typedef std::list<std::shared_ptr<Light>> LIGHTS;
+typedef std::map<std::string, std::shared_ptr<Material>> MATERIALS;
+
+/******************************************************************************/
+
 class SceneContext
 {
     protected:
@@ -32,10 +38,10 @@ class SceneContext
         glm::vec3 lookAtPosition;
         glm::vec3 upDir;
         float yFOV;
-        std::unique_ptr<EnvironmentMap> envMap;
         Graph graph;
-        std::map<std::string,Material*> materials;
-        std::list<Light*> lights;
+        std::shared_ptr<EnvironmentMap> envMap;
+        std::shared_ptr<std::map<std::string,std::shared_ptr<Material>>> materials;
+        std::shared_ptr<std::list<std::shared_ptr<Light>>> lights;
     public:
 
         SceneContext(const glm::vec2& resolution
@@ -43,10 +49,10 @@ class SceneContext
                     ,const glm::vec3& viewDir
                     ,const glm::vec3& upDir
                     ,float yFOV
-                    ,std::unique_ptr<EnvironmentMap> envMap
                     ,const Graph& graph
-                    ,const std::map<std::string,Material*>& materials
-                    ,const std::list<Light*>& lights);
+                    ,std::shared_ptr<EnvironmentMap> envMap
+                    ,std::shared_ptr<std::map<std::string, std::shared_ptr<Material>>> materials
+                    ,std::shared_ptr<std::list<std::shared_ptr<Light>>> lights);
         ~SceneContext();
 
         const glm::vec2& getResolution() const     { return this->resolution; }
@@ -59,11 +65,11 @@ class SceneContext
         float getZNear() const                     { return 0.1f; }
         float getZFar() const                      { return 100.0f; }
 
-
-        const EnvironmentMap& getEnvironmentMap() const { return *this->envMap; }
-        const Graph& getSceneGraph() const      { return graph; }
-        const std::map<std::string,Material*>& getMaterials() const { return this->materials; }
-        const std::list<Light*>& getLights() const { return this->lights; }
+        const Graph& getSceneGraph() const { return graph; }
+        std::shared_ptr<EnvironmentMap> getEnvironmentMap() const { return this->envMap; }
+        void setEnvironmentMap(std::shared_ptr<EnvironmentMap> envMap) { this->envMap = envMap ; }
+        std::shared_ptr<MATERIALS> getMaterials() const { return this->materials; }
+        std::shared_ptr<LIGHTS> getLights() const { return this->lights; }
 };
 
 /******************************************************************************/

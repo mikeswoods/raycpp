@@ -14,7 +14,6 @@
 #include <omp.h>
 #include <cstdlib>
 #include <iostream>
-#include <utility>
 #include <stack>
 #include "Raytrace.h"
 #include "Intersection.h"
@@ -49,13 +48,7 @@ using namespace std;
  *
  ******************************************************************************/
 
-static Color trace(TraceOptions& options
-	              ,const Ray& ray
-		          ,const Graph& graph
-				  ,EnvironmentMap const * envMap
-		          ,const list<Light*>& lights
-		          ,int depth
-				  ,bool isDebugPixel);
+static Color trace(const Ray&, shared_ptr<SceneContext>, shared_ptr<TraceOptions>, int depth, bool isDebugPixel);
 
 /*******************************************************************************
  *
@@ -65,38 +58,33 @@ static Color trace(TraceOptions& options
 
 std::ostream& operator<<(std::ostream& s, const Intersection& isect)
 {
-	s << "Intersection {"                 << endl
-	  << "  t="         << isect.t        << endl
-	  << "  node="      << isect.node     << endl
-	  << "  inside="    << isect.inside   << endl
-	  << "  hitWorld="  << isect.hitWorld << endl
-	  << "  hitLocal="  << isect.hitLocal << endl
-	  << "  normal="    << isect.normal   << endl
-	  << "}"                              << endl;
-	return s;
+    s << "Intersection {"                 << endl
+      << "  t="         << isect.t        << endl
+      << "  node="      << isect.node     << endl
+      << "  inside="    << isect.inside   << endl
+      << "  hitWorld="  << isect.hitWorld << endl
+      << "  hitLocal="  << isect.hitLocal << endl
+      << "  normal="    << isect.normal   << endl
+      << "}"                              << endl;
+    return s;
 }
 
 std::ostream& operator<<(std::ostream& s, const TraceContext& ctx)
 {
-	s << "TraceContext {"                      << endl
-	  << "  ray="          << ctx.ray          << endl
-	  << "  closestIsect=" << ctx.closestIsect << endl
-	  << "}"                                   << endl;
-	return s;
+    s << "TraceContext {"                      << endl
+      << "  ray="          << ctx.ray          << endl
+      << "  closestIsect=" << ctx.closestIsect << endl
+      << "}"                                   << endl;
+    return s;
 }
 
-std::ostream& operator<<(std::ostream& s, const TraceOptions& options)
+std::ostream& operator<<(std::ostream& s, const TraceOptions& opts)
 {
-	s << "TraceOptions {"      << endl
-	  << "  samplesPerLight="  << options.samplesPerLight << endl
-	  << "  samplesPerPixel="  << options.samplesPerPixel << endl
-	  << "  enablePixelDebug=" << (options.enablePixelDebug ? "yes" : "no") << endl;
-	if (options.enablePixelDebug) {
-		s << "  debugPixel=(" << options.xDebugPixel << "," << options.yDebugPixel << ")" 
-		  << endl;
-	}
-	s << "}" << endl;
-	return s;
+	s << "[samplesPerLight: " << opts.samplesPerLight <<
+		 ", samplesPerPixel: " << opts.samplesPerPixel << 
+		 ", enablePixelDebug: " << (opts.enablePixelDebug ? "yes" : "no") <<
+		 "]" << endl;
+    return s;
 }
 
 /*******************************************************************************
@@ -107,36 +95,36 @@ std::ostream& operator<<(std::ostream& s, const TraceOptions& options)
 
 static std::ostream& debugPixel(std::ostream& os, string funcName, int depth)
 {
-	for (int i=0; i<depth; i++) {
-		os << "    ";
-	}
-	os << funcName << "<" << depth << ">: ";
-	return os;
+    for (int i=0; i<depth; i++) {
+        os << "    ";
+    }
+    os << funcName << "<" << depth << ">: ";
+    return os;
 }
 
 static std::ostream& debugPixel(string funcName, int depth, const Color& output)
 {
-	return debugPixel(cerr, funcName, depth) << output << endl;
+    return debugPixel(cerr, funcName, depth) << output << endl;
 }
 
 static std::ostream& debugPixel(string funcName, int depth, const glm::vec3& output)
 {
-	return debugPixel(cerr, funcName, depth) << output << endl;
+    return debugPixel(cerr, funcName, depth) << output << endl;
 }
 
 static std::ostream& debugPixel(string funcName, int depth, float output)
 {
-	return debugPixel(cerr, funcName, depth) << output << endl;
+    return debugPixel(cerr, funcName, depth) << output << endl;
 }
 
 static std::ostream& debugPixel(string funcName, int depth, int output)
 {
-	return debugPixel(cerr, funcName, depth) << output << endl;
+    return debugPixel(cerr, funcName, depth) << output << endl;
 }
 
 static std::ostream& debugPixel(string funcName, int depth, string output)
 {
-	return debugPixel(cerr, funcName, depth) << output << endl;
+    return debugPixel(cerr, funcName, depth) << output << endl;
 }
 
 /*******************************************************************************
@@ -145,14 +133,14 @@ static std::ostream& debugPixel(string funcName, int depth, string output)
  *
  ******************************************************************************/
 
-void initRaytrace(const SceneContext& sc, Camera& camera)
+void initRaytrace(Camera& camera, shared_ptr<SceneContext> scene)
 {
-	camera.setPosition(sc.getEyePosition());
-	camera.setViewDir(sc.getViewDir());
-	camera.setUp(sc.getUpDir());
-	// Divide this by 2 to match the FOV produced by glm::perspective(). 
-	camera.setFOV(sc.getFOVAngle() / 2.0f);
-	camera.setAspectRatio(sc.getAspectRatio());
+    camera.setPosition(scene->getEyePosition());
+    camera.setViewDir(scene->getViewDir());
+    camera.setUp(scene->getUpDir());
+    // Divide this by 2 to match the FOV produced by glm::perspective(). 
+    camera.setFOV(scene->getFOVAngle() / 2.0f);
+    camera.setAspectRatio(scene->getAspectRatio());
 }
 
 /******************************************************************************/
@@ -162,7 +150,7 @@ void initRaytrace(const SceneContext& sc, Camera& camera)
  */
 static bool isCloser(const TraceContext& test, TraceContext& other)
 {
-	return test.closestIsect.isCloser(other.closestIsect);
+    return test.closestIsect.isCloser(other.closestIsect);
 }
 
 /**
@@ -170,16 +158,18 @@ static bool isCloser(const TraceContext& test, TraceContext& other)
  */
 static TraceContext intersectNode(GraphNode* node, TraceContext ctx)
 {
-	Geometry const * geometry = node->getGeometry();
+    Geometry const * geometry = node->getGeometry();
 
-	glm::mat4 nextT    = applyTransform(node, ctx.T);
-	Intersection isect = geometry != nullptr ? geometry->intersect(nextT, ctx.ray) : Intersection::miss();
+    glm::mat4 nextT    = applyTransform(node, ctx.T);
+    Intersection isect = geometry != nullptr 
+        ? geometry->intersect(nextT, ctx.ray, ctx.scene) 
+        : Intersection::miss();
 
-	if (isect.isHit()) {
-		isect.node = node;
-	}
+    if (isect.isHit()) {
+        isect.node = node;
+    }
 
-	return TraceContext(ctx.ray, nextT, isect);
+    return TraceContext(ctx.scene, ctx.ray, nextT, isect);
 }
 
 /**
@@ -188,7 +178,7 @@ static TraceContext intersectNode(GraphNode* node, TraceContext ctx)
  */
 static TraceContext findClosestContextNode(TraceContext currentCtx, TraceContext lastCtx)
 {
-	return isCloser(currentCtx, lastCtx) ? currentCtx : lastCtx;
+    return isCloser(currentCtx, lastCtx) ? currentCtx : lastCtx;
 }
 
 /*******************************************************************************
@@ -198,16 +188,20 @@ static TraceContext findClosestContextNode(TraceContext currentCtx, TraceContext
  ******************************************************************************/
 
 static TraceContext closestIntersection(const Ray& ray
-	                                   ,const Graph& graph
-									   ,bool& hit)
+                                       ,shared_ptr<SceneContext> scene
+                                       ,bool& hit)
 {
-	glm::mat4 I           = glm::mat4();
-	TraceContext initCtx  = TraceContext(ray, I); // Identity transform
-	TraceContext finalCtx = fold(graph, intersectNode, findClosestContextNode, initCtx);
+    // Identity matrix as the initial transformation:
+    glm::mat4 I           = glm::mat4(); 
+    TraceContext initCtx  = TraceContext(scene, ray, I);
+    TraceContext finalCtx = fold(scene->getSceneGraph()
+                                ,intersectNode
+                                ,findClosestContextNode
+                                ,initCtx);
 
-	hit = finalCtx.closestIsect.isHit();
+    hit = finalCtx.closestIsect.isHit();
 
-	return finalCtx;
+    return finalCtx;
 }
 
 /*******************************************************************************
@@ -217,46 +211,51 @@ static TraceContext closestIntersection(const Ray& ray
  *
  ******************************************************************************/
 
-static bool fastTestInShadow(const Ray& ray, const Graph& graph, GraphNode* ignore, float withinDist)
+static bool fastTestInShadow(const Ray& ray
+                            ,shared_ptr<SceneContext> scene
+                            ,GraphNode* ignore
+                            ,float withinDist)
 {
-	// Initial transformation matrix is the identity matrix:
-	glm::mat4 I = glm::mat4();
+    auto graph = scene->getSceneGraph();
 
-	stack<pair<GraphNode*,glm::mat4>> S;
+    // Initial transformation matrix is the identity matrix:
+    auto I = glm::mat4();
 
-	S.push(make_pair(graph.getRoot(), I));
+    stack<pair<GraphNode*,glm::mat4>> S;
 
-	while (!S.empty()) {
+    S.push(make_pair(graph.getRoot(), I));
 
-		pair<GraphNode*,glm::mat4> nodeAndT = S.top();
-		S.pop();
+    while (!S.empty()) {
 
-		GraphNode* node = nodeAndT.first;
-		glm::mat4 T     = nodeAndT.second;
+        pair<GraphNode*,glm::mat4> nodeAndT = S.top();
+        S.pop();
 
-		Geometry const * geometry = node->getGeometry();
-		glm::mat4 nextT = applyTransform(node, T);
+        GraphNode* node = nodeAndT.first;
+        glm::mat4 T     = nodeAndT.second;
 
-		if (node != ignore && geometry != nullptr) {
+        Geometry const * geometry = node->getGeometry();
+        glm::mat4 nextT = applyTransform(node, T);
 
-			Intersection isect = geometry->intersect(nextT, ray);
-			isect.node = node;
+        if (node != ignore && geometry != nullptr) {
 
-			if (isect.isHit() && !node->isAreaLight() && isect.t < withinDist) {
+            Intersection isect = geometry->intersect(nextT, ray, scene);
+            isect.node = node;
 
-				return true; // We're done
-			}
-		}
+            if (isect.isHit() && !node->isAreaLight() && isect.t < withinDist) {
 
-		std::list<GraphNode*> children = node->getChildren();
+                return true; // We're done
+            }
+        }
 
-		// Otherwise, go through the children:
-		for (auto i=children.begin(); i != children.end(); i++) {
-			S.push(make_pair(*i, nextT));
-		}
-	}
+        std::list<GraphNode*> children = node->getChildren();
 
-	return false;
+        // Otherwise, go through the children:
+        for (auto i=children.begin(); i != children.end(); i++) {
+            S.push(make_pair(*i, nextT));
+        }
+    }
+
+    return false;
 }
 
 /*******************************************************************************
@@ -265,26 +264,26 @@ static bool fastTestInShadow(const Ray& ray, const Graph& graph, GraphNode* igno
  *
  ******************************************************************************/
 
-static bool isOccludedFromPosition(const Graph& graph
-	                              ,GraphNode* const selfNode
-					              ,const P& hitAt
-					              ,Light * const light)
+static bool isOccludedFromPosition(shared_ptr<SceneContext> scene
+                                  ,GraphNode* const selfNode
+                                  ,const P& hitAt
+                                  ,shared_ptr<Light> light)
 {
-	float cosine = 0.0f;
-	V L          = light->fromSampledPoint(hitAt, cosine);
+    float cosine = 0.0f;
+    V L          = light->fromSampledPoint(hitAt, cosine);
 
-	// if the cosine angle is less than zero, then the sample on the surface of
-	// the light geometry is pointing away from the position to test for 
-	// occlusion. As a result, it cannot occlude, so we can exit early:
-	/*
-	if (cosine < 0.0f) {
-		return false;
-	}
-	*/
+    // if the cosine angle is less than zero, then the sample on the surface of
+    // the light geometry is pointing away from the position to test for 
+    // occlusion. As a result, it cannot occlude, so we can exit early:
+    /*
+    if (cosine < 0.0f) {
+        return false;
+    }
+    */
 
-	Ray ray(hitAt, glm::normalize(L), Utils::EPSILON, Ray::SHADOW);
+    Ray ray(hitAt, glm::normalize(L), Utils::EPSILON, Ray::SHADOW);
 
-	return fastTestInShadow(ray, graph, selfNode, glm::length(L));
+    return fastTestInShadow(ray, scene, selfNode, glm::length(L));
 };
 
 /*******************************************************************************
@@ -298,34 +297,34 @@ static bool isOccludedFromPosition(const Graph& graph
  *
  ******************************************************************************/
 
-static float shadow(const Graph& graph
-	                ,GraphNode* const selfNode
-					,const P& hitAt
-					,Light * const light
-					,int samples)
+static float shadow(shared_ptr<SceneContext> scene
+                    ,GraphNode* const selfNode
+                    ,const P& hitAt
+                    ,shared_ptr<Light> light
+                    ,int samples)
 {
-	// If the self node being tested is the light itself, bail immediately:
-	if (light->isLightSourceNode(selfNode)) {
-		return 1.0f;
-	}
+    // If the self node being tested is the light itself, bail immediately:
+    if (light->isLightSourceNode(selfNode)) {
+        return 1.0f;
+    }
 
-	// Point lights only need 1 sample, 
-	if (light->getLightType() == Light::POINT_LIGHT) {
-		return isOccludedFromPosition(graph, selfNode, hitAt, light) 
-			? 0.0f 
-			: 1.0f;
-	}
+    // Point lights only need 1 sample, 
+    if (light->getLightType() == Light::POINT_LIGHT) {
+        return isOccludedFromPosition(scene, selfNode, hitAt, light) 
+            ? 0.0f 
+            : 1.0f;
+    }
 
-	float contribution = 1.0f / static_cast<float>(samples);
-	float shadeFactor  = 1.0f;
+    float contribution = 1.0f / static_cast<float>(samples);
+    float shadeFactor  = 1.0f;
 
-	for (int i=0; i<samples; i++) {
-		if (isOccludedFromPosition(graph, selfNode, hitAt, light)) {
-			shadeFactor -= contribution;
-		}
-	}
+    for (int i=0; i<samples; i++) {
+        if (isOccludedFromPosition(scene, selfNode, hitAt, light)) {
+            shadeFactor -= contribution;
+        }
+    }
 
-	return shadeFactor;
+    return shadeFactor;
 };
 
 /*******************************************************************************
@@ -334,31 +333,29 @@ static float shadow(const Graph& graph
  *
  ******************************************************************************/
 
-static Color traceReflect(TraceOptions& options
-	                     ,const Graph& graph
-						 ,EnvironmentMap const * envMap
-	                     ,const Intersection& isect
-	                     ,const V& I
-						 ,const V& N
-						 ,const list<Light*>& lights
-						 ,int depth
-						 ,bool isDebugPixel = false)
+static Color traceReflect(shared_ptr<SceneContext> scene
+                         ,shared_ptr<TraceOptions> opts
+                         ,const Intersection& isect
+                         ,const V& I
+                         ,const V& N
+                         ,int depth
+                         ,bool isDebugPixel = false)
 {
-	Material const * mat = isect.node->getMaterial();
-	assert(mat != nullptr);
+    shared_ptr<Material> mat = isect.node->getMaterial();
+    assert(!!mat);
 
-	V R = glm::reflect(I, N);
+    V R = glm::reflect(I, N);
 
-	#ifdef ENABLE_PIXEL_DEBUG
-	if (options.enablePixelDebug && isDebugPixel) {
-		debugPixel(__FUNCTION_NAME__ "/debug:traceReflect", depth, R);
-	}
-	#endif
+    #ifdef ENABLE_PIXEL_DEBUG
+    if (opts->enablePixelDebug && isDebugPixel) {
+        debugPixel(__FUNCTION_NAME__ "/debug:traceReflect", depth, R);
+    }
+    #endif
 
-	Ray ray(isect.hitWorld, R, Utils::EPSILON, Ray::REFLECTION);
+    Ray ray(isect.hitWorld, R, Utils::EPSILON, Ray::REFLECTION);
 
-	return mat->getReflectColor() * 
-		   trace(options, ray, graph, envMap, lights, depth + 1, isDebugPixel);
+    return mat->getReflectColor() * 
+           trace(ray, scene, opts, depth + 1, isDebugPixel);
 }
 
 /*******************************************************************************
@@ -367,45 +364,35 @@ static Color traceReflect(TraceOptions& options
  *
  ******************************************************************************/
 
-static Color traceRefract(TraceOptions& options
-	                     ,const Graph& graph
-						 ,EnvironmentMap const * envMap
-	                     ,const Intersection& isect
-	                     ,const V& I
-						 ,const V& N
-						 ,float n
-						 ,const list<Light*>& lights
-						 ,int depth
-						 ,bool isDebugPixel)
+static Color traceRefract(shared_ptr<SceneContext> scene
+                         ,shared_ptr<TraceOptions> opts
+                         ,const Intersection& isect
+                         ,const V& I
+                         ,const V& N
+                         ,float n
+                         ,int depth
+                         ,bool isDebugPixel)
 {
-	V R = glm::refract(I, N, n);
+    V R = glm::refract(I, N, n);
 
-	// Is R a zero vector? If so, reflect instead:
-	if (R == glm::vec3(0, 0, 0)) {
+    // Is R a zero vector? If so, reflect instead:
+    if (R == glm::vec3(0, 0, 0)) {
 
-		return traceReflect(options
-	                       ,graph
-						   ,envMap
-	                       ,isect
-	                       ,I
-						   ,N
-						   ,lights
-						   ,depth
-						   ,isDebugPixel);
-	}
+        return traceReflect(scene, opts, isect, I, N, depth, isDebugPixel);
+    }
 
-	#ifdef ENABLE_PIXEL_DEBUG
-	if (options.enablePixelDebug && isDebugPixel) {
-		debugPixel(__FUNCTION_NAME__ "/debug:I=", depth, I);
-		debugPixel(__FUNCTION_NAME__ "/debug:N=", depth, N);
-		debugPixel(__FUNCTION_NAME__ "/debug:R=", depth, R);
-		debugPixel(__FUNCTION_NAME__ "/debug:n=", depth, n);
-	}
-	#endif
+    #ifdef ENABLE_PIXEL_DEBUG
+    if (opts->enablePixelDebug && isDebugPixel) {
+        debugPixel(__FUNCTION_NAME__ "/debug:I=", depth, I);
+        debugPixel(__FUNCTION_NAME__ "/debug:N=", depth, N);
+        debugPixel(__FUNCTION_NAME__ "/debug:R=", depth, R);
+        debugPixel(__FUNCTION_NAME__ "/debug:n=", depth, n);
+    }
+    #endif
 
-	Ray ray(isect.hitWorld, R, Utils::EPSILON, Ray::REFRACTION);
+    Ray ray(isect.hitWorld, R, Utils::EPSILON, Ray::REFRACTION);
 
-	return trace(options, ray, graph, envMap, lights, depth + 1, isDebugPixel);
+    return trace(ray, scene, opts, depth + 1, isDebugPixel);
 }
 
 /*******************************************************************************
@@ -417,12 +404,12 @@ static Color traceRefract(TraceOptions& options
 
 float reflectCoeff(const V& lightDir, const V& viewDir, float n1, float n2)
 {
-	// Adapted in part from http://www.cs.utah.edu/~shirley/books/fcg2/rt.pdf
-	V H        = glm::normalize(lightDir + viewDir);
-	float R0   = powf((n1 - n2) / (n2 + n1), 2.0f);
-	float cosI = glm::dot(viewDir, H);
+    // Adapted in part from http://www.cs.utah.edu/~shirley/books/fcg2/rt.pdf
+    V H        = glm::normalize(lightDir + viewDir);
+    float R0   = powf((n1 - n2) / (n2 + n1), 2.0f);
+    float cosI = glm::dot(viewDir, H);
 
-	return R0 + ((1.0f - R0) * powf(max(0.0f, 1.0f - cosI), 5.0f));
+    return R0 + ((1.0f - R0) * powf(max(0.0f, 1.0f - cosI), 5.0f));
 }
 
 /*******************************************************************************
@@ -431,87 +418,87 @@ float reflectCoeff(const V& lightDir, const V& viewDir, float n1, float n2)
  *
  ******************************************************************************/
 
-glm::vec3 blinnPhongShade(TraceOptions& options
-	                     ,const Intersection& isect
-			   			 ,const V& I
-						 ,Light const * light
-						 ,Color& ambient
-						 ,Color& diffuse
-						 ,Color& specular
-						 ,bool isDebugPixel)
+static glm::vec3 blinnPhongShade(shared_ptr<TraceOptions> opts
+                                ,const Intersection& isect
+                                ,const V& I
+                                ,shared_ptr<Light> light
+                                ,Color& ambient
+                                ,Color& diffuse
+                                ,Color& specular
+                                ,bool isDebugPixel)
 {
-	// Coefficients
-	float ka = 0.15f; // ambient
-	float kd = 0.95f; // diffuse
-	float ks = 1.0f;  // specular
+    // Coefficients
+    float ka = 0.15f; // ambient
+    float kd = 0.95f; // diffuse
+    float ks = 1.0f;  // specular
 
-	Material const * mat      = isect.node->getMaterial();
-	Geometry const * geometry = isect.node->getGeometry();
+    shared_ptr<Material> mat  = isect.node->getMaterial();
+    Geometry const * geometry = isect.node->getGeometry();
 
-	assert(mat != nullptr && geometry != nullptr);
+    assert(mat != nullptr && geometry != nullptr);
 
-	// Adjust the height of the normal vector by multiplying it with the
-	// intensity value of the bump map
-	V N = isect.normal;
+    // Adjust the height of the normal vector by multiplying it with the
+    // intensity value of the bump map
+    V N = isect.normal;
 
-	// Choose the UV mapping vector. If one is given in the intersection, use it,
-	// otherwise use the local hit
-	glm::vec3 uvFromHit = glm::normalize(isect.hitLocal.xyz);
+    // Choose the UV mapping vector. If one is given in the intersection, use it,
+    // otherwise use the local hit
+    glm::vec3 uvFromHit = glm::normalize(isect.hitLocal.xyz);
 
-	if (mat->hasBumpMap()) {
+    if (mat->hasBumpMap()) {
 
-		V B = mat->getNormal(uvFromHit, geometry);
+        V B = mat->getNormal(uvFromHit, geometry);
 
-		#ifdef ENABLE_PIXEL_DEBUG
-		if (options.enablePixelDebug && isDebugPixel) {
-			debugPixel(__FUNCTION_NAME__ "/debug:has-bump-map", -99, B);
-		}
-		#endif
+        #ifdef ENABLE_PIXEL_DEBUG
+        if (opts->enablePixelDebug && isDebugPixel) {
+            debugPixel(__FUNCTION_NAME__ "/debug:has-bump-map", -99, B);
+        }
+        #endif
 
-		N = glm::normalize(N + B);
-	}
+        N = glm::normalize(N + B);
+    }
 
-	// Get the color at the hit position:
-	Color matColor = mat->getColor(uvFromHit, geometry);
+    // Get the color at the hit position:
+    Color matColor = mat->getColor(uvFromHit, geometry);
 
-	// Set the base ambient color component:
-	ambient = (mat->getAmbientCoeff() < 0.0f ? ka : mat->getAmbientCoeff()) * matColor;
+    // Set the base ambient color component:
+    ambient = (mat->getAmbientCoeff() < 0.0f ? ka : mat->getAmbientCoeff()) * matColor;
 
-	// If the material is assigned to an object that acts as a light source
-	// (as indicated by its "emissiveness", then there's no further work to do
-	if (mat->isEmissive()) {
+    // If the material is assigned to an object that acts as a light source
+    // (as indicated by its "emissiveness", then there's no further work to do
+    if (mat->isEmissive()) {
 
-		diffuse  = matColor;
-		specular = matColor;
+        diffuse  = matColor;
+        specular = matColor;
 
-		return N; // The surface normal
-	}
+        return N; // The surface normal
+    }
 
-	V L        = glm::normalize(light->fromCenter(isect.hitWorld));
-	V R        = glm::reflect(L, N);
-	Color lcol = light->getColor(isect.hitWorld);
+    V L        = glm::normalize(light->fromCenter(isect.hitWorld));
+    V R        = glm::reflect(L, N);
+    Color lcol = light->getColor(isect.hitWorld);
 
-	// Diffuse component:
-	float cosineAngle = glm::dot(L, N);
+    // Diffuse component:
+    float cosineAngle = glm::dot(L, N);
 
-	#ifdef ENABLE_PIXEL_DEBUG
-	if (options.enablePixelDebug && isDebugPixel) {
-		debugPixel(__FUNCTION_NAME__ "/debug:diffuse:cosine", -99, cosineAngle);
-	}
-	#endif
+    #ifdef ENABLE_PIXEL_DEBUG
+    if (opts->enablePixelDebug && isDebugPixel) {
+        debugPixel(__FUNCTION_NAME__ "/debug:diffuse:cosine", -99, cosineAngle);
+    }
+    #endif
 
-	float Id = max(0.0f, cosineAngle);
-	diffuse += kd * Id * matColor * lcol;
+    float Id = max(0.0f, cosineAngle);
+    diffuse += kd * Id * matColor * lcol;
 
-	// Specular component:
-	if (mat->getSpecularExponent() > 0.0f) {
-		float Is = glm::dot(I, R);
-		if (Is > 0.0f) {
-			specular += ks * powf(Is, mat->getSpecularExponent()) * lcol;
-		}
-	}
+    // Specular component:
+    if (mat->getSpecularExponent() > 0.0f) {
+        float Is = glm::dot(I, R);
+        if (Is > 0.0f) {
+            specular += ks * powf(Is, mat->getSpecularExponent()) * lcol;
+        }
+    }
 
-	return N; // The surface normal
+    return N; // The surface normal
 }
 
 /*******************************************************************************
@@ -520,142 +507,142 @@ glm::vec3 blinnPhongShade(TraceOptions& options
  *
  ******************************************************************************/
 
-static Color computeShading(TraceOptions& options
-	                       ,const Intersection& isect
-	                       ,const Graph& graph
-						   ,EnvironmentMap const * envMap
-						   ,const Ray& ray
-						   ,const list<Light*>& lights
-						   ,int depth
-						   ,bool isDebugPixel = false)
+static Color computeShading(const Ray& ray
+                           ,shared_ptr<SceneContext> scene
+                           ,shared_ptr<TraceOptions> opts
+                           ,const Intersection& isect
+                           ,int depth
+                           ,bool isDebugPixel = false)
 {
-	GraphNode* const selfNode = isect.node;
-	assert(selfNode != nullptr);
+    GraphNode* const selfNode = isect.node;
+    assert(selfNode != nullptr);
 
-	Material const * mat = selfNode->getMaterial();
-	assert(mat != nullptr);
+    shared_ptr<Material> mat = selfNode->getMaterial();
+    assert(!!mat);
 
-	/***************************************************************************
-	 * Compute Blinn-Phong shading
-	 **************************************************************************/
+    /***************************************************************************
+     * Compute Blinn-Phong shading
+     **************************************************************************/
 
-	Color ambient, diffuse, specular, reflected, refracted;
+    Color ambient, diffuse, specular, reflected, refracted;
 
-	// Index of refraction coefficients:
-	float n1, n2;
+    // Index of refraction coefficients:
+    float n1, n2;
 
-	if (isect.inside) {
-		n1 = mat->getIndexOfRefraction();
-		n2 = 1.0f;
-	} else {
-		n1 = 1.0f;
-		n2 = mat->getIndexOfRefraction();
-	}
+    if (isect.inside) {
+        n1 = mat->getIndexOfRefraction();
+        n2 = 1.0f;
+    } else {
+        n1 = 1.0f;
+        n2 = mat->getIndexOfRefraction();
+    }
 
-	// Schlick Fresnel term approximation:	
-	float fresnelTerm = 0.0f;
-	float n           = n1 / n2;
+    // Schlick Fresnel term approximation:  
+    float fresnelTerm = 0.0f;
+    float n           = n1 / n2;
 
-	// Incident ray:
-	V I = glm::normalize(ray.dir);
-	V N = glm::vec3();
+    // Incident ray:
+    V I = glm::normalize(ray.dir);
+    V N = glm::vec3();
 
-	// For each light:
-	for (auto i=lights.begin(); i != lights.end(); i++) {
+    auto lights = scene->getLights();
 
-		N += blinnPhongShade(options, isect, I, *i, ambient, diffuse, specular, isDebugPixel);
+    // For each light:
+    for (auto l=lights->begin(); l != lights->end(); l++) {
 
-		// Compute the Blinn-Phong diffuse and specular components for the current light
-		// if not in the shadow:
-		float amount = shadow(graph, isect.node, isect.hitWorld, *i, options.samplesPerLight);
-		//float amount = 1.0f;
+        N += blinnPhongShade(opts, isect, I, *l, ambient, diffuse, specular, isDebugPixel);
 
-		// Apply the shading factor to the diffuse + specular components
-		diffuse  *= amount;
-		specular *= amount;
+        // Compute the Blinn-Phong diffuse and specular components for the current light
+        // if not in the shadow:
+        float amount = shadow(scene, isect.node, isect.hitWorld, *l, opts->samplesPerLight);
+        //float amount = 1.0f;
 
-		// For each light, compute the accumulated the Schlick approximation for  the Fresnel term:
-		if (mat->isTransparent() && mat->isMirror()) {
-			V L          = glm::normalize((*i)->fromCenter(isect.hitWorld));
-			fresnelTerm += reflectCoeff(L, I, n1, n2);
-		}
-	}
+        // Apply the shading factor to the diffuse + specular components
+        diffuse  *= amount;
+        specular *= amount;
 
-	/**************************************************************************
-	 * Reflection & refraction
-	 *************************************************************************/
-	if (mat->isTransparent()) {
+        // For each light, compute the accumulated the Schlick approximation for  the Fresnel term:
+        if (mat->isTransparent() && mat->isMirror()) {
+            V L          = glm::normalize((*l)->fromCenter(isect.hitWorld));
+            fresnelTerm += reflectCoeff(L, I, n1, n2);
+        }
+    }
 
-		refracted = traceRefract(options, graph, envMap, isect, I, N, n, lights, depth, isDebugPixel);
+    /**************************************************************************
+     * Reflection & refraction
+     *************************************************************************/
+    if (mat->isTransparent()) {
 
-		#ifdef ENABLE_PIXEL_DEBUG
-		if (options.enablePixelDebug && isDebugPixel) {
-			debugPixel(__FUNCTION_NAME__ "/debug:trace-refract", depth, refracted);
-		}
-		#endif
-	}
+        refracted = traceRefract(scene, opts, isect, I, N, n, depth, isDebugPixel);
 
-	if (mat->isMirror()) {
+        #ifdef ENABLE_PIXEL_DEBUG
+        if (opts->enablePixelDebug && isDebugPixel) {
+            debugPixel(__FUNCTION_NAME__ "/debug:trace-refract", depth, refracted);
+        }
+        #endif
+    }
 
-		reflected = traceReflect(options, graph, envMap, isect, I, N, lights, depth, isDebugPixel);
+    if (mat->isMirror()) {
 
-		#ifdef ENABLE_PIXEL_DEBUG
-		if (options.enablePixelDebug && isDebugPixel) {
-			debugPixel(__FUNCTION_NAME__ "/debug:trace-reflect", depth, reflected);
-		}
-		#endif
-	}
+        reflected = traceReflect(scene, opts, isect, I, N, depth, isDebugPixel);
 
-	/***************************************************************************
-	 * Output
-	 **************************************************************************/
-	if (mat->isTransparent() && mat->isMirror()) {
+        #ifdef ENABLE_PIXEL_DEBUG
+        if (opts->enablePixelDebug && isDebugPixel) {
+            debugPixel(__FUNCTION_NAME__ "/debug:trace-reflect", depth, reflected);
+        }
+        #endif
+    }
 
-		#ifdef ENABLE_PIXEL_DEBUG
-		if (options.enablePixelDebug && isDebugPixel) {
-			debugPixel(__FUNCTION_NAME__ "/debug:transparent+mirror", depth, refracted);
-		}
-		#endif
+    /***************************************************************************
+     * Output
+     **************************************************************************/
+    if (mat->isTransparent() && mat->isMirror()) {
 
-		fresnelTerm = Utils::unitClamp(fresnelTerm);
+        #ifdef ENABLE_PIXEL_DEBUG
+        if (opts->enablePixelDebug && isDebugPixel) {
+            debugPixel(__FUNCTION_NAME__ "/debug:transparent+mirror", depth, refracted);
+        }
+        #endif
 
-		return ((1.0f - fresnelTerm) * (refracted + specular) + fresnelTerm * (reflected + specular));
-	}
-	
-	if (mat->isTransparent()) {
+        fresnelTerm = Utils::unitClamp(fresnelTerm);
 
-		#ifdef ENABLE_PIXEL_DEBUG
-		if (options.enablePixelDebug && isDebugPixel) {
-			debugPixel(__FUNCTION_NAME__ "/debug:transparent-only", depth, refracted + specular);
-		}
-		#endif
+        return ((1.0f - fresnelTerm) * (refracted + specular) + fresnelTerm * (reflected + specular));
+    }
+    
+    if (mat->isTransparent()) {
 
-		return refracted + specular;
-	}
-	
-	if (mat->isMirror()) {
+        #ifdef ENABLE_PIXEL_DEBUG
+        if (opts->enablePixelDebug && isDebugPixel) {
+            debugPixel(__FUNCTION_NAME__ "/debug:transparent-only", depth, refracted + specular);
+        }
+        #endif
 
-		#ifdef ENABLE_PIXEL_DEBUG
-		if (options.enablePixelDebug && isDebugPixel) {
-			debugPixel(__FUNCTION_NAME__ "/debug:mirror-only", depth, reflected + specular);
-		}
-		#endif
+        return refracted + specular;
+    }
+    
+    if (mat->isMirror()) {
 
-		return reflected + specular;
-	}
-	
-	// Otherwise, assume diffuse only
+        #ifdef ENABLE_PIXEL_DEBUG
+        if (opts->enablePixelDebug && isDebugPixel) {
+            debugPixel(__FUNCTION_NAME__ "/debug:mirror-only", depth, reflected + specular);
+        }
+        #endif
 
-	#ifdef ENABLE_PIXEL_DEBUG
-	if (options.enablePixelDebug && isDebugPixel) {
-		debugPixel(__FUNCTION_NAME__ "/debug:ambient", depth, ambient);
-		debugPixel(__FUNCTION_NAME__ "/debug:diffuse", depth, diffuse);
-		debugPixel(__FUNCTION_NAME__ "/debug:specular", depth, specular);
-		debugPixel(__FUNCTION_NAME__ "/debug:ambient+diffuse+specular", depth, ambient + diffuse + specular);
-	}
-	#endif
+        return reflected + specular;
+    }
+    
+    // Otherwise, assume diffuse only
 
-	return ambient + diffuse + specular;
+    #ifdef ENABLE_PIXEL_DEBUG
+    if (opts->enablePixelDebug && isDebugPixel) {
+        debugPixel(__FUNCTION_NAME__ "/debug:ambient", depth, ambient);
+        debugPixel(__FUNCTION_NAME__ "/debug:diffuse", depth, diffuse);
+        debugPixel(__FUNCTION_NAME__ "/debug:specular", depth, specular);
+        debugPixel(__FUNCTION_NAME__ "/debug:ambient+diffuse+specular", depth, ambient + diffuse + specular);
+    }
+    #endif
+
+    return ambient + diffuse + specular;
 }
 
 /*******************************************************************************
@@ -664,56 +651,52 @@ static Color computeShading(TraceOptions& options
  *
  ******************************************************************************/
 
-static Color trace(TraceOptions& options
-	              ,const Ray& ray
-		          ,const Graph& graph
-				  ,EnvironmentMap const * envMap
-		          ,const list<Light*>& lights
-		          ,int depth
-				  ,bool isDebugPixel)
+static Color trace(const Ray& ray
+                  ,shared_ptr<SceneContext> scene
+                  ,shared_ptr<TraceOptions> opts
+                  ,int depth
+                  ,bool isDebugPixel)
 {
-	if (depth > MAX_DEPTH) {
+    auto envMap = scene->getEnvironmentMap();
 
-		#ifdef ENABLE_PIXEL_DEBUG
-		if (options.enablePixelDebug && isDebugPixel) {
-			debugPixel(__FUNCTION_NAME__ "/debug:MAX-DEPTH", depth, Color::DEBUG);
-		}
-		#endif
+    if (depth > MAX_DEPTH) {
 
-		return envMap->getColor(ray);
-	}
+        #ifdef ENABLE_PIXEL_DEBUG
+        if (opts->enablePixelDebug && isDebugPixel) {
+            debugPixel(__FUNCTION_NAME__ "/debug:MAX-DEPTH", depth, Color::DEBUG);
+        }
+        #endif
 
-	bool hit         = false;
-	TraceContext ctx = closestIntersection(ray, graph, hit);
+        return envMap->getColor(ray, scene);
+        //return Color::DEBUG;
+    }
 
-	#ifdef ENABLE_PIXEL_DEBUG
-	Color output = Color::DEBUG;
-	#else
-	Color output = Color::BLACK;
-	#endif
+    bool hit         = false;
+    TraceContext ctx = closestIntersection(ray, scene, hit);
 
-	if (hit) {
-		output = computeShading(options
-			                   ,ctx.closestIsect
-			                   ,graph
-							   ,envMap
-							   ,ray
-							   ,lights
-							   ,depth
-							   ,isDebugPixel);
+    #ifdef ENABLE_PIXEL_DEBUG
+    Color output = Color::DEBUG;
+    #else
+    Color output = Color::BLACK;
+    #endif
 
-		#ifdef ENABLE_PIXEL_DEBUG
-		if (options.enablePixelDebug && isDebugPixel) {
-			debugPixel(__FUNCTION_NAME__ "/debug:trace:post-hit", depth, output);
-		}
-		#endif
-	
-	} else {
+    if (hit) {
 
-		output = envMap->getColor(ray);
-	}
+        output = computeShading(ray, scene, opts, ctx.closestIsect, depth, isDebugPixel);
 
-	return output;
+        #ifdef ENABLE_PIXEL_DEBUG
+        if (opts->enablePixelDebug && isDebugPixel) {
+            debugPixel(__FUNCTION_NAME__ "/debug:trace:post-hit", depth, output);
+        }
+        #endif
+    
+    } else {
+
+        output = envMap->getColor(ray, scene);
+        //output = Color::DEBUG;
+    }
+
+    return output;
 }
 
 /*******************************************************************************
@@ -722,60 +705,58 @@ static Color trace(TraceOptions& options
  *
  ******************************************************************************/
 
-static Color samplePixel(TraceOptions& options
-	                    ,const Camera& camera
-			            ,const Graph& graph
-						,EnvironmentMap const * envMap
-				        ,const list<Light*>& lights
-	                    ,float pixelW
-	                    ,float pixelH
-						,float screenW
-						,float screenH
-		 		        ,int i
-				        ,int j
-						,bool isDebugPixel = false)
+static Color samplePixel(const Camera& camera
+                        ,shared_ptr<SceneContext> scene
+                        ,shared_ptr<TraceOptions> opts
+                        ,float pixelW
+                        ,float pixelH
+                        ,float screenW
+                        ,float screenH
+                        ,int i
+                        ,int j
+                        ,bool isDebugPixel = false)
 {
-	// Sample by an N by N grid:
-	int N  = options.samplesPerPixel;
-	int N2 = N * N;
-	Color C;
+    // Sample by an N by N grid:
+    int N  = opts->samplesPerPixel;
+    int N2 = N * N;
+    Color C;
 
-	// Find the offsets:
-	float X  = pixelW * static_cast<float>(i);
-	float Y  = pixelH * static_cast<float>(j);
-	float dx = pixelW / static_cast<float>(N2);
-	float dy = pixelH / static_cast<float>(N2);
+    // Find the offsets:
+    float X  = pixelW * static_cast<float>(i);
+    float Y  = pixelH * static_cast<float>(j);
+    float dx = pixelW / static_cast<float>(N2);
+    float dy = pixelH / static_cast<float>(N2);
 
-	// Otherwise, average red, green, and blue components:
-	float avgR = C.fR();
-	float avgG = C.fG();
-	float avgB = C.fB();
+    // Otherwise, average red, green, and blue components:
+    float avgR = C.fR();
+    float avgG = C.fG();
+    float avgB = C.fB();
 
-	float u, v, xNDC, yNDC;
-	float K = static_cast<float>(N2);
+    float u, v, xNDC, yNDC;
+    float K = static_cast<float>(N2);
 
-	// For each sub-pixel sampling point (N * N):
-	for (int k=0; k<N2; k++) {
+    // For each sub-pixel sampling point (N * N):
+    for (int k=0; k<N2; k++) {
 
-		// Find the sampling point:
-		u = static_cast<float>(k / N2);
-		v = static_cast<float>(k % N2);
+        // Find the sampling point:
+        u = static_cast<float>(k / N2);
+        v = static_cast<float>(k % N2);
 
-		// Find the jittered (x,y) sampling point coordinate in NDC space:
-		xNDC = X + (u * dx) + (Utils::unitRand() * 0.9f * dx);
-		yNDC = Y + (v * dy) + (Utils::unitRand() * 0.9f * dy);
+        // Find the jittered (x,y) sampling point coordinate in NDC space:
+        xNDC = X + (u * dx) + (Utils::unitRand() * 0.9f * dx);
+        yNDC = Y + (v * dy) + (Utils::unitRand() * 0.9f * dy);
 
-		// Now, shoot a ray per sub-pixel sampling point:
-		C = trace(options, camera.spawnRay(xNDC, yNDC), graph, envMap, lights, 0, false);
+        // Now, shoot a ray per sub-pixel sampling point:
+        C = trace(camera.spawnRay(xNDC, yNDC), scene, opts, 0, false);
 
-		// Average the colors component-by-component to get around
-		// the saturation limit imposed by clamping:
-		avgR += C.fR();
-		avgG += C.fG();
-		avgB += C.fB();
-	}
+        // Average the colors component-by-component to get around
+        // the saturation limit imposed by clamping:
+        avgR += C.fR();
+        avgG += C.fG();
+        avgB += C.fB();
+    }
 
-	return Color(avgR / K, avgG / K, avgB / K);
+    return Color(avgR / K, avgG / K, avgB / K);
 }
 
 /*******************************************************************************
@@ -788,59 +769,59 @@ static Color samplePixel(TraceOptions& options
 
 float luminosity(const RGBApixel& pixel)
 {
-	return (0.212655f * (static_cast<float>(pixel.Red) / 255.0f)) + 
-	       (0.715158f * (static_cast<float>(pixel.Green) / 255.0f)) + 
-	       (0.072187f * (static_cast<float>(pixel.Blue) / 255.0f));
+    return (0.212655f * (static_cast<float>(pixel.Red) / 255.0f)) + 
+           (0.715158f * (static_cast<float>(pixel.Green) / 255.0f)) + 
+           (0.072187f * (static_cast<float>(pixel.Blue) / 255.0f));
 }
 
 // Returns the average edge intensity
 float detectEdges(const BMP& input, int w, int h, float* E)
-{	
-	// Sobel filter in X:
-	float Gx[3][3] = {{-1.0f, 0.0f, 1.0f}
-	                 ,{-2.0f, 0.0f, 2.0f}
-	                 ,{-1.0f, 0.0f, 1.0f}};
-	// Sobel filter in Y:
-	float Gy[3][3] = {{-1.0f, -2.0f, -1.0f}
-	                 ,{ 0.0f,  0.0f,  0.0f}
-	                 ,{ 1.0f,  2.0f,  1.0f}};
+{   
+    // Sobel filter in X:
+    float Gx[3][3] = {{-1.0f, 0.0f, 1.0f}
+                     ,{-2.0f, 0.0f, 2.0f}
+                     ,{-1.0f, 0.0f, 1.0f}};
+    // Sobel filter in Y:
+    float Gy[3][3] = {{-1.0f, -2.0f, -1.0f}
+                     ,{ 0.0f,  0.0f,  0.0f}
+                     ,{ 1.0f,  2.0f,  1.0f}};
 
-	float avgIntensity = 0.0f;
+    float avgIntensity = 0.0f;
 
-	#ifdef ENABLE_OPENMP
-	#pragma omp parallel for
-	#endif
-	for (int i=1; i<(w-1); i++) {
-		for (int j=1; j<(h-1); j++) {
+    #ifdef ENABLE_OPENMP
+    #pragma omp parallel for
+    #endif
+    for (int i=1; i<(w-1); i++) {
+        for (int j=1; j<(h-1); j++) {
 
-			// Gradient values in the X and Y directions at (i,j)
-			float X = 0.0f;
-			float Y = 0.0f;
+            // Gradient values in the X and Y directions at (i,j)
+            float X = 0.0f;
+            float Y = 0.0f;
 
-			for (int u=0; u<3; u++) {
-				for (int v=0; v<3; v++) {
+            for (int u=0; u<3; u++) {
+                for (int v=0; v<3; v++) {
 
-					int ii = i + (u - 1);
-					int jj = j + (v - 1);
-					assert(ii >= 0 && ii < w);
-					assert(jj >= 0 && jj < h);
+                    int ii = i + (u - 1);
+                    int jj = j + (v - 1);
+                    assert(ii >= 0 && ii < w);
+                    assert(jj >= 0 && jj < h);
 
-					float L = luminosity(input.GetPixel(ii, jj));
-					X      += (L * Gx[u][v]);
-					Y      += (L * Gy[u][v]);
-				}
-			}
+                    float L = luminosity(input.GetPixel(ii, jj));
+                    X      += (L * Gx[u][v]);
+                    Y      += (L * Gy[u][v]);
+                }
+            }
 
-			// Compute the gradient magnitude and clamp to the range [0,1]:
-			float magnitude = min(max(0.0f, sqrt(powf(X, 2.0f) + powf(Y, 2.0f))), 1.0f); 
-			E[(i * h) + j]  = magnitude;
+            // Compute the gradient magnitude and clamp to the range [0,1]:
+            float magnitude = min(max(0.0f, sqrt(powf(X, 2.0f) + powf(Y, 2.0f))), 1.0f); 
+            E[(i * h) + j]  = magnitude;
 
-			avgIntensity += magnitude;
-		}
-	}
+            avgIntensity += magnitude;
+        }
+    }
 
-	avgIntensity /= static_cast<float>(w * h);
-	return avgIntensity;
+    avgIntensity /= static_cast<float>(w * h);
+    return avgIntensity;
 }
 
 /**
@@ -848,11 +829,11 @@ float detectEdges(const BMP& input, int w, int h, float* E)
  */
 static inline RGBApixel colorToRGBAPixel(const Color& color)
 {
-	RGBApixel pixel;
-	pixel.Red   = color.iR();
-	pixel.Green = color.iG();
-	pixel.Blue  = color.iB();
-	return pixel;
+    RGBApixel pixel;
+    pixel.Red   = color.iR();
+    pixel.Green = color.iG();
+    pixel.Blue  = color.iB();
+    return pixel;
 }
 
 /*******************************************************************************
@@ -861,170 +842,177 @@ static inline RGBApixel colorToRGBAPixel(const Color& color)
  *
  ******************************************************************************/
 
-void rayTrace(BMP& output, const SceneContext& sc, const Camera& C, TraceOptions& opts)
+void rayTrace(BMP& output
+             ,const Camera& C
+             ,std::shared_ptr<SceneContext> scene
+             ,std::shared_ptr<TraceOptions> opts)
 {
-	Graph G        = sc.getSceneGraph();
-	glm::vec2 reso = sc.getResolution();
-	int X = reso.x;
-	int Y = reso.y;
+    Graph G        = scene->getSceneGraph();
+    glm::vec2 reso = scene->getResolution();
+    int X = reso.x;
+    int Y = reso.y;
 
-	unsigned int line = 0;
-	chrono::time_point<chrono::system_clock> start, end;
-	chrono::duration<double> elapsed_sec_1, elapsed_sec_2;
+    unsigned int line = 0;
+    chrono::time_point<chrono::system_clock> start, end;
+    chrono::duration<double> elapsed_sec_1, elapsed_sec_2;
 
-	// Get all of the point lights, etc. defined in the scene configuration:
-	list<Light*> lights = sc.getLights();
+    // Get all of the point lights, etc. defined in the scene configuration:
+    auto lights = scene->getLights();
 
-	// Collect all objects that constitute emissive objects and merge them
-	// with the existing light list:
-	G.addAreaLights(&lights);
+    // Collect all objects that constitute emissive objects and merge them
+    // with the existing light list:
+    auto areaLights = G.areaLights();
+    for (auto l=areaLights->begin(); l != areaLights->end(); l++) {
+        lights->push_back(*l);
+    }
 
-	// Compute the width and height of a single pixel
-	float pixW = 0.0f;
-	float pixH = 1.0f;
-	Camera::pixelDimensions(X, Y, pixW, pixH);
+    // Compute the width and height of a single pixel
+    float pixW = 0.0f;
+    float pixH = 1.0f;
+    Camera::pixelDimensions(X, Y, pixW, pixH);
 
-	// Use an edge map to adaptively find where to perform supersampling:
-	float* edgeMap = nullptr;
-	
-	// Only initialize the edge map if opts.samplesPerPixel > 1
+    // Use an edge map to adaptively find where to perform supersampling:
+    float* edgeMap = nullptr;
+    
+    // Only initialize the edge map if opts->samplesPerPixel > 1
 
-	if (opts.samplesPerPixel > 1) {
-		edgeMap = new float[X * Y];
-		memset(&edgeMap[0], 0, sizeof(edgeMap[0]) * X * Y);
-	}
+    if (opts->samplesPerPixel > 1) {
+        edgeMap = new float[X * Y];
+        memset(&edgeMap[0], 0, sizeof(edgeMap[0]) * X * Y);
+    }
 
-	// Environment map:
-	EnvironmentMap const * envMap = &sc.getEnvironmentMap();
+    // Environment map:
+    auto envMap = scene->getEnvironmentMap();
 
-	// If the given environment map is null, just use a simple color:
-	if (envMap == nullptr) {
-		envMap = new ColorEnvironmentMap(Color::BLACK);
-	}
+    // If the given environment map is null, just use a simple color:
+    if (!envMap) {
+        auto blank = shared_ptr<EnvironmentMap>(make_shared<ColorEnvironmentMap>(Color::BLACK));
+        scene->setEnvironmentMap(blank);
+    }
 
-	float fX = static_cast<float>(X);
-	float fY = static_cast<float>(Y);
-	
-	// Dump the trace opts:
-	cout << "> Rendering with configuration: " << endl 
-		 << endl 
-		 << opts 
-		 << endl;
+    float fX = static_cast<float>(X);
+    float fY = static_cast<float>(Y);
+    
+    // Dump the trace opts:
+    cout << "> Rendering with configuration: " << endl 
+         << endl 
+         << *opts 
+         << endl;
 
-	start = chrono::system_clock::now();
+    start = chrono::system_clock::now();
 
-	#ifdef ENABLE_OPENMP
-	#pragma omp parallel
-	#endif
-	{
-		#ifdef ENABLE_OPENMP
-		#pragma omp for schedule(static)
-		#endif
-		for (int i=0; i<X; i++) {
-			for (int j=0; j<Y; j++) {
+    #ifdef ENABLE_OPENMP
+    #pragma omp parallel
+    #endif
+    {
+        #ifdef ENABLE_OPENMP
+        #pragma omp for schedule(static)
+        #endif
+        for (int i=0; i<X; i++) {
+            for (int j=0; j<Y; j++) {
 
-				#ifdef ENABLE_PIXEL_DEBUG
-				bool hitDebugPixel =    opts.enablePixelDebug 
-					                 && opts.xDebugPixel == i 
-									 && opts.yDebugPixel == j;
-				#else
-				bool hitDebugPixel = false;
-				#endif
+                #ifdef ENABLE_PIXEL_DEBUG
+                bool hitDebugPixel =    opts->enablePixelDebug 
+                                     && opts->xDebugPixel == i 
+                                     && opts->yDebugPixel == j;
+                #else
+                bool hitDebugPixel = false;
+                #endif
 
-				// Shoot a single ray through the center of each pixel
-				float xNDC = static_cast<float>(i) / fX;
-				float yNDC = static_cast<float>(j) / fY;
+                // Shoot a single ray through the center of each pixel
+                float xNDC = static_cast<float>(i) / fX;
+                float yNDC = static_cast<float>(j) / fY;
 
-				Color c = trace(opts, C.spawnRay(xNDC, yNDC), G, envMap, lights, 0, hitDebugPixel);
+                Color c = trace(C.spawnRay(xNDC, yNDC), scene, opts, 0, hitDebugPixel);
 
-				#ifdef ENABLE_PIXEL_DEBUG
-				// If we hit the debug pixel: break out, since there's nothing more to do
-				if (opts.enablePixelDebug && hitDebugPixel) {
-					debugPixel(__FUNCTION_NAME__ ":done", 0, c);
-					// It's still abnormal termination:
-					exit(EXIT_FAILURE);
-				}
-				#endif
+                #ifdef ENABLE_PIXEL_DEBUG
+                // If we hit the debug pixel: break out, since there's nothing more to do
+                if (opts->enablePixelDebug && hitDebugPixel) {
+                    debugPixel(__FUNCTION_NAME__ ":done", 0, c);
+                    // It's still abnormal termination:
+                    exit(EXIT_FAILURE);
+                }
+                #endif
 
-				output.SetPixel(i, j, colorToRGBAPixel(c));
-			}
+                output.SetPixel(i, j, colorToRGBAPixel(c));
+            }
 
-			++line;
+            ++line;
 
-			clog << "(PASS-1) " << ((static_cast<float>(line) / fY) * 100.0f) << "%\r";
-		}
-	}
+            clog << "(PASS-1) " << ((static_cast<float>(line) / fY) * 100.0f) << "%\r";
+        }
+    }
 
-	elapsed_sec_1 = chrono::system_clock::now() - start;
+    elapsed_sec_1 = chrono::system_clock::now() - start;
 
-	cout << endl 
-	     << endl 
-		 << "> Rendering elapsed time: "
-		 << elapsed_sec_1.count() << "s" 
-		 << endl 
-		 << endl;
+    cout << endl 
+         << endl 
+         << "> Rendering elapsed time: "
+         << elapsed_sec_1.count() << "s" 
+         << endl 
+         << endl;
 
-	// Adaptively antialias:
-	if (opts.samplesPerPixel > 1) {
+    // Adaptively antialias:
+    if (opts->samplesPerPixel > 1) {
 
-		line = 0;
+        line = 0;
 
-		// Detect the edges of the image:
-		float avgIntensity = detectEdges(output, X, Y, edgeMap);
-		int N = opts.samplesPerPixel;
+        // Detect the edges of the image:
+        float avgIntensity = detectEdges(output, X, Y, edgeMap);
+        int N = opts->samplesPerPixel;
 
-		cout << "> Adaptively supersampling with " << N << " x " << N 
-		     << " samples per pixel" 
-			 << endl << endl;
+        cout << "> Adaptively supersampling with " << N << " x " << N 
+             << " samples per pixel" 
+             << endl << endl;
 
-		start = chrono::system_clock::now();
+        start = chrono::system_clock::now();
 
-		#ifdef ENABLE_OPENMP
-		#pragma omp parallel
-		#endif
-		{
-			#ifdef ENABLE_OPENMP
-			#pragma omp for schedule(static)
-			#endif
-			for (int i=0; i<X; i++) {
-				for (int j=0; j<Y; j++) {
+        #ifdef ENABLE_OPENMP
+        #pragma omp parallel
+        #endif
+        {
+            #ifdef ENABLE_OPENMP
+            #pragma omp for schedule(static)
+            #endif
+            for (int i=0; i<X; i++) {
+                for (int j=0; j<Y; j++) {
 
-					// Linearize the index:
-					int k = (i * Y) + j;
+                    // Linearize the index:
+                    int k = (i * Y) + j;
 
-					// For any pixel at (i,j) that has an edge intensity greater than
-					// the average value, run antialiasing:
-					if (edgeMap[k] > avgIntensity) {
+                    // For any pixel at (i,j) that has an edge intensity greater than
+                    // the average value, run antialiasing:
+                    if (edgeMap[k] > avgIntensity) {
 
-						Color c = samplePixel(opts, C, G, envMap, lights, pixW, pixH, fX, fY, i ,j);
+                        Color c = samplePixel(C, scene, opts, pixW, pixH, fX, fY, i ,j);
 
-						// Overwrite the value previously stored at (i,j) with the 
-						// supersampled color value:
-						output.SetPixel(i, j, colorToRGBAPixel(c));
-					}
-				}
+                        // Overwrite the value previously stored at (i,j) with the 
+                        // supersampled color value:
+                        output.SetPixel(i, j, colorToRGBAPixel(c));
+                    }
+                }
 
-				++line;
+                ++line;
 
-				clog << "(PASS-2) " << ((static_cast<float>(line) / fY) * 100.0f) << "%\r";
-			}
-		}
+                clog << "(PASS-2) " << ((static_cast<float>(line) / fY) * 100.0f) << "%\r";
+            }
+        }
 
-		if (edgeMap != nullptr) {
-			delete [] edgeMap;
-			edgeMap = nullptr;
-		}
+        if (edgeMap != nullptr) {
+            delete [] edgeMap;
+            edgeMap = nullptr;
+        }
 
-		elapsed_sec_2 = chrono::system_clock::now() - start;
+        elapsed_sec_2 = chrono::system_clock::now() - start;
 
-		cout << endl 
-		     << endl 
-			 << "> Supersampling elapsed time: " << elapsed_sec_2.count() << "s"  
-			 << endl
-			 << "> Total elapsed time: " << (elapsed_sec_1 + elapsed_sec_2).count() << "s"  
-			 << endl
-			 << endl;
-	}
+        cout << endl 
+             << endl 
+             << "> Supersampling elapsed time: " << elapsed_sec_2.count() << "s"  
+             << endl
+             << "> Total elapsed time: " << (elapsed_sec_1 + elapsed_sec_2).count() << "s"  
+             << endl
+             << endl;
+    }
 }
 
 /******************************************************************************/
