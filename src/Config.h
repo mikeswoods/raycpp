@@ -34,10 +34,28 @@ class Configuration
 		void registerMaterial(std::shared_ptr<Material> material);
 		void registerLight(std::shared_ptr<Light> light);
 
+    public:
+        std::string filename;
+        
+        // RESO: two integers specifying the width and height (in pixels) of 
+        // the ray casting that should be performed.
+        int RESO[2];
+
+        // EYEP: the x, y, z position of the eye/camera in world-space.
+        float EYEP[3];
+
+        // VDIR: the viewing direction of the eye/camera towards the box, 
+        // in world-space.
+        float VDIR[3];
+        
+        // UVEC: the up-vector in world-space.
+        float UVEC[3];
+        
+        // FOVY: the half-angle field of view in the Y-direction in degrees.
+        float FOVY;
+
     protected:
         GraphBuilder graphBuilder;
-
-		std::string filename;
 		std::shared_ptr<EnvironmentMap> envMap;
 		Graph graph;
 		std::shared_ptr<MATERIALS> materials;
@@ -50,23 +68,6 @@ class Configuration
 		void parseNodeDefinition(std::istream& is, const std::string& beginToken);
 
     public:
-        // RESO: two integers specifying the width and height (in pixels) of 
-        // the ray casting that should be performed.
-        int RESO[2];
-
-        // EYEP: the x, y, z position of the eye/camera in world-space.
-        float EYEP[3];
-
-		// VDIR: the viewing direction of the eye/camera towards the box, 
-        // in world-space.
-        float VDIR[3];
-        
-		// UVEC: the up-vector in world-space.
-        float UVEC[3];
-        
-		// FOVY: the half-angle field of view in the Y-direction in degrees.
-        float FOVY;
-
         Configuration(const std::string& filename);
 		virtual ~Configuration();
 

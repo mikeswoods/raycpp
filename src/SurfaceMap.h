@@ -41,9 +41,9 @@ class SurfaceMap
 	protected:
 		MapType type;
 		std::unique_ptr<BMP> bitmap;
+		std::string filename;
 		int iWidth, iHeight;
 		float fWidth, fHeight;
-		std::string filename;
 
 		inline void convert1DTo2D(int i, int&x, int&y) const
 		{

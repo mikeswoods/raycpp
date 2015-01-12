@@ -26,8 +26,8 @@ SceneContext::SceneContext(const glm::vec2& _resolution
     eyePosition(_eyePosition),
     viewDir(_viewDir),
     yFOV(_yFOV),
-    envMap(_envMap),
     graph(_graph),
+    envMap(_envMap),
     materials(_materials),
     lights(_lights)
 {

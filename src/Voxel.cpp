@@ -80,24 +80,6 @@ void VoxelBuffer::set(int i, int j, int k, const Voxel& v)
 	this->buffer[sub2ind(i,j,k)] = v;
 }
 
-/*
-bool VoxelBuffer::intersects(const Ray& ray, const RenderContext& ctx, Hit& hit)
-{
-	P entered, exited;
-
-	if (!this->bounds.isHit(ray, entered, exited)) {
-		return false;
-	}
-
-	// Basic color accumulation:
-	RayMarch rm       = rayMarch(ctx, *this, entered, exited);
-	hit.color         = rm.color;
-	hit.transmittance = rm.transmittance;
-
-	return true;
-}
-*/
-
 /** 
  * Sets center to the center point of the voxel the point p falls within. 
  * If this method returns false, point o does not fall within a voxel
@@ -337,13 +319,13 @@ static float Q(const VoxelBuffer& buffer, float kappa, float step, int iters
  * Perform ray marching through the volume accumulating density and 
  * transmittance values
  */
-RayPath rayMarch(const VoxelBuffer& buffer
-				,const P& start
-				,const V& dir
-				,float stepSize
-				,bool interpolate
-				,shared_ptr<list<shared_ptr<Light>>> lights
-				,float (*densityFunction)(Voxel* voxel, const P& X))
+float rayMarch(const VoxelBuffer& buffer
+			  ,const P& start
+			  ,const V& dir
+			  ,float stepSize
+			  ,bool interpolate
+			  ,shared_ptr<list<shared_ptr<Light>>> lights
+			  ,float (*densityFunction)(Voxel* voxel, const P& X))
 {
 	float kappa      = 1.0f;
 	float T          = 1.0f;
@@ -394,13 +376,9 @@ RayPath rayMarch(const VoxelBuffer& buffer
 				voxel->light[k] = Q(buffer, kappa, stepSize, stepsToLight, LX, LN);
 			}
 
-			accumColor += light->getColor(center) * 
-						  Color::WHITE * 
-						  attenuation * 
-						  T * 
-						  voxel->light[k];
+			accumColor += light->getColor(center) * attenuation * T * voxel->light[k];
 		}
 	}
 
-	return RayPath(accumColor, T);
+	return T;
 }

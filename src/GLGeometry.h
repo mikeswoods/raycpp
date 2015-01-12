@@ -10,6 +10,7 @@
 #ifndef GL_GEOMETRY_H
 #define GL_GEOMETRY_H
 
+#include <memory>
 #include <glew/glew.h>
 #include "Geometry.h"
 #include "Color.h"
@@ -31,7 +32,7 @@ class GLGeometry
 {
 	protected:
 		// Geometry object definition
-		Geometry const * geometry;
+		std::shared_ptr<Geometry> geometry;
 
 		// GL object instance color
 		Color color;
@@ -50,8 +51,8 @@ class GLGeometry
 		GLWorldState* state;
 
 	public:
-		GLGeometry(Geometry* geometry);
-		GLGeometry(Geometry* geometry, const Color& color);
+		GLGeometry(std::shared_ptr<Geometry> geometry);
+		GLGeometry(std::shared_ptr<Geometry> geometry, const Color& color);
 		GLGeometry(const GLGeometry& other);
 		~GLGeometry();
 
@@ -70,7 +71,7 @@ class GLGeometry
 		void unHighlightObject() { this->setDrawMode(GL_TRIANGLES); }
 
 		// Get the underlying geometry of the instance
-		Geometry const * getGeometry() { return this->geometry; }
+		std::shared_ptr<Geometry> getGeometry() { return this->geometry; }
 
 		void upload(GLuint shaderProgram
 			       ,GLint locationPos

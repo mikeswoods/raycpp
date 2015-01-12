@@ -38,10 +38,13 @@ class GraphNode
 		GraphNode* parent;
 
 		// The geometric object definition itself
-		Geometry const * geometry;
+		std::shared_ptr<Geometry> geometry;
 
 		// GL wrapped instance of a geometric primitive
 		GLGeometry* instance;
+
+		// Surface material
+		std::shared_ptr<Material> material;
 
 		// All child nodes of this node in the scene graph
 		std::list<GraphNode*> children;
@@ -57,9 +60,6 @@ class GraphNode
 
 		// [x,y,z] center point
 		P center;
-
-		// Surface material
-		std::shared_ptr<Material> material;
 
 	public:
 		GraphNode(const std::string& name);
@@ -82,8 +82,8 @@ class GraphNode
 
 		bool isAreaLight() const;
 
-		Geometry const * getGeometry() const        { return this->geometry; }
-		void setGeometry(Geometry const * geometry) { this->geometry = geometry; }
+		std::shared_ptr<Geometry> getGeometry() const        { return this->geometry; }
+		void setGeometry(std::shared_ptr<Geometry> geometry) { this->geometry = geometry; }
 
 		GLGeometry* getInstance() const        { return this->instance; }
 		void setInstance(GLGeometry* instance) { this->instance = instance; }
@@ -241,7 +241,7 @@ class Graph
 				}
 
 				// Advance the iterator
-                iterator& operator++(int unused)
+                iterator& operator++(int _)
 				{ 
 					this->next();
 					return *this;

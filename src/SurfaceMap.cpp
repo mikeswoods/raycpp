@@ -64,13 +64,13 @@ glm::vec2 SurfaceMap::mapToCube(const glm::vec3& d)
 /*****************************************************************************/
 
 SurfaceMap::SurfaceMap(const string& _filename, MapType _type) :
-	fWidth(0.0f),
-	fHeight(0.0f),
+	type(_type),
+	bitmap(unique_ptr<BMP>(new BMP())),
+	filename(_filename),
 	iWidth(0),
 	iHeight(0),
-	filename(_filename),
-	type(_type),
-	bitmap(unique_ptr<BMP>(new BMP()))
+	fWidth(0.0f),
+	fHeight(0.0f)
 {
 	this->loadBitmap(_filename);
 }

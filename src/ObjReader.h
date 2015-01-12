@@ -66,7 +66,7 @@ class ObjReader
 		ObjReader(const std::string& objFile);
 		~ObjReader();
 
-		Mesh* parse();
+		std::shared_ptr<Mesh> parse();
 
 		const std::vector<glm::vec3>& getVertices() const { return *this->vertices; }
 		const std::vector<glm::vec3>& getNormals() const  { return *this->normals; }

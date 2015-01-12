@@ -3,13 +3,11 @@
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <fstream>
 #include <memory>
 #include <utility>
 #include <iostream>
 #include <string>
 #include <stdexcept>
-#include <time.h>
 #include <glew/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -27,6 +25,7 @@
 #include <CImg.h>
 //#include <chibi/eval.h>
 
+using namespace glm;
 using namespace std;
 
 // Raytracer related 
@@ -273,7 +272,7 @@ int main(int argc, char** argv)
     }
 
     // Initialize raytracer code:
-    glm::vec2 reso = sceneContext->getResolution();
+    vec2 reso = sceneContext->getResolution();
     initRaytrace(rayTraceCamera, sceneContext);
     output.SetBitDepth(24);
     output.SetSize(reso.x, reso.y);
@@ -487,12 +486,12 @@ void uploadGeometry()
  * position in the scene graph, then draws tha actual geometry using the
  * updated affine matrix
  */
-static glm::mat4 drawGLGeometry(GraphNode* node, glm::mat4 current, int depth)
+static mat4 drawGLGeometry(GraphNode* node, mat4 current, int depth)
 {
-    glm::mat4 next = applyTransform(node, current);
+    mat4 next = applyTransform(node, current);
 
     if (state->doRotateScene() && node->isRoot()) {
-        next *= glm::rotate(glm::mat4(), rotation, glm::vec3(0.0, 1.0f, 0.0f));
+        next *= rotate(mat4(), rotation, vec3(0.0, 1.0f, 0.0f));
     }
 
     GLGeometry* instance = node->getInstance();
@@ -518,7 +517,7 @@ void display()
     // --- Export the uniforms -------------------------------------------------
 
     // Eye position
-    glm::vec3 eyePosition = sceneContext->getEyePosition();
+    vec3 eyePosition = sceneContext->getEyePosition();
     glUniform4f(unifEyePos, x(eyePosition), y(eyePosition), z(eyePosition), 1.0f);
 
     // Eye position
@@ -541,7 +540,7 @@ void display()
     GraphNode* root = sceneContext->getSceneGraph().getRoot();
 
     if (root != nullptr) {
-        walk(root, drawGLGeometry, glm::mat4());
+        walk(root, drawGLGeometry, mat4());
     }
 
     // -------------------------------------------------------------------------
@@ -560,12 +559,12 @@ void handleWindowResize(GLFWwindow* window, int width, int height)
 
     glViewport(0, 0, width, height);
 
-    glm::mat4 projection = glm::perspective(glm::radians(sceneContext->getFOVAngle())
+    mat4 projection = perspective(radians(sceneContext->getFOVAngle())
                                            ,sceneContext->getAspectRatio()
                                            ,sceneContext->getZNear()
                                            ,sceneContext->getZFar());
 
-    glm::mat4 camera = glm::lookAt(sceneContext->getEyePosition()
+    mat4 camera = lookAt(sceneContext->getEyePosition()
                                   ,sceneContext->getLookAtPosition()
                                   ,sceneContext->getUpDir());
 

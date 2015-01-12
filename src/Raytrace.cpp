@@ -158,7 +158,7 @@ static bool isCloser(const TraceContext& test, TraceContext& other)
  */
 static TraceContext intersectNode(GraphNode* node, TraceContext ctx)
 {
-    Geometry const * geometry = node->getGeometry();
+    shared_ptr<Geometry> geometry = node->getGeometry();
 
     glm::mat4 nextT    = applyTransform(node, ctx.T);
     Intersection isect = geometry != nullptr 
@@ -233,7 +233,7 @@ static bool fastTestInShadow(const Ray& ray
         GraphNode* node = nodeAndT.first;
         glm::mat4 T     = nodeAndT.second;
 
-        Geometry const * geometry = node->getGeometry();
+        shared_ptr<Geometry> geometry = node->getGeometry();
         glm::mat4 nextT = applyTransform(node, T);
 
         if (node != ignore && geometry != nullptr) {
@@ -432,8 +432,8 @@ static glm::vec3 blinnPhongShade(shared_ptr<TraceOptions> opts
     float kd = 0.95f; // diffuse
     float ks = 1.0f;  // specular
 
-    shared_ptr<Material> mat  = isect.node->getMaterial();
-    Geometry const * geometry = isect.node->getGeometry();
+    shared_ptr<Material> mat      = isect.node->getMaterial();
+    shared_ptr<Geometry> geometry = isect.node->getGeometry();
 
     assert(mat != nullptr && geometry != nullptr);
 
@@ -524,7 +524,7 @@ static Color computeShading(const Ray& ray
      * Compute Blinn-Phong shading
      **************************************************************************/
 
-    Color ambient, diffuse, specular, reflected, refracted;
+    Color ambient, diffuse, specular, reflected, refracted, volumetric;
 
     // Index of refraction coefficients:
     float n1, n2;
@@ -568,9 +568,14 @@ static Color computeShading(const Ray& ray
         }
     }
 
-    /**************************************************************************
+    /***************************************************************************
      * Reflection & refraction
-     *************************************************************************/
+     **************************************************************************/
+
+    if (isect.density < 1.0f) {
+        volumetric = traceRefract(scene, opts, isect, I, N, 1.0f, depth, isDebugPixel);
+    }
+
     if (mat->isTransparent()) {
 
         refracted = traceRefract(scene, opts, isect, I, N, n, depth, isDebugPixel);
@@ -643,6 +648,7 @@ static Color computeShading(const Ray& ray
     #endif
 
     return ambient + diffuse + specular;
+    //return ((ambient + diffuse + specular) * isect.density) + (volumetric * (1.0f - isect.density));
 }
 
 /*******************************************************************************

@@ -37,7 +37,6 @@ CXXFLAGS += \
 	--std=c++11 \
 	-Wall \
 	-Wextra \
-	-Wno-reorder \
 	-Wno-unused-parameter \
 	-Wno-unused-function 
 

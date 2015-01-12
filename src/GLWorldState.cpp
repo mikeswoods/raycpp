@@ -23,10 +23,10 @@ const glm::vec3 GLWorldState::DEFAULT_LIGHT_POSITION = glm::vec3(0.0f, 9.0f, 0.0
 /******************************************************************************/
 
 GLWorldState::GLWorldState(const Graph& _graph) :
-	flagCycleLightHue(false),
-	flagRotateScene(false),
-	polyModeIndex(0),
 	iterator(unique_ptr<Graph::iterator>(new Graph::pre_iterator(_graph, true))),
+	flagRotateScene(false),
+	flagCycleLightHue(false),
+	polyModeIndex(0),
 	previewLight(PointLight(DEFAULT_LIGHT_POSITION, Color::WHITE)),
 	globalLightHue(0.0f)
 { 

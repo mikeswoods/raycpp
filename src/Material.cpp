@@ -107,7 +107,7 @@ Color Material::getColor() const
  * Color function that takes a position in R^3 and a geometric object
  * and maps a color based on the given information
  */
-Color Material::getColor(const glm::vec3& d, Geometry const * geometry) const
+Color Material::getColor(const glm::vec3& d, shared_ptr<Geometry> geometry) const
 {
 	if (this->hasTextureMap()) {
 
@@ -141,7 +141,7 @@ Color Material::getColor(const glm::vec3& d, Geometry const * geometry) const
  * Given a position in R^3 and a geometric object, this function returns
  * the normal intensity at the given position
  */
-float Material::getIntensity(const glm::vec3& d, Geometry const * geometry) const
+float Material::getIntensity(const glm::vec3& d, shared_ptr<Geometry> geometry) const
 {
 	if (this->hasBumpMap()) {
 
@@ -175,7 +175,7 @@ float Material::getIntensity(const glm::vec3& d, Geometry const * geometry) cons
  * Given a position in R^3 and a geometric object, this function returns
  * the surface bump normal the given position
  */
-glm::vec3 Material::getNormal(const glm::vec3& d, Geometry const * geometry) const
+glm::vec3 Material::getNormal(const glm::vec3& d, shared_ptr<Geometry> geometry) const
 {
 	if (this->hasBumpMap()) {
 

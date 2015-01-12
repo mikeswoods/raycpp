@@ -64,8 +64,6 @@ Color EnvironmentMap::getColor(const Ray& ray, shared_ptr<SceneContext> scene) c
 {
 	Intersection isect;
 
-	//return Color::DEBUG;
-
 	switch (this->mapType) {
 		case SPHERE:
 			{
@@ -122,8 +120,8 @@ Color EnvironmentMap::getColor(const Ray& ray, shared_ptr<SceneContext> scene) c
  ******************************************************************************/
 
 ColorEnvironmentMap::ColorEnvironmentMap(const Color& _color) :
-	color(_color),
-	EnvironmentMap("SPHERE")
+	EnvironmentMap("SPHERE"),
+	color(_color)
 {
 
 }

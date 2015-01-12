@@ -16,6 +16,9 @@
 
 class Cube : public Geometry
 {
+	protected:
+		P p1, p2, centroid;
+
 	private:
 		BoundingSphere volume;
 		AABB aabb;
@@ -24,7 +27,6 @@ class Cube : public Geometry
 		void computeAABB();
 
 	protected:
-		P p1, p2, centroid;
 		virtual Intersection intersectImpl(const Ray &ray, std::shared_ptr<SceneContext> scene) const;
 		virtual glm::vec3 sampleImpl() const;
 

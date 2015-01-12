@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <string>
+#include <memory>
 #include <vector>
 #include <limits>
 #include "ObjReader.h"
@@ -51,7 +52,7 @@ int ObjReader::normalizeIndex(int i) const
 	return (i > 0) ? i : (this->vertices->size() + i) + 1;
 }
 
-Mesh* ObjReader::parse()
+shared_ptr<Mesh> ObjReader::parse()
 {
 	this->reset();
 
@@ -138,7 +139,7 @@ Mesh* ObjReader::parse()
 		}
 	}
 
-	return new Mesh(this->getVertices(), this->getNormals(), this->getUVs(), this->getFaces());
+	return make_shared<Mesh>(this->getVertices(), this->getNormals(), this->getUVs(), this->getFaces());
 }
 
 // Parse a comment from the string stream

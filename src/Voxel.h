@@ -88,13 +88,13 @@ class RayPath
         };
 };
 
-RayPath rayMarch(const VoxelBuffer& buffer
-                ,const P& start
-                ,const V& dir
-                ,float step
-                ,bool interpolate
-                ,std::shared_ptr<std::list<std::shared_ptr<Light>>> lights
-                ,float (*densityFunction)(Voxel* voxel, const P& X) = nullptr);
+float rayMarch(const VoxelBuffer& buffer
+              ,const P& start
+              ,const V& dir
+              ,float stepSize
+              ,bool interpolate
+              ,std::shared_ptr<std::list<std::shared_ptr<Light>>> lights
+              ,float (*densityFunction)(Voxel* voxel, const P& X) = nullptr);
 
 /******************************************************************************/
 

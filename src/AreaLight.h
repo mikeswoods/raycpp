@@ -1,14 +1,14 @@
 #ifndef AREA_LIGHT_H
 #define AREA_LIGHT_H
 
-/*****************************************************************************
+/*******************************************************************************
  *
  * This file defines a simple area light implementation
  *
  * @file AreaLight.h
  * @author Michael Woods
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -17,12 +17,11 @@
 #include "R3.h"
 #include "Graph.h"
 
-/*****************************************************************************/
+/******************************************************************************/
 
 class AreaLight : public Light
 {
 	protected:
-
 		// The centroid of the light in world space
 		P centroidWorld;
 
@@ -52,6 +51,6 @@ class AreaLight : public Light
 		virtual bool isLightSourceNode(GraphNode const * testNode) const;
 };
 
-/*****************************************************************************/
+/******************************************************************************/
 
 #endif

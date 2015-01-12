@@ -17,7 +17,7 @@ using namespace std;
 
 /*****************************************************************************/
 
-GLGeometry::GLGeometry(Geometry* _geometry) :
+GLGeometry::GLGeometry(shared_ptr<Geometry> _geometry) :
 	geometry(_geometry),
 	color(Color::WHITE),
     vao(0),
@@ -28,7 +28,7 @@ GLGeometry::GLGeometry(Geometry* _geometry) :
 
 }
 
-GLGeometry::GLGeometry(Geometry* _geometry, const Color& _color) :
+GLGeometry::GLGeometry(shared_ptr<Geometry> _geometry, const Color& _color) :
 	geometry(_geometry),
 	color(_color),
 	vao(0),

@@ -18,6 +18,7 @@
 #include "Config.h"
 #include "Sphere.h"
 #include "Cube.h"
+#include "Volume.h"
 #include "Cylinder.h"
 #include "GLGeometry.h"
 #include "PointLight.h"
@@ -442,10 +443,12 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 	string line, attribute;
 	string objFileName    = "";
 	GraphNode* node       = nullptr;
-	Geometry* geometry    = nullptr;
 	bool isMesh           = false;
+	bool isVolume         = false;
 	bool readNonEmptyLine = false;
 	bool firstLine        = true;
+
+	shared_ptr<Geometry> geometry(nullptr);
 
 	#ifdef DEBUG
 	clog << "GRAPH-NODE:" << endl;
@@ -542,17 +545,33 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 
 				string shapeType;
 				ss >> shapeType;
+
 				if (shapeType == "null") {
-					geometry = nullptr;
+
+					// Do nothing
+
 				} else if (shapeType == "sphere") {
-					geometry = new Sphere();
+
+					geometry = shared_ptr<Geometry>(make_shared<Sphere>());
+
 				} else if (shapeType == "cylinder") {
-					geometry = new Cylinder();
+
+					geometry = shared_ptr<Geometry>(make_shared<Cylinder>());
+
 				} else if (shapeType == "cube") {
-					geometry = new Cube();
+
+					geometry = shared_ptr<Geometry>(make_shared<Cube>());
+
 				} else if (shapeType == "mesh") {
+
 					isMesh = true;
+
+				} else if (shapeType == "volume") {
+
+					isMesh = isVolume = true;
+
 				} else {
+
 					throw runtime_error("parseNodeDefinition: Unsupported geometry type: " + shapeType);
 				}
 				readNonEmptyLine = true;
@@ -599,16 +618,24 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 	if (isMesh) {
 		
 		objFileName = Utils::trim(objFileName);
+
 		if (objFileName == "") {
 			throw runtime_error("No object filename given for mesh object!");
 		}
 
 		ObjReader objReader(objFileName);
-		geometry = objReader.parse();
+
+		auto meshData = objReader.parse();
+
+		if (isVolume) {
+			geometry = shared_ptr<Geometry>(make_shared<Volume>(new Cube()));
+		} else {
+			geometry = meshData;
+		}
 	}
 
 	// We have a non-null object:
-	if (geometry != nullptr) {
+	if (geometry) {
 
 		// Associate the geometric object definition with the actual node:
 		node->setGeometry(geometry);
@@ -646,15 +673,25 @@ unique_ptr<SceneContext> Configuration::read()
 	string readToken;
 
 	while (is >> readToken) {
+
 		if (readToken == "CAMERA") { // Begin CAMERA section
+
 			this->parseCameraSection(is, readToken);
+
 		} else if (readToken == "ENVIRONMENT") { // Begin ENVIRONMENT section
+
 			this->parseEnvironmentSection(is, readToken);
+
 		} else if (readToken == "LIGHT") { // Begin LIGHT section
+
 			this->parsePointLightSection(is, readToken);
+
 		} else if (readToken == "MAT") { // Begin material definition
+
 			this->parseMaterialSection(is, readToken);
+
 		} else { // Begin graph node definition
+
 			this->parseNodeDefinition(is, readToken);
 		}
 	}

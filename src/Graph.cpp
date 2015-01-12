@@ -11,29 +11,29 @@ using namespace glm;
 
 /*****************************************************************************/
 
-GraphNode::GraphNode(const string& name)
+GraphNode::GraphNode(const string& _name) :
+	name(_name),
+	parent(nullptr),
+	geometry(shared_ptr<Geometry>(nullptr)),
+	instance(nullptr),
+	material(nullptr),
+	T(vec3(0.0f, 0.0f, 0.0f)),
+	R(vec3(0.0f, 0.0f, 0.0f)),
+	S(vec3(1.0f, 1.0f, 1.0f))
 {
-	this->name     = name;
-	this->parent   = nullptr;
-	this->instance = nullptr;
-	this->material = nullptr;
-	this->geometry = nullptr;
-	this->T        = vec3(0.0f, 0.0f, 0.0f);
-	this->R        = vec3(0.0f, 0.0f, 0.0f);
-	this->S        = vec3(1.0f, 1.0f, 1.0f);
+
 }
 
-GraphNode::GraphNode(const GraphNode& other)
+GraphNode::GraphNode(const GraphNode& other) :
+	name(other.name),
+	parent(other.parent),
+	geometry(other.geometry),
+	instance(other.instance),
+	material(other.material),
+	T(other.T),
+	R(other.R),
+	S(other.S)
 {
-	this->name     = other.name;
-	this->parent   = other.parent;
-	this->instance = other.instance;
-	this->material = other.material;
-	this->geometry = other.geometry;
-	this->T        = other.T;
-	this->R        = other.R;
-	this->S        = other.S;
-
 	// Copy the children list:
 	copy(other.children.begin(), other.children.end(), back_inserter(this->children));
 }

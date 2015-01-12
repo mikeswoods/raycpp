@@ -93,15 +93,15 @@ class Material
 
 		// Color function that takes a position in R^3 and a geometric object
 		// and maps a color based on the given information
-		Color getColor(const glm::vec3& d, Geometry const * geometry) const;
+		Color getColor(const glm::vec3& d, std::shared_ptr<Geometry> geometry) const;
 
 		// Given a position in R^3 and a geometric object, this function returns
 		// the normal intensity at the given position
-		float getIntensity(const glm::vec3& d, Geometry const * geometry) const;
+		float getIntensity(const glm::vec3& d, std::shared_ptr<Geometry> geometry) const;
 
 		// Given a position in R^3 and a geometric object, this function returns
 		// the surface bump normal the given position
-		glm::vec3 getNormal(const glm::vec3& d, Geometry const * geometry) const;
+		glm::vec3 getNormal(const glm::vec3& d, std::shared_ptr<Geometry> geometry) const;
 };
 
 /******************************************************************************/
