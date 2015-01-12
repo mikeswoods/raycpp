@@ -17,10 +17,12 @@
 #include "Utils.h"
 
 using namespace std;
+using namespace glm;
+using namespace cimg_library;
 
 #define USE_BILINEAR_FILTERING 1
 
-/*****************************************************************************/
+/******************************************************************************/
 
 /**
  *  Static method that maps the given position P to a spherical UV position
@@ -28,44 +30,42 @@ using namespace std;
  * Code was adapted from the sphere example on the Wikwpedia article "UV Mapping"
  * at http://en.wikipedia.org/wiki/UV_mapping
  */
-glm::vec2 SurfaceMap::mapToSphere(const glm::vec3& d)
+vec2 SurfaceMap::mapToSphere(const vec3& d)
 {
-	float u = 0.5f + ((glm::atan(z(d), x(d)) / (2.0f * static_cast<float>(M_PI))));
+	float u = 0.5f + ((atan(z(d), x(d)) / (2.0f * static_cast<float>(M_PI))));
 	float v = 0.5f - (asin(y(d)) / static_cast<float>(M_PI));
-
-	return glm::vec2(u, v);
+	return vec2(u, v);
 }
 
 /**
  * Static method that maps the given position P to a cubic  UV position
  */
-glm::vec2 SurfaceMap::mapToCube(const glm::vec3& d)
+vec2 SurfaceMap::mapToCube(const vec3& d)
 {
 	float X = abs(d.x);
 	float Y = abs(d.y);
 	float Z = abs(d.z);
-	float M = max(X, max(Y, Z));
+	float M = std::max(X, std::max(Y, Z));
 
 	if (X == M) { // X is max
 		float u = Utils::unitRange(d.z, -1.0f, 1.0f);
 		float v = Utils::unitRange(d.x, -1.0f, 1.0f);
-		return  glm::vec2(u, v);
+		return  vec2(u, v);
 	} else if (Y == M) { // Y is max
 		float u = Utils::unitRange(d.x, -1.0f, 1.0f);
 		float v = Utils::unitRange(d.z, -1.0f, 1.0f);
-		return  glm::vec2(u, v);
+		return  vec2(u, v);
 	} else { // Z is max
 		float u = Utils::unitRange(d.x, 1.0f, -1.0f);
 		float v = Utils::unitRange(d.y, 1.0f, -1.0f);
-		return  glm::vec2(u, v);
+		return  vec2(u, v);
 	}
 }
 
-/*****************************************************************************/
+/******************************************************************************/
 
 SurfaceMap::SurfaceMap(const string& _filename, MapType _type) :
 	type(_type),
-	bitmap(unique_ptr<BMP>(new BMP())),
 	filename(_filename),
 	iWidth(0),
 	iHeight(0),
@@ -74,43 +74,20 @@ SurfaceMap::SurfaceMap(const string& _filename, MapType _type) :
 {
 	this->loadBitmap(_filename);
 }
-/*
-SurfaceMap::SurfaceMap(const SurfaceMap& other) :
-	fWidth(other.fWidth),
-	fHeight(other.fHeight),
-	iWidth(other.iWidth),
-	iHeight(other.iHeight),
-	filename(other.filename),
-	type(other.type),
-	bitmap(other.bitmap)
-{ }
-*/
 
 SurfaceMap::~SurfaceMap()
 {
-	if (this->bitmap != nullptr) {
-	//	delete this->bitmap;
-	}
-}
 
-ostream& operator<<(ostream& s, const SurfaceMap& map)
-{
-	if (map.isTextureMap()) {
-		s << "TextureMap { \"" << map.filename << "\" }";
-	} else {
-		s << "BumpMap { \"" << map.filename << "\" }";
-	}
-	return s;
 }
 
 void SurfaceMap::loadBitmap(const string& filename)
 {
-	if (!this->bitmap->ReadFromFile(filename.c_str())) {
-		throw runtime_error("SurfaceMap: Could not read bitmap from file");
+	if (!this->image.load(filename.c_str())) {
+		throw runtime_error("SurfaceMap: Could not read image from file");
 	}
 
-	this->iWidth  = this->bitmap->TellWidth();
-	this->iHeight = this->bitmap->TellHeight();
+	this->iWidth  = this->image.width();
+	this->iHeight = this->image.height();
 	this->fWidth  = static_cast<float>(this->iWidth);
 	this->fHeight = static_cast<float>(this->iHeight);
 }
@@ -132,12 +109,12 @@ void SurfaceMap::uvToXY(float u, float v, int& x, int& y) const
  * Given u and v coordinates, this function computes four weight values for 
  * four (x,y) coordinates to intgerpolate using bilinear filtering
  */
-glm::vec4 SurfaceMap::getBilinearWeights(float u
+vec4 SurfaceMap::getBilinearWeights(float u
 	                                    ,float v
-										,glm::vec2& P1
-										,glm::vec2& P2
-										,glm::vec2& P3
-										,glm::vec2& P4) const
+										,vec2& P1
+										,vec2& P2
+										,vec2& P3
+										,vec2& P4) const
 {
 	assert(u >= 0.0f && u <= 1.0f && v >= 0.0f && v <= 1.0f);
 
@@ -149,7 +126,7 @@ glm::vec4 SurfaceMap::getBilinearWeights(float u
 	float T = U - floorf(U);
 
 	// Weights 1-4 corresponding to positions <P1,P2,P3,P4>
-	glm::vec4 W = glm::vec4((1.0f - S) * (1.0f - T), S * (1.0f - T), (1.0f - S) * T, S *  T);
+	vec4 W = vec4((1.0f - S) * (1.0f - T), S * (1.0f - T), (1.0f - S) * T, S *  T);
 
 	float WW = this->fWidth - 1.0f;
 	float HH = this->fHeight - 1.0f;
@@ -158,15 +135,15 @@ glm::vec4 SurfaceMap::getBilinearWeights(float u
 	float VF = static_cast<float>(floor(V));
 	float VC = static_cast<float>(ceil(V));
 
-	P1 = glm::vec2(static_cast<int>(Utils::clamp(UF, 0.0f, WW)), static_cast<int>(Utils::clamp(VF, 0.0f, HH)));
-	P2 = glm::vec2(static_cast<int>(Utils::clamp(UC, 0.0f, WW)), static_cast<int>(Utils::clamp(VF, 0.0f, HH)));
-	P3 = glm::vec2(static_cast<int>(Utils::clamp(UF, 0.0f, WW)), static_cast<int>(Utils::clamp(VC, 0.0f, HH)));
-	P4 = glm::vec2(static_cast<int>(Utils::clamp(UC, 0.0f, WW)), static_cast<int>(Utils::clamp(VC, 0.0f, HH)));
+	P1 = vec2(static_cast<int>(Utils::clamp(UF, 0.0f, WW)), static_cast<int>(Utils::clamp(VF, 0.0f, HH)));
+	P2 = vec2(static_cast<int>(Utils::clamp(UC, 0.0f, WW)), static_cast<int>(Utils::clamp(VF, 0.0f, HH)));
+	P3 = vec2(static_cast<int>(Utils::clamp(UF, 0.0f, WW)), static_cast<int>(Utils::clamp(VC, 0.0f, HH)));
+	P4 = vec2(static_cast<int>(Utils::clamp(UC, 0.0f, WW)), static_cast<int>(Utils::clamp(VC, 0.0f, HH)));
 
 	return W;
 }
 
-/*****************************************************************************/
+/******************************************************************************/
 
 TextureMap::TextureMap(const string& filename) :
 	SurfaceMap(filename, TEXTURE_MAP)
@@ -184,8 +161,8 @@ TextureMap::~TextureMap()
  */
 Color TextureMap::getColor(int i, int j) const
 {
-	RGBApixel pixel = this->bitmap->GetPixel(i, j);
-	return Color(pixel.Red, pixel.Green, pixel.Blue);
+	ImagePixel p = pixel(this->image, i, j);
+	return Color(RED(p), GREEN(p), BLUE(p));
 }
 
 /**
@@ -195,33 +172,30 @@ Color TextureMap::getColor(float u, float v) const
 {
 	#ifdef USE_BILINEAR_FILTERING
 
-	glm::vec2 P1, P2, P3, P4;
-	glm::vec4 W = this->getBilinearWeights(u, v, P1, P2, P3, P4);
+	vec2 P1, P2, P3, P4;
+	vec4 W = this->getBilinearWeights(u, v, P1, P2, P3, P4);
 
-	RGBApixel pixels[4] = {
-		this->bitmap->GetPixel(static_cast<int>(P1.x), static_cast<int>(P1.y)),
-		this->bitmap->GetPixel(static_cast<int>(P2.x), static_cast<int>(P2.y)),
-		this->bitmap->GetPixel(static_cast<int>(P3.x), static_cast<int>(P3.y)),
-		this->bitmap->GetPixel(static_cast<int>(P4.x), static_cast<int>(P4.y))
+	ImagePixel pixels[4] = {
+		pixel(this->image, static_cast<int>(P1.x), static_cast<int>(P1.y)),
+		pixel(this->image, static_cast<int>(P2.x), static_cast<int>(P2.y)),
+		pixel(this->image, static_cast<int>(P3.x), static_cast<int>(P3.y)),
+		pixel(this->image, static_cast<int>(P4.x), static_cast<int>(P4.y))
 	};
 
-	return (W[0] * Color(pixels[0].Red, pixels[0].Green, pixels[0].Blue)) + 
-		   (W[1] * Color(pixels[1].Red, pixels[1].Green, pixels[1].Blue)) +
-		   (W[2] * Color(pixels[2].Red, pixels[2].Green, pixels[2].Blue)) +
-		   (W[3] * Color(pixels[3].Red, pixels[3].Green, pixels[3].Blue));
+	return (W[0] * Color(RED(pixels[0]), GREEN(pixels[0]), BLUE(pixels[0]))) + 
+		   (W[1] * Color(RED(pixels[1]), GREEN(pixels[1]), BLUE(pixels[1]))) +
+		   (W[2] * Color(RED(pixels[2]), GREEN(pixels[2]), BLUE(pixels[2]))) +
+		   (W[3] * Color(RED(pixels[3]), GREEN(pixels[3]), BLUE(pixels[3])));
 	#else
 
 	int x = 0, y = 0;
 	uvToXY(u, v, x, y);
-
-	RGBApixel pixel = this->bitmap->GetPixel(x, y);
-	Color color = Color(pixel.Red, pixel.Green, pixel.Blue);
-
-	return color;
+	ImagePixel p = pixel(this->image->GetPixel(x, y);
+	return Color(RED(p), GREEN(p), BLUE(p));
 	#endif
 }
 
-/*****************************************************************************/
+/******************************************************************************/
 
 BumpMap::BumpMap(const string& filename) :
 	SurfaceMap(filename, BUMP_MAP),
@@ -278,8 +252,8 @@ void BumpMap::computeDerivatives()
  */
 float BumpMap::getIntensity(int i, int j) const
 {
-	RGBApixel pixel = this->bitmap->GetPixel(i, j);
-	return Color(pixel.Red, pixel.Green, pixel.Blue).luminosity();
+	ImagePixel p = pixel(this->image, i, j);
+	return Color(RED(p), GREEN(p), BLUE(p)).luminosity();
 }
 
 /**
@@ -287,19 +261,16 @@ float BumpMap::getIntensity(int i, int j) const
  */
 float BumpMap::getIntensity(float u, float v) const
 {
-	int x = 0, y = 0;
-	uvToXY(u, v, x, y);
-
-	RGBApixel pixel = this->bitmap->GetPixel(x, y);
-
-	return Color(pixel.Red, pixel.Green, pixel.Blue).luminosity();
+	int i = 0, j = 0;
+	uvToXY(u, v, i, j);
+	ImagePixel p = pixel(this->image, i, j);
+	return Color(RED(p), GREEN(p), BLUE(p)).luminosity();
 }
 
 /**
  * Get the bump "depth" at the given cartesian (i,j) or (u,v) position
  */
-
-glm::vec3 BumpMap::getNormal(float u, float v) const
+vec3 BumpMap::getNormal(float u, float v) const
 {
 	// Adapted from http://web.cse.ohio-state.edu/~hwshen/781/Site/Slides_files/bump.pdf
 	// and lecture notes
@@ -312,14 +283,26 @@ glm::vec3 BumpMap::getNormal(float u, float v) const
 	unsigned int k = this->convert2DTo1D(x, y);
 	assert(k < this->N);
 
-	float bu     = this->bU[k];
-	float bv     = this->bV[k];
-	glm::vec3 pu = glm::vec3(u, v, bu);
-	glm::vec3 pv = glm::vec3(u, v, bv);
-	glm::vec3 n  = glm::cross(pu, pv);
-	float Ln     = max(FLT_EPSILON, glm::length(n));
+	float bu = this->bU[k];
+	float bv = this->bV[k];
+	vec3 pu  = vec3(u, v, bu);
+	vec3 pv  = vec3(u, v, bv);
+	vec3 n   = cross(pu, pv);
+	float Ln = std::max(FLT_EPSILON, length(n));
 
-	return n + (bu * (glm::cross(n, pv) / Ln)) + (bv * (glm::cross(n, pu) / Ln));
+	return n + (bu * (cross(n, pv) / Ln)) + (bv * (cross(n, pu) / Ln));
 }
 
-/*****************************************************************************/
+/******************************************************************************/
+
+ostream& operator<<(ostream& s, const SurfaceMap& map)
+{
+	if (map.isTextureMap()) {
+		s << "TextureMap { \"" << map.filename << "\" }";
+	} else {
+		s << "BumpMap { \"" << map.filename << "\" }";
+	}
+	return s;
+}
+
+/******************************************************************************/

@@ -15,7 +15,7 @@
 #include <memory>
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
-#include <EasyBMP/EasyBMP.h>
+#include "Image.h"
 #include "Color.h"
 #include "R3.h"
 #include "Geometry.h"
@@ -23,6 +23,7 @@
 /*******************************************************************************
  * Abstract surface map type
  ******************************************************************************/
+
 class SurfaceMap
 {
 	public:
@@ -40,7 +41,7 @@ class SurfaceMap
 
 	protected:
 		MapType type;
-		std::unique_ptr<BMP> bitmap;
+		Image image;
 		std::string filename;
 		int iWidth, iHeight;
 		float fWidth, fHeight;
@@ -79,6 +80,7 @@ class SurfaceMap
 /*******************************************************************************
  * Texture map
  ******************************************************************************/
+
 class TextureMap : public SurfaceMap
 {
 	public:
@@ -93,6 +95,7 @@ class TextureMap : public SurfaceMap
 /*******************************************************************************
  * Bump map
  ******************************************************************************/
+
 class BumpMap : public SurfaceMap
 {
 	private:

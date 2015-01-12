@@ -1,6 +1,3 @@
-#ifndef AREA_LIGHT_H
-#define AREA_LIGHT_H
-
 /*******************************************************************************
  *
  * This file defines a simple area light implementation
@@ -9,6 +6,9 @@
  * @author Michael Woods
  *
  ******************************************************************************/
+
+#ifndef AREA_LIGHT_H
+#define AREA_LIGHT_H
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>

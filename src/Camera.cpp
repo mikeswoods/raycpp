@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * A general camera class definition. This camera is used primary for 
+ * raytracer-based rendering.
+ *
+ * @file Camera.h
+ * @author Michael Woods
+ *
+ ******************************************************************************/
+
 #define _USE_MATH_DEFINES
 #include <cmath>
 #define GLM_FORCE_RADIANS
@@ -11,19 +21,6 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
- * Computes the width and height dimensions of the given pixel, setting 
- * width and height with the computed values
- */
-void Camera::pixelDimensions(int resoX, int resoY, float& pw, float& ph)
-{
-	pw = 1.0f / static_cast<float>(resoX);
-	ph = 1.0f / static_cast<float>(resoY);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// General camera definition
-////////////////////////////////////////////////////////////////////////////////
 
 Camera::Camera(const P &position, const V &viewDir, const V &up, float fov, float aspectRatio)
 {
@@ -171,26 +168,33 @@ Ray Camera::spawnRay(float x, float y, float resoX, float resoY) const
     return Ray(this->position, screen2World(x, y, resoX, resoY) - this->position);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * Computes the width and height dimensions of the given pixel, setting 
+ * width and height with the computed values
+ */
+void Camera::pixelDimensions(int resoX, int resoY, float& pw, float& ph)
+{
+    pw = 1.0f / static_cast<float>(resoX);
+    ph = 1.0f / static_cast<float>(resoY);
+}
 
-std::ostream& operator<<(std::ostream& s, const Camera& c)
+/******************************************************************************/
+
+ostream& operator<<(ostream& s, const Camera& c)
 {
     return s                                << 
-        "Camera {"                          << std::endl <<
-        "  position    = " << c.position    << std::endl << 
-        "  viewDir     = " << c.viewDir     << std::endl <<
-        "  up          = " << c.up          << std::endl <<
-        "  fov         = " << c.fov         << std::endl <<
-        "  theta       = " << c.theta       << std::endl <<
-        "  phi         = " << c.phi         << std::endl <<
-        "  aspectRatio = " << c.aspectRatio << std::endl <<
-        "  midpoint    = " << c.midpoint    << std::endl << 
+        "Camera {"                          << endl <<
+        "  position    = " << c.position    << endl << 
+        "  viewDir     = " << c.viewDir     << endl <<
+        "  up          = " << c.up          << endl <<
+        "  fov         = " << c.fov         << endl <<
+        "  theta       = " << c.theta       << endl <<
+        "  phi         = " << c.phi         << endl <<
+        "  aspectRatio = " << c.aspectRatio << endl <<
+        "  midpoint    = " << c.midpoint    << endl << 
         "}";
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-// From slide 163
 void Camera::calibrateViewPlane()
 {
     // Basis vectors: 

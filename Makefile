@@ -51,9 +51,9 @@ endif
 ################################################################################
 
 ifeq ($(UNAME), Darwin)
-LDFLAGS = -fopenmp -lGLEW `pkg-config --static --libs glfw3`
+LDFLAGS = -L/usr/X11/lib -fopenmp -lGLEW `pkg-config --static --libs glfw3` -lX11
 else
-LDFLAGS = -fopenmp -lGLEW `pkg-config --static --libs glfw3`
+LDFLAGS = -L/usr/X11/lib -fopenmp -lGLEW `pkg-config --static --libs glfw3` -lX11
 endif
 
 ################################################################################

@@ -6,6 +6,7 @@
  * @author Michael Woods
  *
  ******************************************************************************/
+
 #define GLM_FORCE_RADIANS
 #include <algorithm>
 #include <ctime>
@@ -15,6 +16,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <stack>
+#include "Image.h"
 #include "Raytrace.h"
 #include "Intersection.h"
 #include "EnvironmentMap.h"
@@ -22,6 +24,7 @@
 
 using namespace std;
 using namespace glm;
+using namespace cimg_library;
 
 /*******************************************************************************
  *
@@ -57,7 +60,7 @@ static Color trace(const Ray&, shared_ptr<SceneContext>, shared_ptr<TraceOptions
  *
  ******************************************************************************/
 
-std::ostream& operator<<(std::ostream& s, const Intersection& isect)
+ostream& operator<<(ostream& s, const Intersection& isect)
 {
     s << "Intersection {"                 << endl
       << "  t="         << isect.t        << endl
@@ -70,7 +73,7 @@ std::ostream& operator<<(std::ostream& s, const Intersection& isect)
     return s;
 }
 
-std::ostream& operator<<(std::ostream& s, const TraceContext& ctx)
+ostream& operator<<(ostream& s, const TraceContext& ctx)
 {
     s << "TraceContext {"                      << endl
       << "  ray="          << ctx.ray          << endl
@@ -79,7 +82,7 @@ std::ostream& operator<<(std::ostream& s, const TraceContext& ctx)
     return s;
 }
 
-std::ostream& operator<<(std::ostream& s, const TraceOptions& opts)
+ostream& operator<<(ostream& s, const TraceOptions& opts)
 {
 	s << "[samplesPerLight: " << opts.samplesPerLight <<
 		 ", samplesPerPixel: " << opts.samplesPerPixel << 
@@ -94,7 +97,7 @@ std::ostream& operator<<(std::ostream& s, const TraceOptions& opts)
  *
  ******************************************************************************/
 
-static std::ostream& debugPixel(std::ostream& os, string funcName, int depth)
+static ostream& debugPixel(ostream& os, string funcName, int depth)
 {
     for (int i=0; i<depth; i++) {
         os << "    ";
@@ -103,27 +106,27 @@ static std::ostream& debugPixel(std::ostream& os, string funcName, int depth)
     return os;
 }
 
-static std::ostream& debugPixel(string funcName, int depth, const Color& output)
+static ostream& debugPixel(string funcName, int depth, const Color& output)
 {
     return debugPixel(cerr, funcName, depth) << output << endl;
 }
 
-static std::ostream& debugPixel(string funcName, int depth, const vec3& output)
+static ostream& debugPixel(string funcName, int depth, const vec3& output)
 {
     return debugPixel(cerr, funcName, depth) << output << endl;
 }
 
-static std::ostream& debugPixel(string funcName, int depth, float output)
+static ostream& debugPixel(string funcName, int depth, float output)
 {
     return debugPixel(cerr, funcName, depth) << output << endl;
 }
 
-static std::ostream& debugPixel(string funcName, int depth, int output)
+static ostream& debugPixel(string funcName, int depth, int output)
 {
     return debugPixel(cerr, funcName, depth) << output << endl;
 }
 
-static std::ostream& debugPixel(string funcName, int depth, string output)
+static ostream& debugPixel(string funcName, int depth, string output)
 {
     return debugPixel(cerr, funcName, depth) << output << endl;
 }
@@ -248,7 +251,7 @@ static bool fastTestInShadow(const Ray& ray
             }
         }
 
-        std::list<shared_ptr<GraphNode>> children = node->getChildren();
+        list<shared_ptr<GraphNode>> children = node->getChildren();
 
         // Otherwise, go through the children:
         for (auto i=children.begin(); i != children.end(); i++) {
@@ -768,96 +771,19 @@ static Color samplePixel(const Camera& camera
 
 /*******************************************************************************
  *
- * Detects the edges in the given bitmap using the Sobel operator, producing 
- * an edge intensity map. This map is used to selectively determine where to 
- * apply antialiasing
- *
- *******************************************************************************/
-
-float luminosity(const RGBApixel& pixel)
-{
-    return (0.212655f * (static_cast<float>(pixel.Red) / 255.0f)) + 
-           (0.715158f * (static_cast<float>(pixel.Green) / 255.0f)) + 
-           (0.072187f * (static_cast<float>(pixel.Blue) / 255.0f));
-}
-
-// Returns the average edge intensity
-float detectEdges(const BMP& input, int w, int h, float* E)
-{   
-    // Sobel filter in X:
-    float Gx[3][3] = {{-1.0f, 0.0f, 1.0f}
-                     ,{-2.0f, 0.0f, 2.0f}
-                     ,{-1.0f, 0.0f, 1.0f}};
-    // Sobel filter in Y:
-    float Gy[3][3] = {{-1.0f, -2.0f, -1.0f}
-                     ,{ 0.0f,  0.0f,  0.0f}
-                     ,{ 1.0f,  2.0f,  1.0f}};
-
-    float avgIntensity = 0.0f;
-
-    #ifdef ENABLE_OPENMP
-    #pragma omp parallel for
-    #endif
-    for (int i=1; i<(w-1); i++) {
-        for (int j=1; j<(h-1); j++) {
-
-            // Gradient values in the X and Y directions at (i,j)
-            float X = 0.0f;
-            float Y = 0.0f;
-
-            for (int u=0; u<3; u++) {
-                for (int v=0; v<3; v++) {
-
-                    int ii = i + (u - 1);
-                    int jj = j + (v - 1);
-                    assert(ii >= 0 && ii < w);
-                    assert(jj >= 0 && jj < h);
-
-                    float L = luminosity(input.GetPixel(ii, jj));
-                    X      += (L * Gx[u][v]);
-                    Y      += (L * Gy[u][v]);
-                }
-            }
-
-            // Compute the gradient magnitude and clamp to the range [0,1]:
-            float magnitude = std::min(std::max(0.0f, std::sqrt(powf(X, 2.0f) + powf(Y, 2.0f))), 1.0f); 
-            E[(i * h) + j]  = magnitude;
-
-            avgIntensity += magnitude;
-        }
-    }
-
-    avgIntensity /= static_cast<float>(w * h);
-    return avgIntensity;
-}
-
-/**
- * Converts a Color instance to an EasyBMP RGBApixel value
- */
-static inline RGBApixel colorToRGBAPixel(const Color& color)
-{
-    RGBApixel pixel;
-    pixel.Red   = color.iR();
-    pixel.Green = color.iG();
-    pixel.Blue  = color.iB();
-    return pixel;
-}
-
-/*******************************************************************************
- *
  * Raytraces the entire scene
  *
  ******************************************************************************/
 
-void rayTrace(BMP& output
+void rayTrace(shared_ptr<Image> output
              ,const Camera& C
-             ,std::shared_ptr<SceneContext> scene
-             ,std::shared_ptr<TraceOptions> opts)
+             ,shared_ptr<SceneContext> scene
+             ,shared_ptr<TraceOptions> opts)
 {
-    Graph G        = scene->getSceneGraph();
+    Graph G   = scene->getSceneGraph();
     vec2 reso = scene->getResolution();
-    int X = reso.x;
-    int Y = reso.y;
+    int X     = reso.x;
+    int Y     = reso.y;
 
     unsigned int line = 0;
     chrono::time_point<chrono::system_clock> start, end;
@@ -877,16 +803,6 @@ void rayTrace(BMP& output
     float pixW = 0.0f;
     float pixH = 1.0f;
     Camera::pixelDimensions(X, Y, pixW, pixH);
-
-    // Use an edge map to adaptively find where to perform supersampling:
-    float* edgeMap = nullptr;
-    
-    // Only initialize the edge map if opts->samplesPerPixel > 1
-
-    if (opts->samplesPerPixel > 1) {
-        edgeMap = new float[X * Y];
-        memset(&edgeMap[0], 0, sizeof(edgeMap[0]) * X * Y);
-    }
 
     // Environment map:
     auto envMap = scene->getEnvironmentMap();
@@ -935,13 +851,15 @@ void rayTrace(BMP& output
                 #ifdef ENABLE_PIXEL_DEBUG
                 // If we hit the debug pixel: break out, since there's nothing more to do
                 if (opts->enablePixelDebug && hitDebugPixel) {
+
                     debugPixel(__FUNCTION_NAME__ ":done", 0, c);
-                    // It's still abnormal termination:
                     exit(EXIT_FAILURE);
                 }
                 #endif
 
-                output.SetPixel(i, j, colorToRGBAPixel(c));
+                (*output)(i, j, 0, 0) = c.iR(); // Set red channel
+                (*output)(i, j, 0, 1) = c.iG(); // Set green channel
+                (*output)(i, j, 0, 2) = c.iB(); // Set blue channel
             }
 
             ++line;
@@ -965,10 +883,10 @@ void rayTrace(BMP& output
         line = 0;
 
         // Detect the edges of the image:
-        float avgIntensity = detectEdges(output, X, Y, edgeMap);
-        int N = opts->samplesPerPixel;
+        float avgIntensity = 0.0f;
+        auto edgeMap       = edges(*output, X, Y, avgIntensity);
 
-        cout << "> Adaptively supersampling with " << N << " x " << N 
+        cout << "> Adaptively supersampling with " << opts->samplesPerPixel << " x " << opts->samplesPerPixel 
              << " samples per pixel" 
              << endl << endl;
 
@@ -995,7 +913,9 @@ void rayTrace(BMP& output
 
                         // Overwrite the value previously stored at (i,j) with the 
                         // supersampled color value:
-                        output.SetPixel(i, j, colorToRGBAPixel(c));
+                        (*output)(i, j, 0, 0) = c.iR(); // Set red channel
+                        (*output)(i, j, 0, 1) = c.iG(); // Set green channel
+                        (*output)(i, j, 0, 2) = c.iB(); // Set blue channel
                     }
                 }
 
@@ -1003,11 +923,6 @@ void rayTrace(BMP& output
 
                 clog << "(PASS-2) " << ((static_cast<float>(line) / fY) * 100.0f) << "%\r";
             }
-        }
-
-        if (edgeMap != nullptr) {
-            delete [] edgeMap;
-            edgeMap = nullptr;
         }
 
         elapsed_sec_2 = chrono::system_clock::now() - start;

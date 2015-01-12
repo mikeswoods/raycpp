@@ -18,19 +18,18 @@
 #include "Config.h"
 #include "ObjReader.h"
 #include "Camera.h"
-#include "Raytrace.h"
 #include "Options.h"
+#include "Raytrace.h"
 
-#include <EasyBMP/EasyBMP.h>
-#include <CImg.h>
 //#include <chibi/eval.h>
 
 using namespace glm;
 using namespace std;
+using namespace cimg_library;
 
 // Raytracer related 
 static Camera rayTraceCamera;
-static BMP output;
+static shared_ptr<CImg<unsigned char>> output;
 
 // Attributes
 static GLint locationPos;
@@ -162,8 +161,9 @@ static void runRaytracer(bool disablePreview = false)
     rayTrace(output, rayTraceCamera, sceneContext, traceOptions);
 
     if (!traceOptions->enablePixelDebug) {
-        string outputFile = Utils::cwd("output.bmp");
-        output.WriteToFile(outputFile.c_str());
+
+        string outputFile = Utils::cwd("output.png");
+        output->save(outputFile.c_str());
         cout << "Output written to " << outputFile << endl;
     
     } else {
@@ -274,8 +274,9 @@ int main(int argc, char** argv)
     // Initialize raytracer code:
     vec2 reso = sceneContext->getResolution();
     initRaytrace(rayTraceCamera, sceneContext);
-    output.SetBitDepth(24);
-    output.SetSize(reso.x, reso.y);
+
+    // Dimension the output image:
+    output = shared_ptr<CImg<unsigned char>>(make_shared<CImg<unsigned char>>(reso.x, reso.y, 1, 3, 0));
 
     if (options[PRINT_CAMERA]) {
         clog << rayTraceCamera << endl;

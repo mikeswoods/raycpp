@@ -10,12 +10,13 @@
 #ifndef RAYTRACE_H
 #define RAYTRACE_H
 
+#include <Cimg.h>
+
 #include <iostream>
 #include <memory>
 #include <utility> 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
-#include <EasyBMP/EasyBMP.h>
 
 #include "Config.h"
 #include "Camera.h"
@@ -23,14 +24,6 @@
 #include "SceneContext.h"
 
 /******************************************************************************/
-
-/**
- * NDC coordinate pair datatype
- */
-struct NDCCoord
-{
-	float x,y;
-};
 
 /** 
  * Options specifying various parameters during raytracing like sampling, 
@@ -151,14 +144,20 @@ class TraceContext
 		}
 };
 
+/******************************************************************************/
+
 /**
  * Raytracing code 
  */
 void initRaytrace(Camera&, std::shared_ptr<SceneContext> scene);
 
-void rayTrace(BMP&
+void rayTrace(std::shared_ptr<cimg_library::CImg<unsigned char>>
 	         ,const Camera&
 	         ,std::shared_ptr<SceneContext>
 	         ,std::shared_ptr<TraceOptions>);
 
+/******************************************************************************/
+
 #endif
+
+

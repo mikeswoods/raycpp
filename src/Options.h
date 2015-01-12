@@ -35,7 +35,7 @@ const option::Descriptor usage[] =
         ,0
         ,"" 
         ,""
-        ,option::Arg::None
+        ,option::Arg::None_
         ,"USAGE: <program> [options]\n\n Options:" 
     },
     {
@@ -43,7 +43,7 @@ const option::Descriptor usage[] =
         ,0
         ,""
         ,"help"
-        ,option::Arg::None
+        ,option::Arg::None_
         ,"  --help  \t\tPrint usage and exit."
     },
     {
@@ -51,7 +51,7 @@ const option::Descriptor usage[] =
         ,0
         ,"T"
         ,"tests"
-        ,option::Arg::None
+        ,option::Arg::None_
         ,"  --tests \t\tRun tests and exit."
     },
     {
@@ -59,7 +59,7 @@ const option::Descriptor usage[] =
         ,0
         ,"C"
         ,"config"
-        ,option::Arg::None
+        ,option::Arg::None_
         ,"  --config \t\tPrint the configuration to stdout and quit."
     },
     {
@@ -67,7 +67,7 @@ const option::Descriptor usage[] =
         ,0
         ,""
         ,"camera"
-        ,option::Arg::None
+        ,option::Arg::None_
         ,"  --camera \t\tPrint the camera to stdout."
     },
     {
@@ -83,7 +83,7 @@ const option::Descriptor usage[] =
         ,0
         ,"P"
         ,"no-preview"
-        ,option::Arg::None
+        ,option::Arg::None_
         ,"  -P/--no-preview \t\tDisable preview mode and begin rendering immediately."
     },
     {
@@ -107,7 +107,7 @@ const option::Descriptor usage[] =
         ,0
         ,""
         ,""
-        ,option::Arg::None
+        ,option::Arg::None_
         ,"\nExamples:\n"
          "  example --unknown -- --this_is_no_option\n"
          "  example -unk --plus -ppp file1 file2\n" 
