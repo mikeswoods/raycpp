@@ -72,7 +72,7 @@ Mesh::Mesh(const Mesh& other) :
 
 Mesh::~Mesh() 
 { 
-	if (this->tree != nullptr) {
+	if (this->tree) {
 		delete this->tree;
 	}
 	

@@ -65,9 +65,9 @@ class GLWorldState
 		void setPreviewLight(const PointLight& previewLight) { this->previewLight = previewLight; }
 
 		// Node traversal operations:
-		GraphNode* gotoRoot();
-		GraphNode* getCurrentNode();
-		GraphNode* getNextNode();
+		std::shared_ptr<GraphNode> gotoRoot();
+		std::shared_ptr<GraphNode> getCurrentNode();
+		std::shared_ptr<GraphNode> getNextNode();
 
 		// Highlight next node:
 		void highlightNextNode();

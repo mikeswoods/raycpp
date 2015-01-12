@@ -43,16 +43,15 @@ GraphNode::~GraphNode()
 
 }
 
-void GraphNode::detachChild(GraphNode* child)
+void GraphNode::detachChild(shared_ptr<GraphNode> child)
 {
 	this->children.remove(child);
 }
 
 void GraphNode::detachFromParent()
 {
-	if (this->parent != nullptr) {
-		this->parent->detachChild(this);
-		//this->parent = nullptr;
+	if (this->parent) {
+		this->parent->detachChild(shared_ptr<GraphNode>(this));
 	}
 }
 
@@ -69,7 +68,7 @@ bool GraphNode::isAreaLight() const
 ostream& operator<<(ostream& os, const GraphNode& node)
 {
 	os  << "Node { \"" << node.name << "\", material = ";
-	if (node.material == nullptr) {
+	if (!node.material) {
 		os << "<null>";
 	} else {
 		os << *(node.material);
@@ -94,7 +93,7 @@ ostream& operator<<(ostream& os, const mat4 M)
 // Based on the parameters of the given node, this function will apply 
 // the given transformation matrix T, yielding a new transformation matrix T'
 
-mat4 applyTransform(GraphNode* node, mat4 current)
+mat4 applyTransform(shared_ptr<GraphNode> node, mat4 current)
 {
 	vec3 T = node->getTranslate();
 	vec3 R = node->getRotate();
@@ -122,10 +121,10 @@ mat4 applyTransform(GraphNode* node, mat4 current)
 
 Graph::Graph()
 { 
-	this->root = nullptr;
+
 }
 
-Graph::Graph(GraphNode* root)
+Graph::Graph(shared_ptr<GraphNode> root)
 { 
 	this->root = root;
 }
@@ -136,14 +135,14 @@ Graph::Graph(GraphNode* root)
  * Accumulator function used to fold over the scene graph collecting
  * all graph nodes that are emissive by getAllAreaLights()
  */
-static pair<LIGHTS*, mat4> collectAreaLight(GraphNode* node, pair<LIGHTS*, mat4> current)
+static pair<LIGHTS*, mat4> collectAreaLight(std::shared_ptr<GraphNode> node, pair<LIGHTS*, mat4> current)
 {
 	mat4 nextT = applyTransform(node, current.second);
 
 	// Found a node with an emissive material assigned to it:
-	if (node->getMaterial() != nullptr && node->getMaterial()->isEmissive()) {
+	if (node->getMaterial() && node->getMaterial()->isEmissive()) {
 
-		list<shared_ptr<Light>>* areaLights = current.first;
+		auto areaLights = current.first;
 		areaLights->push_back(make_shared<AreaLight>(node, nextT));
 	}
 
@@ -175,7 +174,7 @@ unique_ptr<LIGHTS> Graph::areaLights() const
 
 /*****************************************************************************/
 
-static ostream* walkAndPrint(GraphNode* node, ostream* os, int depth)
+static ostream* walkAndPrint(std::shared_ptr<GraphNode> node, ostream* os, int depth)
 {
 	for (int i=0; i<(2*depth); i++) {
 		(*os) << "-";

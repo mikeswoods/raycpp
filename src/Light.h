@@ -19,6 +19,7 @@
  *
  ******************************************************************************/
 
+#include <memory>
 #include <iostream>
 #include "R3.h"
 #include "Color.h"
@@ -83,7 +84,7 @@ class Light
 		 * Given a scene graph node, test if the given node is the same as that
 		 * as the node that is acting as the light source
 		 */
-		virtual bool isLightSourceNode(GraphNode const * testNode) const = 0;
+		virtual bool isLightSourceNode(std::shared_ptr<GraphNode> testNode) const = 0;
 
 		friend std::ostream& operator<<(std::ostream& s, const Light& light);
 };

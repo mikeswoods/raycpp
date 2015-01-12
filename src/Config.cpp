@@ -442,12 +442,12 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 {
 	string line, attribute;
 	string objFileName    = "";
-	GraphNode* node       = nullptr;
 	bool isMesh           = false;
 	bool isVolume         = false;
 	bool readNonEmptyLine = false;
 	bool firstLine        = true;
 
+	std::shared_ptr<GraphNode> node(nullptr);
 	shared_ptr<Geometry> geometry(nullptr);
 
 	#ifdef DEBUG
@@ -481,10 +481,12 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 
 			string name;
 			ss >> name;
+
 			#ifdef DEBUG
 			clog << "\tCREATE: " << attribute << endl;
 			#endif
-			node = new GraphNode(name);
+
+			node = make_shared<GraphNode>(name);
 			readNonEmptyLine = true;
 
 		} else {
@@ -640,7 +642,7 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 		// Associate the geometric object definition with the actual node:
 		node->setGeometry(geometry);
 
-		GLGeometry* instance = new GLGeometry(geometry);
+		std::shared_ptr<GLGeometry> instance(make_shared<GLGeometry>(geometry));
 		node->setInstance(instance);
 
 		// Set the color of the geometry contained in the node based

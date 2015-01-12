@@ -12,6 +12,7 @@
 #define GRAPH_BUILDER_H
 
 #include <map>
+#include <memory>
 #include "Graph.h"
 
 /******************************************************************************/
@@ -19,9 +20,9 @@
  class GraphBuilder
 {
     protected:
-        GraphNode* root;
+        std::shared_ptr<GraphNode> root;
         Graph graph;
-        std::map<std::string,GraphNode*> nodeMap;
+        std::map<std::string, std::shared_ptr<GraphNode>> nodeMap;
 
     public:
         GraphBuilder();
@@ -29,11 +30,11 @@
         ~GraphBuilder();
 
         bool nodeExists(const std::string& name) const;
-        GraphBuilder const * registerNode(GraphNode* node);
-        GraphNode const * getNode(const std::string& name) const;
-        GraphBuilder const * linkNodes(const std::string& parentName, GraphNode* child);
-        GraphBuilder const * linkNodes(GraphNode* parent, GraphNode* child);
-        GraphBuilder const * setRoot(GraphNode* root);
+        GraphBuilder const * registerNode(std::shared_ptr<GraphNode> node);
+        std::shared_ptr<GraphNode> getNode(const std::string& name) const;
+        GraphBuilder const * linkNodes(const std::string& parentName, std::shared_ptr<GraphNode> child);
+        GraphBuilder const * linkNodes(std::shared_ptr<GraphNode> parent, std::shared_ptr<GraphNode> child);
+        GraphBuilder const * setRoot(std::shared_ptr<GraphNode> root);
         Graph build() const;
 };
 

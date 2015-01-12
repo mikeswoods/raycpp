@@ -35,19 +35,19 @@ class GraphNode
 		std::string name;
 
 		// Pointer to parent, if any. If null, node is the root of the graph
-		GraphNode* parent;
+		std::shared_ptr<GraphNode> parent;
 
 		// The geometric object definition itself
 		std::shared_ptr<Geometry> geometry;
 
 		// GL wrapped instance of a geometric primitive
-		GLGeometry* instance;
+		std::shared_ptr<GLGeometry> instance;
 
 		// Surface material
 		std::shared_ptr<Material> material;
 
 		// All child nodes of this node in the scene graph
-		std::list<GraphNode*> children;
+		std::list<std::shared_ptr<GraphNode>> children;
 
 		// <x,y,z> translation values
 		glm::vec3 T;
@@ -71,13 +71,13 @@ class GraphNode
 		const std::string& getName() const    { return this->name; }
 		void setName(const std::string& name) { this->name = name; }
 
-		GraphNode* getParent() const      { return this->parent; }
-		void setParent(GraphNode* parent) { this->parent = parent; }
+		std::shared_ptr<GraphNode> getParent() const      { return this->parent; }
+		void setParent(std::shared_ptr<GraphNode> parent) { this->parent = parent; }
 
-		const std::list<GraphNode*>& getChildren() const { return this->children; }
-		void addChild(GraphNode* child)                  { this->children.push_back(child); }
+		const std::list<std::shared_ptr<GraphNode>>& getChildren() const { return this->children; }
+		void addChild(std::shared_ptr<GraphNode> child)  { this->children.push_back(child); }
 
-		void detachChild(GraphNode* child);
+		void detachChild(std::shared_ptr<GraphNode> child);
 		void detachFromParent();
 
 		bool isAreaLight() const;
@@ -85,8 +85,8 @@ class GraphNode
 		std::shared_ptr<Geometry> getGeometry() const        { return this->geometry; }
 		void setGeometry(std::shared_ptr<Geometry> geometry) { this->geometry = geometry; }
 
-		GLGeometry* getInstance() const        { return this->instance; }
-		void setInstance(GLGeometry* instance) { this->instance = instance; }
+		std::shared_ptr<GLGeometry> getInstance() const        { return this->instance; }
+		void setInstance(std::shared_ptr<GLGeometry> instance) { this->instance = instance; }
 
 		const glm::vec3& getTranslate() const       { return this->T; }
 		void setTranslate(const glm::vec3& T)       { this->T = T; }
@@ -127,7 +127,7 @@ std::ostream& operator<<(std::ostream& os, const glm::mat4 M);
  * Based on the parameters of the given node, this function will apply 
  * the given transformation matrix T, yielding a new transformation matrix T'
  */
-glm::mat4 applyTransform(GraphNode* node, glm::mat4 current);
+glm::mat4 applyTransform(std::shared_ptr<GraphNode> node, glm::mat4 current);
 
 /**
  * Shorthand for data returned from collectAreaLight and returnCurrent
@@ -138,7 +138,7 @@ class Graph
 {
 	protected:
 		// Root of the graph to traverse
-		GraphNode* root;
+		std::shared_ptr<GraphNode> root;
 
 	public:
 
@@ -151,10 +151,10 @@ class Graph
 				bool cyclic;
 
 				// Starting node of the traversal
-				GraphNode* start;
+				std::shared_ptr<GraphNode> start;
 
 				// Interal node stack
-				std::stack<GraphNode*> st;
+				std::stack<std::shared_ptr<GraphNode>> st;
 
 			public:
 				iterator(const Graph& graph, bool _cyclic = false) : 
@@ -164,7 +164,7 @@ class Graph
 					this->reset();
 				}
 
-				iterator(GraphNode* _start, bool _cyclic = false) : 
+				iterator(std::shared_ptr<GraphNode> _start, bool _cyclic = false) : 
 					cyclic(_cyclic),
 					start(_start)
 				{ 
@@ -186,11 +186,11 @@ class Graph
 				bool isCyclic() { return this->cyclic; }
 
 				// Resets the iterator to the starting node
-				GraphNode* reset()
+				std::shared_ptr<GraphNode> reset()
 				{
-					this->st = std::stack<GraphNode*>();
+					this->st = std::stack<std::shared_ptr<GraphNode>>();
 
-					if (this->start != nullptr) {
+					if (this->start) {
 						this->st.push(this->start);
 					}
 
@@ -201,13 +201,13 @@ class Graph
 				// resets as needed
 				void testAndReset()
 				{
-					if (this->cyclic && this->st.empty() && this->start != nullptr) {
+					if (this->cyclic && this->st.empty() && this->start) {
 						this->reset();
 					}
 				}
 
 				// Returns the current node in the traversal
-				GraphNode* current()
+				std::shared_ptr<GraphNode> current()
 				{
 					this->testAndReset();
 
@@ -216,10 +216,10 @@ class Graph
 
 				// Advances the iterator, returning true if elements
 				// remain in the traversal
-				virtual GraphNode* next() = 0;
+				virtual std::shared_ptr<GraphNode> next() = 0;
 				
 				// Same as current()
-				GraphNode* operator*() { return this->current(); }
+				std::shared_ptr<GraphNode> operator*() { return this->current(); }
 
 				// Iterator equality
 				bool operator==(iterator& other)
@@ -252,7 +252,7 @@ class Graph
 		class pre_iterator : public iterator
 		{
 			public:
-				pre_iterator(GraphNode* start, bool cyclic = false) : 
+				pre_iterator(std::shared_ptr<GraphNode> start, bool cyclic = false) : 
 					iterator(start, cyclic)
 				{ }
 
@@ -260,7 +260,7 @@ class Graph
 					iterator(graph, _cyclic)
 				{ }
 
-				virtual GraphNode* next()
+				virtual std::shared_ptr<GraphNode> next()
 				{
 					this->testAndReset();
 
@@ -268,10 +268,10 @@ class Graph
 						return nullptr;
 					}
 
-					std::list<GraphNode*> children = this->st.top()->getChildren();
+					std::list<std::shared_ptr<GraphNode>> children = this->st.top()->getChildren();
 					this->st.pop();
 
-					for (std::list<GraphNode*>::reverse_iterator i=children.rbegin()
+					for (std::list<std::shared_ptr<GraphNode>>::reverse_iterator i=children.rbegin()
 						; i != children.rend()
 						; i++)
 					{
@@ -285,10 +285,10 @@ class Graph
 		};
 
 		Graph();
-		Graph(GraphNode* root);
+		Graph(std::shared_ptr<GraphNode> root);
 
-		GraphNode* getRoot() const    { return this->root; }
-		void setRoot(GraphNode* root) { this->root = root; }
+		std::shared_ptr<GraphNode> getRoot() const    { return this->root; }
+		void setRoot(std::shared_ptr<GraphNode> root) { this->root = root; }
 
 		// Collect all of the area lights in the scene graph
 		std::unique_ptr<std::list<std::shared_ptr<Light>>> areaLights() const;
@@ -303,7 +303,7 @@ class Graph
  */
 template<typename T> 
 void walk(const Graph& graph
-	     ,T (*visit)(GraphNode* node,  T current, int depth)
+	     ,T (*visit)(std::shared_ptr<GraphNode> node,  T current, int depth)
 		 ,T initial
 		 ,int depth = 0)
 {
@@ -314,14 +314,14 @@ void walk(const Graph& graph
  * Perform a pre-order traversal over a scene graph w/o accumulation
  */
 template<typename T>
-void walk(GraphNode* root // The graph root
-	     ,T (*visit)(GraphNode* node,  T current, int depth)
+void walk(std::shared_ptr<GraphNode> root // The graph root
+	     ,T (*visit)(std::shared_ptr<GraphNode> node,  T current, int depth)
 		 ,T initial       // The initial value to begin accumulating from
 		 ,int depth = 0)  // The initial depth
 {
 	T next = visit(root, initial, depth);
 
-	std::list<GraphNode*> children = root->getChildren();
+	auto children = root->getChildren();
 
 	for (auto i=children.begin(); i != children.end(); i++) {
 		walk(*i, visit, next, depth+1);
@@ -333,10 +333,10 @@ void walk(GraphNode* root // The graph root
  * Perform a pre-order traversal over a scene graph with accumulation
  */
 template<typename T>
-T fold(const Graph& graph                      // The graph to traverse
-	  ,T (*visit)(GraphNode* node,  T current) // Visit function: Takes a graph node and the current value, producing a new value
-      ,T (*accum)(T current, T total)          // Accumulate function: Takes a current value and a sum value and returns the new sum value
-	  ,T initial)                              // The initial value to begin accumulating from
+T fold(const Graph& graph                                      // The graph to traverse
+	  ,T (*visit)(std::shared_ptr<GraphNode> node,  T current) // Visit function: Takes a graph node and the current value, producing a new value
+      ,T (*accum)(T current, T total)                          // Accumulate function: Takes a current value and a sum value and returns the new sum value
+	  ,T initial)                                              // The initial value to begin accumulating from
 {
 	return fold(graph.getRoot(), visit, accum, initial);
 }
@@ -346,15 +346,15 @@ T fold(const Graph& graph                      // The graph to traverse
  * Perform a pre-order traversal over a scene graph with accumulation
  */
 template<typename T>
-T fold(GraphNode* root                         // The graph root
-	  ,T (*visit)(GraphNode* node,  T current) // Visit function: Takes a graph node and the current value, producing a new value
-      ,T (*accum)(T current, T total)          // Accumulate function: Takes a current value and a sum value and returns the new sum value
-	  ,T initial)                              // The initial value to begin accumulating from
+T fold(std::shared_ptr<GraphNode> root                         // The graph root
+	  ,T (*visit)(std::shared_ptr<GraphNode> node,  T current) // Visit function: Takes a graph node and the current value, producing a new value
+      ,T (*accum)(T current, T total)                          // Accumulate function: Takes a current value and a sum value and returns the new sum value
+	  ,T initial)                                              // The initial value to begin accumulating from
 {
 	T next  = visit(root, initial);
 	T total = accum(next, initial);
 
-	std::list<GraphNode*> children = root->getChildren();
+	auto children = root->getChildren();
 
 	for (auto i=children.begin(); i != children.end(); i++) {
 		total = accum(fold(*i, visit, accum, next), total);
@@ -365,16 +365,20 @@ T fold(GraphNode* root                         // The graph root
 
 // Perform a post-order traversal over a scene graph
 template<typename T>
-void postWalk(const Graph& graph, void (*visit)(GraphNode* node,  T current), T context)
+void postWalk(const Graph& graph
+	         ,void (*visit)(std::shared_ptr<GraphNode> node,  T current)
+	         ,T context)
 {
 	 postWalk(graph.getRoot(), visit, context);
 }
 
 // Perform a post-order traversal over a scene graph
 template<typename T>
-void postWalk(GraphNode* root, void (*visit)(GraphNode* node,  T context), T context)
+void postWalk(std::shared_ptr<GraphNode> root
+	         ,void (*visit)(std::shared_ptr<GraphNode> node, T context)
+	         ,T context)
 {
-	std::list<GraphNode*> children = root->getChildren();
+	auto children = root->getChildren();
 
 	for (auto i=children.begin(); i != children.end(); i++) {
 		postWalk(*i, visit, context);

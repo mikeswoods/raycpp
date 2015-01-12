@@ -13,6 +13,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #define GLM_FORCE_RADIANS
+#include <memory>
 #include <glm/glm.hpp>
 #include "R3.h"
 
@@ -33,7 +34,7 @@ class Intersection
 	    float density;
 
 		// The node of the scene graph that was intersected
-		GraphNode* node;
+		std::shared_ptr<GraphNode> node;
 
 	    // The surface normal at the point of intersection. (Ignored if t < 0.)
 	    V normal;

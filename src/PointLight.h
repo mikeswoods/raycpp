@@ -52,7 +52,7 @@ class PointLight : public Light
 
 		virtual Color getColor(const P& from) const;
 
-		virtual bool isLightSourceNode(GraphNode const * testNode) const;
+		virtual bool isLightSourceNode(std::shared_ptr<GraphNode> testNode) const;
 };
 
 /*****************************************************************************/

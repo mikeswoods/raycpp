@@ -12,6 +12,7 @@
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
+#include <memory>
 #include <iostream>
 #include "Light.h"
 #include "R3.h"
@@ -26,20 +27,20 @@ class AreaLight : public Light
 		P centroidWorld;
 
 		// Graph node that acts as the light source:
-		GraphNode const * node;
+		std::shared_ptr<GraphNode> node;
 
 		// Transformation matrix associated with the node acting as the
 		// light source
 		glm::mat4 T;
 
 	public:
-		AreaLight(GraphNode const * node, glm::mat4 T);
+		AreaLight(std::shared_ptr<GraphNode> node, glm::mat4 T);
 		AreaLight(const AreaLight& other);
 
 		virtual void repr(std::ostream& s) const;
 
-		GraphNode const * getNode() { return this->node; }
-		const glm::mat4& getT()     { return this->T; }
+		std::shared_ptr<GraphNode> getNode() { return this->node; }
+		const glm::mat4& getT()              { return this->T; }
 
 		virtual V fromCenter(const P& from) const;
 
@@ -48,7 +49,7 @@ class AreaLight : public Light
 
 		virtual Color getColor(const P& from) const;
 
-		virtual bool isLightSourceNode(GraphNode const * testNode) const;
+		virtual bool isLightSourceNode(std::shared_ptr<GraphNode> testNode) const;
 };
 
 /******************************************************************************/

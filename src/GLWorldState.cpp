@@ -40,17 +40,17 @@ GLWorldState::~GLWorldState()
 
 // Node traversal operations //////////////////////////////////////////////////
 
-GraphNode* GLWorldState::gotoRoot()
+shared_ptr<GraphNode> GLWorldState::gotoRoot()
 {
 	return this->iterator->reset();
 }
 
-GraphNode* GLWorldState::getCurrentNode()
+shared_ptr<GraphNode> GLWorldState::getCurrentNode()
 {
 	return this->iterator->current();
 }
 
-GraphNode* GLWorldState::getNextNode()
+shared_ptr<GraphNode> GLWorldState::getNextNode()
 {
 	return this->iterator->next();
 }
@@ -69,15 +69,16 @@ bool GLWorldState::doRotateScene()
 
 void GLWorldState::highlightNextNode()
 {
-	GLGeometry* currentInstance = this->getCurrentNode()->getInstance();
-	GLGeometry* nextInstance    = this->getNextNode()->getInstance();
+	shared_ptr<GLGeometry> current = this->getCurrentNode()->getInstance();
 
-	if (currentInstance != nullptr) {
-		currentInstance->unHighlightObject();
+	if (current) {
+		current->unHighlightObject();
 	}
 
-	if (nextInstance != nullptr) {
-		nextInstance->highlightObject();
+	shared_ptr<GLGeometry> next = this->getNextNode()->getInstance();
+
+	if (next) {
+		next->highlightObject();
 	}
 }
 
@@ -98,30 +99,19 @@ void GLWorldState::switchPolygonMode()
 	}
 
 	for (auto i = this->graph.begin(); !i.done(); i++) {
-		GLGeometry* instance = (*i)->getInstance();
-		if (instance != nullptr) {
+		
+		shared_ptr<GLGeometry> instance = (*i)->getInstance();
+		if (instance) {
 			instance->setPolyMode(useMode);
 		}
 	}
 }
 
 // used in GLWorldState::deleteSelectedNode()
-static void _deleteNode(GraphNode* node, Graph* graph)
+static void _deleteNode(shared_ptr<GraphNode> node, Graph* graph)
 {
-	GLGeometry* instance = node->getInstance();
+	shared_ptr<GLGeometry> instance = node->getInstance();
 	node->detachFromParent();
-
-	if (node != graph->getRoot()) {
-		if (instance != nullptr) {
-			delete instance;
-		}
-		delete node;
-	} else { // Special handling for root node:
-		graph->setRoot(nullptr);
-		if (instance != nullptr) {
-			delete instance;
-		}
-	}
 }
 
 // Delete the selected node
@@ -129,7 +119,7 @@ bool GLWorldState::deleteSelectedNode()
 {
 	postWalk(this->getCurrentNode(), _deleteNode, &this->graph);
 
-	if (graph.getRoot() != nullptr) {
+	if (graph.getRoot()) {
 		this->gotoRoot();
 		return false;
 	} else {
@@ -141,7 +131,7 @@ bool GLWorldState::deleteSelectedNode()
 
 void GLWorldState::translateSelectedXPos()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "translate +X<before>: " << *node << endl;
 	#endif
@@ -153,7 +143,7 @@ void GLWorldState::translateSelectedXPos()
 
 void GLWorldState::translateSelectedXNeg()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "translate -X<before>: " << *node << endl;
 	#endif
@@ -165,7 +155,7 @@ void GLWorldState::translateSelectedXNeg()
 
 void GLWorldState::translateSelectedYPos()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "translate +Y<before>: " << *node << endl;
 	#endif
@@ -177,7 +167,7 @@ void GLWorldState::translateSelectedYPos()
 
 void GLWorldState::translateSelectedYNeg()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "translate -Y<before>: " << *node << endl;
 	#endif
@@ -189,7 +179,7 @@ void GLWorldState::translateSelectedYNeg()
 
 void GLWorldState::translateSelectedZPos()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "translate +Z<before>: " << *node << endl;
 	#endif
@@ -201,7 +191,7 @@ void GLWorldState::translateSelectedZPos()
 
 void GLWorldState::translateSelectedZNeg()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "translate -Z<before>: " << *node << endl;
 	#endif
@@ -215,7 +205,7 @@ void GLWorldState::translateSelectedZNeg()
 
 void GLWorldState::rotateSelectedPosX()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "rotate +X<before>: " << *node << endl;
 	#endif
@@ -227,7 +217,7 @@ void GLWorldState::rotateSelectedPosX()
 
 void GLWorldState::rotateSelectedNegX()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "rotate -X<before>: " << *node << endl;
 	#endif
@@ -239,7 +229,7 @@ void GLWorldState::rotateSelectedNegX()
 
 void GLWorldState::rotateSelectedPosY()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "rotate +Y<before>: " << *node << endl;
 	#endif
@@ -251,7 +241,7 @@ void GLWorldState::rotateSelectedPosY()
 
 void GLWorldState::rotateSelectedNegY()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "rotate -Y<before>: " << *node << endl;
 	#endif
@@ -263,7 +253,7 @@ void GLWorldState::rotateSelectedNegY()
 
 void GLWorldState::rotateSelectedPosZ()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "rotate +Z<before>: " << *node << endl;
 	#endif
@@ -275,7 +265,7 @@ void GLWorldState::rotateSelectedPosZ()
 
 void GLWorldState::rotateSelectedNegZ()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "rotate -Z<before>: " << *node << endl;
 	#endif
@@ -289,7 +279,7 @@ void GLWorldState::rotateSelectedNegZ()
 
 void GLWorldState::scaleIncreaseSelectedX()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "scale +X<before>: " << *node << endl;
 	#endif
@@ -301,7 +291,7 @@ void GLWorldState::scaleIncreaseSelectedX()
 
 void GLWorldState::scaleDecreaseSelectedX()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "scale -X<before>: " << *node << endl;
 	#endif
@@ -313,7 +303,7 @@ void GLWorldState::scaleDecreaseSelectedX()
 
 void GLWorldState::scaleIncreaseSelectedY()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "scale +Y<before>: " << *node << endl;
 	#endif
@@ -325,7 +315,7 @@ void GLWorldState::scaleIncreaseSelectedY()
 
 void GLWorldState::scaleDecreaseSelectedY()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "scale -Y<before>: " << *node << endl;
 	#endif
@@ -337,7 +327,7 @@ void GLWorldState::scaleDecreaseSelectedY()
 
 void GLWorldState::scaleIncreaseSelectedZ()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "scale +Z<before>: " << *node << endl;
 	#endif
@@ -349,7 +339,7 @@ void GLWorldState::scaleIncreaseSelectedZ()
 
 void GLWorldState::scaleDecreaseSelectedZ()
 {
-	GraphNode* node = this->getCurrentNode();
+	auto node = this->getCurrentNode();
 	#ifdef DEBUG
 	clog << "scale -Z<before>: " << *node << endl;
 	#endif

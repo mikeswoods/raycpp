@@ -16,7 +16,7 @@ using namespace std;
 
 /******************************************************************************/
 
-AreaLight::AreaLight(GraphNode const * _node, glm::mat4 _T) :
+AreaLight::AreaLight(shared_ptr<GraphNode> _node, glm::mat4 _T) :
 	Light(AREA_LIGHT),
 	node(_node),
 	T(_T)
@@ -85,7 +85,7 @@ Color AreaLight::getColor(const P& from) const
 	return mat->getDiffuseColor();
 }
 
-bool AreaLight::isLightSourceNode(GraphNode const * testNode) const
+bool AreaLight::isLightSourceNode(shared_ptr<GraphNode> testNode) const
 {
 	return testNode == this->node;
 }

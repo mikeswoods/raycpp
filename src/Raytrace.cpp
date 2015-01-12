@@ -21,6 +21,7 @@
 #include "AreaLight.h"
 
 using namespace std;
+using namespace glm;
 
 /*******************************************************************************
  *
@@ -107,7 +108,7 @@ static std::ostream& debugPixel(string funcName, int depth, const Color& output)
     return debugPixel(cerr, funcName, depth) << output << endl;
 }
 
-static std::ostream& debugPixel(string funcName, int depth, const glm::vec3& output)
+static std::ostream& debugPixel(string funcName, int depth, const vec3& output)
 {
     return debugPixel(cerr, funcName, depth) << output << endl;
 }
@@ -138,7 +139,7 @@ void initRaytrace(Camera& camera, shared_ptr<SceneContext> scene)
     camera.setPosition(scene->getEyePosition());
     camera.setViewDir(scene->getViewDir());
     camera.setUp(scene->getUpDir());
-    // Divide this by 2 to match the FOV produced by glm::perspective(). 
+    // Divide this by 2 to match the FOV produced by perspective(). 
     camera.setFOV(scene->getFOVAngle() / 2.0f);
     camera.setAspectRatio(scene->getAspectRatio());
 }
@@ -156,12 +157,12 @@ static bool isCloser(const TraceContext& test, TraceContext& other)
 /**
  * A fold visitor function used in closestIntersection() below
  */
-static TraceContext intersectNode(GraphNode* node, TraceContext ctx)
+static TraceContext intersectNode(shared_ptr<GraphNode> node, TraceContext ctx)
 {
     shared_ptr<Geometry> geometry = node->getGeometry();
 
-    glm::mat4 nextT    = applyTransform(node, ctx.T);
-    Intersection isect = geometry != nullptr 
+    auto nextT = applyTransform(node, ctx.T);
+    auto isect = geometry 
         ? geometry->intersect(nextT, ctx.ray, ctx.scene) 
         : Intersection::miss();
 
@@ -192,12 +193,12 @@ static TraceContext closestIntersection(const Ray& ray
                                        ,bool& hit)
 {
     // Identity matrix as the initial transformation:
-    glm::mat4 I           = glm::mat4(); 
-    TraceContext initCtx  = TraceContext(scene, ray, I);
-    TraceContext finalCtx = fold(scene->getSceneGraph()
-                                ,intersectNode
-                                ,findClosestContextNode
-                                ,initCtx);
+    auto I        = mat4(); 
+    auto initCtx  = TraceContext(scene, ray, I);
+    auto finalCtx = fold(scene->getSceneGraph()
+                        ,intersectNode
+                        ,findClosestContextNode
+                        ,initCtx);
 
     hit = finalCtx.closestIsect.isHit();
 
@@ -213,30 +214,30 @@ static TraceContext closestIntersection(const Ray& ray
 
 static bool fastTestInShadow(const Ray& ray
                             ,shared_ptr<SceneContext> scene
-                            ,GraphNode* ignore
+                            ,shared_ptr<GraphNode> ignore
                             ,float withinDist)
 {
     auto graph = scene->getSceneGraph();
 
     // Initial transformation matrix is the identity matrix:
-    auto I = glm::mat4();
+    auto I = mat4();
 
-    stack<pair<GraphNode*,glm::mat4>> S;
+    stack<pair<shared_ptr<GraphNode>, mat4>> S;
 
     S.push(make_pair(graph.getRoot(), I));
 
     while (!S.empty()) {
 
-        pair<GraphNode*,glm::mat4> nodeAndT = S.top();
+        pair<shared_ptr<GraphNode>, mat4> nodeAndT = S.top();
         S.pop();
 
-        GraphNode* node = nodeAndT.first;
-        glm::mat4 T     = nodeAndT.second;
+        shared_ptr<GraphNode> node = nodeAndT.first;
+        mat4 T     = nodeAndT.second;
 
         shared_ptr<Geometry> geometry = node->getGeometry();
-        glm::mat4 nextT = applyTransform(node, T);
+        mat4 nextT = applyTransform(node, T);
 
-        if (node != ignore && geometry != nullptr) {
+        if (node != ignore && geometry) {
 
             Intersection isect = geometry->intersect(nextT, ray, scene);
             isect.node = node;
@@ -247,7 +248,7 @@ static bool fastTestInShadow(const Ray& ray
             }
         }
 
-        std::list<GraphNode*> children = node->getChildren();
+        std::list<shared_ptr<GraphNode>> children = node->getChildren();
 
         // Otherwise, go through the children:
         for (auto i=children.begin(); i != children.end(); i++) {
@@ -265,7 +266,7 @@ static bool fastTestInShadow(const Ray& ray
  ******************************************************************************/
 
 static bool isOccludedFromPosition(shared_ptr<SceneContext> scene
-                                  ,GraphNode* const selfNode
+                                  ,shared_ptr<GraphNode> selfNode
                                   ,const P& hitAt
                                   ,shared_ptr<Light> light)
 {
@@ -281,9 +282,9 @@ static bool isOccludedFromPosition(shared_ptr<SceneContext> scene
     }
     */
 
-    Ray ray(hitAt, glm::normalize(L), Utils::EPSILON, Ray::SHADOW);
+    Ray ray(hitAt, normalize(L), Utils::EPSILON, Ray::SHADOW);
 
-    return fastTestInShadow(ray, scene, selfNode, glm::length(L));
+    return fastTestInShadow(ray, scene, selfNode, length(L));
 };
 
 /*******************************************************************************
@@ -298,7 +299,7 @@ static bool isOccludedFromPosition(shared_ptr<SceneContext> scene
  ******************************************************************************/
 
 static float shadow(shared_ptr<SceneContext> scene
-                    ,GraphNode* const selfNode
+                    ,shared_ptr<GraphNode> selfNode
                     ,const P& hitAt
                     ,shared_ptr<Light> light
                     ,int samples)
@@ -344,7 +345,7 @@ static Color traceReflect(shared_ptr<SceneContext> scene
     shared_ptr<Material> mat = isect.node->getMaterial();
     assert(!!mat);
 
-    V R = glm::reflect(I, N);
+    V R = reflect(I, N);
 
     #ifdef ENABLE_PIXEL_DEBUG
     if (opts->enablePixelDebug && isDebugPixel) {
@@ -373,10 +374,10 @@ static Color traceRefract(shared_ptr<SceneContext> scene
                          ,int depth
                          ,bool isDebugPixel)
 {
-    V R = glm::refract(I, N, n);
+    V R = refract(I, N, n);
 
     // Is R a zero vector? If so, reflect instead:
-    if (R == glm::vec3(0, 0, 0)) {
+    if (R == vec3(0, 0, 0)) {
 
         return traceReflect(scene, opts, isect, I, N, depth, isDebugPixel);
     }
@@ -405,11 +406,11 @@ static Color traceRefract(shared_ptr<SceneContext> scene
 float reflectCoeff(const V& lightDir, const V& viewDir, float n1, float n2)
 {
     // Adapted in part from http://www.cs.utah.edu/~shirley/books/fcg2/rt.pdf
-    V H        = glm::normalize(lightDir + viewDir);
+    V H        = normalize(lightDir + viewDir);
     float R0   = powf((n1 - n2) / (n2 + n1), 2.0f);
-    float cosI = glm::dot(viewDir, H);
+    float cosI = dot(viewDir, H);
 
-    return R0 + ((1.0f - R0) * powf(max(0.0f, 1.0f - cosI), 5.0f));
+    return R0 + ((1.0f - R0) * powf(std::max(0.0f, 1.0f - cosI), 5.0f));
 }
 
 /*******************************************************************************
@@ -418,7 +419,7 @@ float reflectCoeff(const V& lightDir, const V& viewDir, float n1, float n2)
  *
  ******************************************************************************/
 
-static glm::vec3 blinnPhongShade(shared_ptr<TraceOptions> opts
+static vec3 blinnPhongShade(shared_ptr<TraceOptions> opts
                                 ,const Intersection& isect
                                 ,const V& I
                                 ,shared_ptr<Light> light
@@ -435,7 +436,7 @@ static glm::vec3 blinnPhongShade(shared_ptr<TraceOptions> opts
     shared_ptr<Material> mat      = isect.node->getMaterial();
     shared_ptr<Geometry> geometry = isect.node->getGeometry();
 
-    assert(mat != nullptr && geometry != nullptr);
+    assert(mat && geometry);
 
     // Adjust the height of the normal vector by multiplying it with the
     // intensity value of the bump map
@@ -443,7 +444,7 @@ static glm::vec3 blinnPhongShade(shared_ptr<TraceOptions> opts
 
     // Choose the UV mapping vector. If one is given in the intersection, use it,
     // otherwise use the local hit
-    glm::vec3 uvFromHit = glm::normalize(isect.hitLocal.xyz);
+    vec3 uvFromHit = normalize(isect.hitLocal.xyz);
 
     if (mat->hasBumpMap()) {
 
@@ -455,7 +456,7 @@ static glm::vec3 blinnPhongShade(shared_ptr<TraceOptions> opts
         }
         #endif
 
-        N = glm::normalize(N + B);
+        N = normalize(N + B);
     }
 
     // Get the color at the hit position:
@@ -474,12 +475,12 @@ static glm::vec3 blinnPhongShade(shared_ptr<TraceOptions> opts
         return N; // The surface normal
     }
 
-    V L        = glm::normalize(light->fromCenter(isect.hitWorld));
-    V R        = glm::reflect(L, N);
+    V L        = normalize(light->fromCenter(isect.hitWorld));
+    V R        = reflect(L, N);
     Color lcol = light->getColor(isect.hitWorld);
 
     // Diffuse component:
-    float cosineAngle = glm::dot(L, N);
+    float cosineAngle = dot(L, N);
 
     #ifdef ENABLE_PIXEL_DEBUG
     if (opts->enablePixelDebug && isDebugPixel) {
@@ -487,12 +488,12 @@ static glm::vec3 blinnPhongShade(shared_ptr<TraceOptions> opts
     }
     #endif
 
-    float Id = max(0.0f, cosineAngle);
+    float Id = std::max(0.0f, cosineAngle);
     diffuse += kd * Id * matColor * lcol;
 
     // Specular component:
     if (mat->getSpecularExponent() > 0.0f) {
-        float Is = glm::dot(I, R);
+        float Is = dot(I, R);
         if (Is > 0.0f) {
             specular += ks * powf(Is, mat->getSpecularExponent()) * lcol;
         }
@@ -514,8 +515,8 @@ static Color computeShading(const Ray& ray
                            ,int depth
                            ,bool isDebugPixel = false)
 {
-    GraphNode* const selfNode = isect.node;
-    assert(selfNode != nullptr);
+    auto selfNode = isect.node;
+    assert(!!selfNode);
 
     shared_ptr<Material> mat = selfNode->getMaterial();
     assert(!!mat);
@@ -542,8 +543,8 @@ static Color computeShading(const Ray& ray
     float n           = n1 / n2;
 
     // Incident ray:
-    V I = glm::normalize(ray.dir);
-    V N = glm::vec3();
+    V I = normalize(ray.dir);
+    V N = vec3();
 
     auto lights = scene->getLights();
 
@@ -563,7 +564,7 @@ static Color computeShading(const Ray& ray
 
         // For each light, compute the accumulated the Schlick approximation for  the Fresnel term:
         if (mat->isTransparent() && mat->isMirror()) {
-            V L          = glm::normalize((*l)->fromCenter(isect.hitWorld));
+            V L          = normalize((*l)->fromCenter(isect.hitWorld));
             fresnelTerm += reflectCoeff(L, I, n1, n2);
         }
     }
@@ -819,7 +820,7 @@ float detectEdges(const BMP& input, int w, int h, float* E)
             }
 
             // Compute the gradient magnitude and clamp to the range [0,1]:
-            float magnitude = min(max(0.0f, sqrt(powf(X, 2.0f) + powf(Y, 2.0f))), 1.0f); 
+            float magnitude = std::min(std::max(0.0f, std::sqrt(powf(X, 2.0f) + powf(Y, 2.0f))), 1.0f); 
             E[(i * h) + j]  = magnitude;
 
             avgIntensity += magnitude;
@@ -854,7 +855,7 @@ void rayTrace(BMP& output
              ,std::shared_ptr<TraceOptions> opts)
 {
     Graph G        = scene->getSceneGraph();
-    glm::vec2 reso = scene->getResolution();
+    vec2 reso = scene->getResolution();
     int X = reso.x;
     int Y = reso.y;
 

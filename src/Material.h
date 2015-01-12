@@ -83,9 +83,9 @@ class Material
 		bool isEmissive() const                           { return this->emit; }
 		float getAmbientCoeff() const                     { return this->ambient; } 
 		std::shared_ptr<TextureMap> getTextureMap() const { return this->textureMap; } 
-		bool hasTextureMap() const                        { return this->textureMap != nullptr; }
+		bool hasTextureMap() const                        { return !!this->textureMap; }
 		std::shared_ptr<BumpMap> getBumpMap() const       { return this->bumpMap; } 
-		bool hasBumpMap() const                           { return this->bumpMap != nullptr; }
+		bool hasBumpMap() const                           { return !!this->bumpMap; }
 
 		// "Smart" color function will return the correct color based on
 		// assigned material attributes:

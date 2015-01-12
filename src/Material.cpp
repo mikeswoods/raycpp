@@ -10,6 +10,7 @@
 #include "Material.h"
 
 using namespace std;
+using namespace glm;
 
 /******************************************************************************/
 
@@ -107,13 +108,13 @@ Color Material::getColor() const
  * Color function that takes a position in R^3 and a geometric object
  * and maps a color based on the given information
  */
-Color Material::getColor(const glm::vec3& d, shared_ptr<Geometry> geometry) const
+Color Material::getColor(const vec3& d, shared_ptr<Geometry> geometry) const
 {
 	if (this->hasTextureMap()) {
 
 		// Based on the type of geometry presented, choose the most appropriate 
 		// mapping type:
-		glm::vec2 uv;
+		vec2 uv;
 
 		switch (geometry->getGeometryType()) {
 			case Geometry::SPHERE:
@@ -141,13 +142,13 @@ Color Material::getColor(const glm::vec3& d, shared_ptr<Geometry> geometry) cons
  * Given a position in R^3 and a geometric object, this function returns
  * the normal intensity at the given position
  */
-float Material::getIntensity(const glm::vec3& d, shared_ptr<Geometry> geometry) const
+float Material::getIntensity(const vec3& d, shared_ptr<Geometry> geometry) const
 {
 	if (this->hasBumpMap()) {
 
 		// Based on the type of geometry presented, choose the most appropriate 
 		// mapping type:
-		glm::vec2 uv;
+		vec2 uv;
 
 		switch (geometry->getGeometryType()) {
 			case Geometry::SPHERE:
@@ -175,16 +176,16 @@ float Material::getIntensity(const glm::vec3& d, shared_ptr<Geometry> geometry) 
  * Given a position in R^3 and a geometric object, this function returns
  * the surface bump normal the given position
  */
-glm::vec3 Material::getNormal(const glm::vec3& d, shared_ptr<Geometry> geometry) const
+vec3 Material::getNormal(const vec3& d, shared_ptr<Geometry> geometry) const
 {
 	if (this->hasBumpMap()) {
 
-		glm::vec2 uv = this->bumpMap->mapToSphere(d);
+		vec2 uv = this->bumpMap->mapToSphere(d);
 
 		return this->bumpMap->getNormal(uv[0], uv[1]);
 	}
 
-	return glm::vec3(); // zero vector
+	return vec3(); // zero vector
 }
 
 /******************************************************************************/

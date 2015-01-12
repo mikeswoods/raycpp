@@ -704,11 +704,11 @@ void generateSummary(KDTree const * tree
 			NodeChild const * left  = node->getLeftChild();
 			NodeChild const * right = node->getRightChild();
 
-			if (left != nullptr) {
+			if (left) {
 				Q.push(left);
 			}
 
-			if (right != nullptr) {
+			if (right) {
 				Q.push(right);
 			}
 		}

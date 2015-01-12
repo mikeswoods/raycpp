@@ -51,7 +51,7 @@ static GLuint shaderProgram;
 /*******************************************************************************
  * Vertex shader
  ******************************************************************************/
-const GLchar* vertexShader = GLSL(130,
+const GLchar* vertexShader = GLSL(150,
 
 uniform vec4 u_EyePos;
 uniform mat4 u_Model;
@@ -90,7 +90,7 @@ void main()
  * Fragment shader
  ******************************************************************************/
 
-const GLchar* fragmentShader = GLSL(130,
+const GLchar* fragmentShader = GLSL(150,
 
 uniform vec4 u_LightColor;
 
@@ -450,15 +450,15 @@ void initShader()
 /**
  * Uploads the geometry contained in the given scene graph node
  */
-static void* uploadNode(GraphNode* node, void* ignore, int depth)
+static void* uploadNode(shared_ptr<GraphNode> node, void* ignore, int depth)
 {
     #ifdef DEBUG
     clog << "-- uploadNode()" << endl;
     #endif
 
-    GLGeometry* instance = node->getInstance();
+    shared_ptr<GLGeometry> instance = node->getInstance();
 
-    if (instance != nullptr) {
+    if (instance) {
         instance->upload(shaderProgram, locationPos, locationNor, locationCol);
     }
 
@@ -474,10 +474,10 @@ void uploadGeometry()
     clog << "- uploadGeometry()" << endl;
     #endif
 
-    GraphNode* root = sceneContext->getSceneGraph().getRoot();
+    auto root = sceneContext->getSceneGraph().getRoot();
 
-    if (root != nullptr) {
-        walk(root, uploadNode, (void*)nullptr);
+    if (root) {
+        walk(root, uploadNode, static_cast<void*>(nullptr));
     }
 }
 
@@ -486,7 +486,7 @@ void uploadGeometry()
  * position in the scene graph, then draws tha actual geometry using the
  * updated affine matrix
  */
-static mat4 drawGLGeometry(GraphNode* node, mat4 current, int depth)
+static mat4 drawGLGeometry(shared_ptr<GraphNode> node, mat4 current, int depth)
 {
     mat4 next = applyTransform(node, current);
 
@@ -494,9 +494,9 @@ static mat4 drawGLGeometry(GraphNode* node, mat4 current, int depth)
         next *= rotate(mat4(), rotation, vec3(0.0, 1.0f, 0.0f));
     }
 
-    GLGeometry* instance = node->getInstance();
+    shared_ptr<GLGeometry> instance = node->getInstance();
 
-    if (instance != nullptr) {
+    if (instance) {
         instance->draw(*state, shaderProgram, unifModel, unifModelInvTr, next);
     }
 
@@ -537,9 +537,9 @@ void display()
 
     // --- Render the scene ----------------------------------------------------
 
-    GraphNode* root = sceneContext->getSceneGraph().getRoot();
+    auto root = sceneContext->getSceneGraph().getRoot();
 
-    if (root != nullptr) {
+    if (root) {
         walk(root, drawGLGeometry, mat4());
     }
 

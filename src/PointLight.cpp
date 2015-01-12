@@ -84,7 +84,7 @@ Color PointLight::getColor(const P& from) const
 	return this->color;
 }
 
-bool PointLight::isLightSourceNode(GraphNode const * testNode) const
+bool PointLight::isLightSourceNode(shared_ptr<GraphNode> testNode) const
 {
 	// Always false, since no node is involved with point lights
 	return false;
