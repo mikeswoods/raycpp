@@ -41,7 +41,7 @@ ostream& operator<<(ostream& os, const Face& face)
 
 Mesh::Mesh(const vector<glm::vec3>& vertices
 	      ,const vector<glm::vec3>& normals
-		  ,const std::vector<glm::vec2>& textureUV
+		  ,const std::vector<glm::vec3>& textureUV
 		  ,const vector<Face>& _faces) :
     Geometry(MESH)
 { 

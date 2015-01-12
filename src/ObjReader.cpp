@@ -21,14 +21,15 @@
 
 using namespace Utils;
 using namespace std;
+using namespace glm;
 
 /*****************************************************************************/
 
 ObjReader::ObjReader(const string& _objFile) :
 	objFile(_objFile),
-	vertices(unique_ptr<vector<glm::vec3>>(new vector<glm::vec3>())),
-	normals(unique_ptr<vector<glm::vec3>>(new vector<glm::vec3>())),
-	uv(unique_ptr<vector<glm::vec2>>(new vector<glm::vec2>())),
+	vertices(unique_ptr<vector<vec3>>(new vector<vec3>())),
+	normals(unique_ptr<vector<vec3>>(new vector<vec3>())),
+	textures(unique_ptr<vector<vec3>>(new vector<vec3>())),
 	faces(unique_ptr<vector<Face>>(new vector<Face>())),
 	maxVComp(-numeric_limits<float>::infinity())
 {
@@ -116,7 +117,7 @@ shared_ptr<Mesh> ObjReader::parse()
 
 		} else if (lineType == "vn") { // Vertex normal
 
-			//cerr << "[!] ObjReader: unsupported type (" << lineCount << "): " << lineType;
+			this->parseVN(lineCount, line, ss);
 
 		} else {
 
@@ -139,7 +140,10 @@ shared_ptr<Mesh> ObjReader::parse()
 		}
 	}
 
-	return make_shared<Mesh>(this->getVertices(), this->getNormals(), this->getUVs(), this->getFaces());
+	return make_shared<Mesh>(this->getVertices()
+		                    ,this->getNormals()
+		                    ,this->getTextures()
+		                    ,this->getFaces());
 }
 
 // Parse a comment from the string stream
@@ -170,18 +174,28 @@ void ObjReader::parseV(int lineNum, const std::string& line, istringstream& ss)
 		this->maxVComp = abs(vz);
 	}
 
-	this->vertices->push_back(glm::vec3(vx, vy, vz));
+	this->vertices->push_back(vec3(vx, vy, vz));
 }
 
-// Parse a vertex texture from the string stream
+/**
+ * Parse a vertex texture from the string stream
+ */
 void ObjReader::parseVT(int lineNum, const std::string& line, istringstream& ss)
 {
 	#ifdef DEBUG
 	clog << "called ObjReader::parseVT" << endl;
 	#endif
+
+	float vtu, vtv, vtw;
+	//ss >> vtu >> vtv;
+	ss >> vtu >> vtv >> vtw;
+
+	this->textures->push_back(vec3(vtu, vtv, 1.0f));	
 }
 
-// Parse a vertex normal from the string stream
+/** 
+ * Parse a vertex normal from the string stream
+ */
 void ObjReader::parseVN(int lineNum, const std::string& line, istringstream& ss)
 {
 	#ifdef DEBUG

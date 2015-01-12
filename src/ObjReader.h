@@ -39,7 +39,7 @@ class ObjReader
 
 		std::unique_ptr<std::vector<glm::vec3>> vertices;
 		std::unique_ptr<std::vector<glm::vec3>> normals;
-		std::unique_ptr<std::vector<glm::vec2>> uv;
+		std::unique_ptr<std::vector<glm::vec3>> textures;
 		std::unique_ptr<std::vector<Face>> faces;
 
 		// Maximum vertex component in either X, Y, or Z
@@ -70,7 +70,7 @@ class ObjReader
 
 		const std::vector<glm::vec3>& getVertices() const { return *this->vertices; }
 		const std::vector<glm::vec3>& getNormals() const  { return *this->normals; }
-		const std::vector<glm::vec2>& getUVs() const      { return *this->uv; }
+		const std::vector<glm::vec3>& getTextures() const { return *this->textures; }
 		const std::vector<Face>& getFaces() const         { return *this->faces; }
 };
 

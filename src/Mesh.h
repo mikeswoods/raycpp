@@ -42,7 +42,7 @@ class Mesh : public Geometry
 		std::vector<Face> faces;
 
 		// Texture UV coordinates:
-		std::vector<glm::vec2> textureUV;
+		std::vector<glm::vec3> textureUV;
 
 		// Self-contained triangle data:
 		std::vector<Tri> triangles;
@@ -56,7 +56,7 @@ class Mesh : public Geometry
 	public:
 		Mesh(const std::vector<glm::vec3>& vertices
 			,const std::vector<glm::vec3>& normals
-			,const std::vector<glm::vec2>& textureUV
+			,const std::vector<glm::vec3>& textureUV
 			,const std::vector<Face>& faces);
 
 		Mesh(const Mesh& other);

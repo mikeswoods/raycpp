@@ -29,7 +29,7 @@ using namespace cimg_library;
 
 // Raytracer related 
 static Camera rayTraceCamera;
-static shared_ptr<CImg<unsigned char>> output;
+static shared_ptr<Image> output;
 
 // Attributes
 static GLint locationPos;
