@@ -12,7 +12,9 @@
 #ifndef FACE_H
 #define FACE_H
 
-/*****************************************************************************/
+#include <iostream>
+
+/******************************************************************************/
 
 class Face 
 {
@@ -23,6 +25,14 @@ class Face
 		int n[3]; // Vertex-normal indices
 
 	public:
+		Face()
+		{
+			this->id   = -1;
+			this->v[0] = this->v[1] = this->v[2] = -1;
+			this->t[0] = this->t[1] = this->t[2] = -1;
+			this->n[0] = this->n[1] = this->n[2] = -1;
+		}
+
 		Face(int _id, int v[3]) :
 			id(_id)
 		{
@@ -54,8 +64,10 @@ class Face
 			std::memcpy(&this->t[0], &other.t[0], sizeof(this->t[0]) * 3);
 			std::memcpy(&this->n[0], &other.n[0], sizeof(this->n[0]) * 3);
 		}
+
+		friend std::ostream& operator<<(std::ostream& s, const Face& face);
 };
 
-/*****************************************************************************/
+/******************************************************************************/
 
 #endif

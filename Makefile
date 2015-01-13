@@ -17,7 +17,7 @@ endif
 UNAME := $(shell uname)
 
 ifeq ($(UNAME), Darwin)
-CXX = g++-4.9
+CXX = ccache g++-4.9
 else
 	ifeq ($(UNAME), Linux)
 		CXX = g++
@@ -33,12 +33,13 @@ BUILD_DIR = build
 ################################################################################
 
 CXXFLAGS += \
-	-O3 \
+    -O3 \
 	--std=c++11 \
 	-Wall \
 	-Wextra \
 	-Wno-unused-parameter \
-	-Wno-unused-function 
+	-Wno-unused-function \
+	-ggdb
 
 ifeq ($(UNAME), Darwin)
 	CXXFLAGS += -fopenmp -fdiagnostics-color=always `pkg-config --cflags glfw3`
@@ -62,7 +63,8 @@ INCLUDE_DIRS := include /opt/X11/include
 
 ################################################################################
 
-CXXFILES := $(shell find $(SRC_DIR) -mindepth 1 -maxdepth 4 -name "*.cpp")
+#CXXFILES := $(shell find $(SRC_DIR) -mindepth 1 -maxdepth 4 -name "*.cpp")
+CXXFILES := $(shell find $(SRC_DIR) -mindepth 1 -maxdepth 1 -name "*.cpp")
 INFILES  := $(CXXFILES)
 
 OBJFILES := $(CXXFILES:src/%.cpp=%)
@@ -70,10 +72,6 @@ DEPFILES := $(CXXFILES:src/%.cpp=%)
 OFILES := $(OBJFILES:%=$(BUILD_DIR)/%.o)
 
 ################################################################################
-
-ifdef DEBUG
-	CXXFLAGS := $(CXXFLAGS) -g
-endif
 
 CXXFLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 
@@ -89,8 +87,11 @@ $(BUILD_DIR)/%.o: src/%.cpp
 
 $(PROJECT): $(OFILES)
 	$(E)Linking $@
-	$(Q)$(CXX) -o $@ $(OFILES) $(LDFLAGS)
+	$(Q)$(CXX) $(CXXFLAGS) -o $@ $(OFILES) $(LDFLAGS)
+
+test_loader:	src/test/test_loader.cpp build/ObjReader.o build/Mesh.o build/Geometry.o build/Tri.o build/KDTree.o build/Ray.o build/AABB.o build/R3.o build/Intersection.o build/Utils.o
+	$(CXX) -o $@ $< $(CXXFLAGS) build/ObjReader.o build/Mesh.o build/Geometry.o build/Tri.o build/KDTree.o build/Ray.o build/AABB.o build/R3.o build/Intersection.o build/Utils.o
 
 clean:
 	$(E)Removing files
-	$(Q)rm -f $(PROJECT) $(BUILD_DIR)/* Makefile.dep
+	$(Q)rm -f $(PROJECT) $(BUILD_DIR)/* Makefile.dep test_loader
