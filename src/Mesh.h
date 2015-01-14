@@ -10,7 +10,8 @@
 
 #ifndef MESH_H
 #define MESH_H
-\
+
+#include <memory>
 #include <tuple>
 #include <vector>
 #include "R3.h"
@@ -31,7 +32,9 @@ class Mesh : public Geometry
 		P centroid;
 		TrivialVolume volume;
 		AABB aabb;
-		KDTree* tree;
+		std::unique_ptr<KDTree> tree;
+		bool withNormals;
+		bool withTextures;
 
 		void computeCentroid();
 		void computeAABB();
@@ -42,7 +45,7 @@ class Mesh : public Geometry
 		std::vector<Face> faces;
 
 		// Texture UV coordinates:
-		std::vector<glm::vec3> textureUV;
+		std::vector<glm::vec3> textures;
 
 		// Self-contained triangle data:
 		std::vector<Tri> triangles;
@@ -56,10 +59,8 @@ class Mesh : public Geometry
 	public:
 		Mesh(const std::vector<glm::vec3>& vertices
 			,const std::vector<glm::vec3>& normals
-			,const std::vector<glm::vec3>& textureUV
+			,const std::vector<glm::vec3>& textures
 			,const std::vector<Face>& faces);
-
-		Mesh(const Mesh& other);
 
 		virtual ~Mesh();
 

@@ -21,6 +21,7 @@
 #include "Utils.h"
 
 using namespace std;
+using namespace glm;
 
 /*******************************************************************************
  * Numeric functions
@@ -34,8 +35,8 @@ float Utils::almostEqual(float a, float b, float epsilon)
     // assume small positive epsilon
     assert(epsilon >= 0.0f && epsilon <= 1.0f);
 
-    float diff = abs(a - b);
-    float maxab = max(abs(a), abs(b));
+    float diff  = abs(a - b);
+    float maxab = std::max(abs(a), abs(b));
 
     // if the multiply won't underflow then use a multiply
     if (maxab >= 1.0f) {
@@ -57,7 +58,7 @@ float Utils::almostEqual(float a, float b, float epsilon)
  */
 float Utils::clamp(float n, float lo, float hi)
 {
-    return min(max(n,lo),hi); 
+    return std::min(std::max(n, lo), hi); 
 }
 
 /**
@@ -65,7 +66,7 @@ float Utils::clamp(float n, float lo, float hi)
  */
 float Utils::unitClamp(float n)
 {
-    return min(max(n, 0.0f), 1.0f); 
+    return std::min(std::max(n, 0.0f), 1.0f); 
 }
 
 /** 
@@ -153,26 +154,26 @@ bool Utils::leastGreaterThanZero(float x, float y, float& smallest)
 /**
  * Test if two vectors are orthogonal
  */
-bool Utils::orthogonal(glm::vec3 v1, glm::vec3 v2)
+bool Utils::orthogonal(vec3 v1, vec3 v2)
 {
-    return abs(glm::dot(v1, v2) / (glm::length(v1) * glm::length(v2))) < static_cast<float>(EPSILON);
+    return abs(dot(v1, v2) / (length(v1) * length(v2))) < static_cast<float>(EPSILON);
 }
 
 /**
  * Test if two vectors are parallel
  */
-bool Utils::parallel(glm::vec3 v1, glm::vec3 v2)
+bool Utils::parallel(vec3 v1, vec3 v2)
 {
-    return abs(glm::dot(v1, v2) / (glm::length(v1) * glm::length(v2))) > 1.0f - static_cast<float>(EPSILON);
+    return abs(dot(v1, v2) / (length(v1) * length(v2))) > 1.0f - static_cast<float>(EPSILON);
 }
 
 /**
  * Fixes degenerate "up" vector cases
  */
-glm::vec3 Utils::fixUpVector(const glm::vec3& viewDir, const glm::vec3& up)
+vec3 Utils::fixUpVector(const vec3& viewDir, const vec3& up)
 {
     if (Utils::parallel(viewDir, up)) {
-        return glm::vec3(up.x, up.y, up.z + static_cast<float>(EPSILON));
+        return vec3(up.x, up.y, up.z + static_cast<float>(EPSILON));
     }
 
     return up;
@@ -185,20 +186,20 @@ glm::vec3 Utils::fixUpVector(const glm::vec3& viewDir, const glm::vec3& up)
 /**
  * Tests if the given ray intersects the specified plane
  */
-float Utils::hitsPlane(const glm::vec3& origin
-                      ,const glm::vec3& dir
-                      ,const glm::vec3& center
-                      ,const glm::vec3& normal)
+float Utils::hitsPlane(const vec3& origin
+                      ,const vec3& dir
+                      ,const vec3& center
+                      ,const vec3& normal)
 {
-    glm::vec3 n = glm::normalize(normal);
-    glm::vec3 d = glm::normalize(dir);
-    float k     = glm::dot(n, d);
+    vec3 n = normalize(normal);
+    vec3 d = normalize(dir);
+    float k     = dot(n, d);
 
-    if (std::abs(k) < EPSILON) {
+    if (abs(k) < EPSILON) {
         return -1.0f; // Failed
     }
 
-    float t = -(glm::dot(origin - center, n)) / k;
+    float t = -(dot(origin - center, n)) / k;
 
     return t >= 0.0f ? t : -1.0f;
 }
@@ -211,13 +212,13 @@ float Utils::hitsPlane(const glm::vec3& origin
  * Return the current working directory. This solution was adapted from
  * the answer on Stackoverflow at http://stackoverflow.com/a/145309
  */
-string Utils::cwd(const std::string& relFile)
+string Utils::cwd(const string& relFile)
 {
     // Determine the current working directory. Any texture files will be
     // loaded relative to  it
     char buffer[FILENAME_MAX];
 
-    if (!GetCurrentDir(buffer, sizeof(buffer))) {
+    if (!getcwd(buffer, sizeof(buffer))) {
         throw runtime_error("Couldn't get current working directory!");
     }
 
@@ -235,14 +236,14 @@ string Utils::cwd(const std::string& relFile)
 /**
  * Returns the absolute realpath of the given relative path
  */
-std::string Utils::realPath(const std::string& relPath)
+string Utils::realPath(const string& path)
 {
     char buffer[FILENAME_MAX];
 
     #if defined(_WIN32) || defined(_WIN64)
-    GetFullPathName(relPath.c_str(), sizeof(buffer), buffer, nullptr);
+    GetFullPathName(path.c_str(), sizeof(buffer), buffer, nullptr);
     #else
-    realpath(relPath.c_str(), buffer);
+    realpath(path.c_str(), buffer);
     #endif
 
     return string(buffer);
@@ -251,7 +252,7 @@ std::string Utils::realPath(const std::string& relPath)
 /**
  * Returns the base component of a filename
  */
-std::string Utils::baseName(const std::string& path)
+string Utils::baseName(const string& path)
 {
     size_t pos = path.find_last_of(DirSep);
     if (pos == string::npos) {
@@ -263,6 +264,18 @@ std::string Utils::baseName(const std::string& path)
     } else {
         return path.substr(0, pos);
     }
+}
+
+/**
+ * Resolves a file path relative to another path
+ */
+string Utils::resolvePath(const string& path, const string& relative)
+{
+    string current = cwd();
+    chdir(relative.c_str());
+    string p = realPath(path);
+    chdir(current.c_str());
+    return p;
 }
 
 /**
@@ -347,7 +360,7 @@ vector<string> Utils::split(string str, string delim)
 
     auto i = 0U;
     auto j = s.find(delim);
-    while (i != j && j != std::string::npos)
+    while (i != j && j != string::npos)
     {
         token = s.substr(i, j - i);
 
@@ -363,45 +376,21 @@ vector<string> Utils::split(string str, string delim)
     return tokens;
 }
 
-/** 
- * Parses a numeric pair specifier string like "123,45" into its component 
- * floats and sets the values of x and y. If this this function returns true, 
- * then the string was successfully parsed, otherwise false is returned 
- * and x and y are not updated
- */
-bool Utils::parseTuple(string str, float& x, float& y)
-{
-	vector<string> parts = split(str, string(","));
-	if (parts.size() < 2) {
-		return false;
-	}
-	bool good1 = false;
-	bool good2 = false;
-
-	istringstream ss(parts[0] + " " + parts[1]);
-	ss >> x;
-	good1 = !ss.fail();
-	ss >> y;
-	good2 = !ss.fail();
-
-	return good1 && good2;
-}
-
 /**
  * Read a text file into a string
  */
-std::string Utils::textFileRead(const char* filename)
+string Utils::textFileRead(const char* filename)
 {
     // http://insanecoding.blogspot.com/2011/11/how-to-read-in-file-in-c.html
-    std::ifstream in(filename, std::ios::in);
+    ifstream in(filename, ios::in);
     if (!in) {
-        std::cerr << "Error reading file: " << string(filename) << std::endl;
+        cerr << "Error reading file: " << string(filename) << endl;
         throw (errno);
     }
-    return std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+    return string(istreambuf_iterator<char>(in), istreambuf_iterator<char>());
 }
 
-std::string Utils::textFileRead(const string& filename)
+string Utils::textFileRead(const string& filename)
 {
     return Utils::textFileRead(filename.c_str());
 }

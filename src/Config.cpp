@@ -627,7 +627,7 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 
 		ObjReader objReader(objFileName);
 
-		auto meshData = objReader.parse();
+		auto meshData = objReader.read();
 
 		if (isVolume) {
 			geometry = shared_ptr<Geometry>(make_shared<Volume>(new Cube()));

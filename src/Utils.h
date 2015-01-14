@@ -22,12 +22,12 @@
 #if defined(_WIN32) || defined(_WIN64)
     #include <direct.h>
     #include <windows.h>
-    #define GetCurrentDir _getcwd
+    #define getcwd _getcwd
+    #define chdir _chdir
     #define DirSep "\\"
 #else
     #include <unistd.h>
     #include <errno.h>
-    #define GetCurrentDir getcwd
     #define DirSep "/"
 #endif
 
@@ -102,10 +102,13 @@ namespace Utils
     std::string cwd(const std::string& relFile = "");
 
     // Returns the absolute realpath of the given relative path
-    std::string realPath(const std::string& relPath);
+    std::string realPath(const std::string& path);
 
     // Returns the basename of the given path
     std::string baseName(const std::string& path);
+
+    // Resolves a file path relative to another path
+    std::string resolvePath(const std::string& path, const std::string& relative);
 
     // Trims leading and trailing whitespace from a string 
     std::string trim(const std::string& s);
@@ -123,10 +126,6 @@ namespace Utils
 
     // Split a string into pieces given a delimiter
     std::vector<std::string> split(std::string str, std::string delim);
-
-	// Parses a numeric pair specifier string like "123,45" into its component 
-	// floats and sets the values of x and y.
-	bool parseTuple(std::string str, float& x, float& y);
 
 	// Attempt to parse an int, returning a default value in the event of failure
 	template<typename T> T parseNumber(std::string str, T def)

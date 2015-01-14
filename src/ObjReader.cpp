@@ -27,6 +27,47 @@ using namespace glm;
 
 /*****************************************************************************/
 
+MTL::MTL()
+{
+
+}
+
+/*****************************************************************************/
+
+MTLReader::MTLReader(const string& _mtlFile) :
+	mtlFile(_mtlFile)
+{
+
+
+}
+
+MTLReader::~MTLReader()
+{
+
+}
+
+shared_ptr<MTL> MTLReader::read()
+{
+	shared_ptr<MTL> mtl = shared_ptr<MTL>(make_shared<MTL>());
+
+    ifstream is;
+    is.open(this->mtlFile.c_str(), ifstream::in);
+
+    if (!is.good()) {
+        throw runtime_error(".mtl file '" + this->mtlFile + "' cannot be read or does not exist");
+    }
+
+    string line;
+
+    while (getline(is, line)) {
+    	cout << line << endl;
+    }
+
+	return mtl;
+}
+
+/*****************************************************************************/
+
 ObjReader::ObjReader(const string& _objFile) :
     objFile(_objFile),
     vertices(unique_ptr<vector<vec3>>(new vector<vec3>())),
@@ -55,7 +96,7 @@ int ObjReader::normalizeIndex(int i) const
     return (i > 0) ? i : (this->vertices->size() + i) + 1;
 }
 
-shared_ptr<Mesh> ObjReader::parse()
+shared_ptr<Mesh> ObjReader::read()
 {
     this->reset();
 
@@ -63,7 +104,7 @@ shared_ptr<Mesh> ObjReader::parse()
     is.open(this->objFile.c_str(), ifstream::in);
 
     if (!is.good()) {
-        throw runtime_error("ObjReader::readFromFile: " + this->objFile + " cannot be read");
+        throw runtime_error(".obj file '" + this->objFile + "' cannot be read or does not exist");
     }
 
     int lineCount = 0, nextFaceId = 1;
@@ -71,7 +112,7 @@ shared_ptr<Mesh> ObjReader::parse()
 
     while (getline(is, line)) {
 
-        line = Utils::trim(line);
+        line = trim(line);
         lineCount++;
 
         if (line.length() == 0) { // Skip blank lines
@@ -104,8 +145,8 @@ shared_ptr<Mesh> ObjReader::parse()
             // Ignore for now
 
         } else if (lineType == "mtllib") { // Material library include
-        
-            // Ignore for now
+
+            this->parseMtllib(lineCount, line, ss);
 
         } else if (lineType == "usemtl") { // Use material directive
         
@@ -168,7 +209,9 @@ shared_ptr<Mesh> ObjReader::parse()
                             ,this->getFaces());
 }
 
-// Parse a comment from the string stream
+/** 
+ * Parse a comment from the string stream
+ */
 void ObjReader::parseComment(int lineNum, const std::string& line, istringstream& ss)
 {
     #ifdef DEBUG
@@ -176,7 +219,27 @@ void ObjReader::parseComment(int lineNum, const std::string& line, istringstream
     #endif
 }
 
-// Parse a vertex from the string stream
+/** 
+ * Parse a material file include
+ */
+void ObjReader::parseMtllib(int lineNum, const std::string& line, std::istringstream& ss)
+{
+    #ifdef DEBUG
+    clog << "called ObjReader::parseMtllib" << endl;
+    #endif	
+
+    string mtlFile;
+    ss >> mtlFile;
+
+    string mtlPath = resolvePath(mtlFile, baseName(this->objFile));
+
+    MTLReader mtlReader(mtlPath);
+    mtlReader.read();
+}
+
+/** 
+ * Parse a vertex from the string stream
+ */
 void ObjReader::parseV(int lineNum, const std::string& line, istringstream& ss)
 {
     #ifdef DEBUG
@@ -239,7 +302,7 @@ ObjReader::FaceType ObjReader::classifyFaceChunk(std::string chunk)
     if (chunk.find("//") != string::npos) { // Case (3)
         return FACE_VN;
     } else if (chunk.find("/") != string::npos) { // Case (2) or (4)
-        size_t sz = Utils::split(chunk, "/").size();
+        size_t sz = split(chunk, "/").size();
         if (sz == 2) {
             return FACE_VT; // Case (2)
         } else if (sz == 3) {
@@ -269,7 +332,7 @@ void ObjReader::parseF(int lineNum, int nextFaceId
     #endif
 
     // Detect which variation about we have:
-    vector<string> raw_chunks = Utils::split(string(line), " ");
+    vector<string> raw_chunks = split(string(line), " ");
 
     // Copy from then 2nd element to the end into CHUNKS
     vector<string> CHUNKS;
@@ -347,9 +410,9 @@ Face ObjReader::parseFVT(int lineNum, int nextFaceId, const std::string& line
     int n[3] = {-1, -1, -1};
 
     vector<string> parts[3] = {
-         Utils::split(chunk1, "/")
-        ,Utils::split(chunk2, "/")
-        ,Utils::split(chunk3, "/")
+         split(chunk1, "/")
+        ,split(chunk2, "/")
+        ,split(chunk3, "/")
     };
 
     if (parts[0].size() != 2) {
@@ -360,13 +423,13 @@ Face ObjReader::parseFVT(int lineNum, int nextFaceId, const std::string& line
         throw runtime_error("at line " + S(lineNum) + " in parseFVT: bad chunk(3) \"" + line + "\"");
     }
      
-    v[0] = this->normalizeIndex(stoi(Utils::trim(parts[0][0])));
-    v[1] = this->normalizeIndex(stoi(Utils::trim(parts[1][0])));
-    v[2] = this->normalizeIndex(stoi(Utils::trim(parts[2][0])));
+    v[0] = this->normalizeIndex(stoi(trim(parts[0][0])));
+    v[1] = this->normalizeIndex(stoi(trim(parts[1][0])));
+    v[2] = this->normalizeIndex(stoi(trim(parts[2][0])));
 
-    t[0] = this->normalizeIndex(stoi(Utils::trim(parts[0][1])));
-    t[1] = this->normalizeIndex(stoi(Utils::trim(parts[1][1])));
-    t[2] = this->normalizeIndex(stoi(Utils::trim(parts[2][1])));
+    t[0] = this->normalizeIndex(stoi(trim(parts[0][1])));
+    t[1] = this->normalizeIndex(stoi(trim(parts[1][1])));
+    t[2] = this->normalizeIndex(stoi(trim(parts[2][1])));
 
     return Face(nextFaceId, v, t, n);
 }
@@ -384,9 +447,9 @@ Face ObjReader::parseFVN(int lineNum, int nextFaceId, const std::string& line
     int n[3] = {-1, -1, -1};
 
     vector<string> parts[3] = {
-         Utils::split(chunk1, "//")
-        ,Utils::split(chunk2, "//")
-        ,Utils::split(chunk3, "//")
+         split(chunk1, "//")
+        ,split(chunk2, "//")
+        ,split(chunk3, "//")
     };
 
     if (parts[0].size() != 2) {
@@ -397,13 +460,13 @@ Face ObjReader::parseFVN(int lineNum, int nextFaceId, const std::string& line
         throw runtime_error("at line " + S(lineNum) + " in parseFVN: bad chunk(3) \"" + line + "\"");
     }
      
-    v[0] = this->normalizeIndex(stoi(Utils::trim(parts[0][0])));
-    v[1] = this->normalizeIndex(stoi(Utils::trim(parts[1][0])));
-    v[2] = this->normalizeIndex(stoi(Utils::trim(parts[2][0])));
+    v[0] = this->normalizeIndex(stoi(trim(parts[0][0])));
+    v[1] = this->normalizeIndex(stoi(trim(parts[1][0])));
+    v[2] = this->normalizeIndex(stoi(trim(parts[2][0])));
 
-    n[0] = this->normalizeIndex(stoi(Utils::trim(parts[0][1])));
-    n[1] = this->normalizeIndex(stoi(Utils::trim(parts[1][1])));
-    n[2] = this->normalizeIndex(stoi(Utils::trim(parts[2][1])));
+    n[0] = this->normalizeIndex(stoi(trim(parts[0][1])));
+    n[1] = this->normalizeIndex(stoi(trim(parts[1][1])));
+    n[2] = this->normalizeIndex(stoi(trim(parts[2][1])));
 
     return Face(nextFaceId, v, t, n);
 }
@@ -421,9 +484,9 @@ Face ObjReader::parseFVTN(int lineNum, int nextFaceId, const std::string& line
     int n[3] = {-1, -1, -1};
 
     vector<string> parts[3] = {
-         Utils::split(chunk1, "/")
-        ,Utils::split(chunk2, "/")
-        ,Utils::split(chunk3, "/")
+         split(chunk1, "/")
+        ,split(chunk2, "/")
+        ,split(chunk3, "/")
     };
 
     if (parts[0].size() != 3) {
@@ -434,17 +497,17 @@ Face ObjReader::parseFVTN(int lineNum, int nextFaceId, const std::string& line
         throw runtime_error("at line " + S(lineNum) + " in parseFVTN: bad chunk(3) \"" + line + "\"");
     }
      
-    v[0] = this->normalizeIndex(stoi(Utils::trim(parts[0][0])));
-    v[1] = this->normalizeIndex(stoi(Utils::trim(parts[1][0])));
-    v[2] = this->normalizeIndex(stoi(Utils::trim(parts[2][0])));
+    v[0] = this->normalizeIndex(stoi(trim(parts[0][0])));
+    v[1] = this->normalizeIndex(stoi(trim(parts[1][0])));
+    v[2] = this->normalizeIndex(stoi(trim(parts[2][0])));
 
-    t[0] = this->normalizeIndex(stoi(Utils::trim(parts[0][1])));
-    t[1] = this->normalizeIndex(stoi(Utils::trim(parts[1][1])));
-    t[2] = this->normalizeIndex(stoi(Utils::trim(parts[2][1])));
+    t[0] = this->normalizeIndex(stoi(trim(parts[0][1])));
+    t[1] = this->normalizeIndex(stoi(trim(parts[1][1])));
+    t[2] = this->normalizeIndex(stoi(trim(parts[2][1])));
 
-    n[0] = this->normalizeIndex(stoi(Utils::trim(parts[0][2])));
-    n[1] = this->normalizeIndex(stoi(Utils::trim(parts[1][2])));
-    n[2] = this->normalizeIndex(stoi(Utils::trim(parts[2][2])));
+    n[0] = this->normalizeIndex(stoi(trim(parts[0][2])));
+    n[1] = this->normalizeIndex(stoi(trim(parts[1][2])));
+    n[2] = this->normalizeIndex(stoi(trim(parts[2][2])));
 
     return Face(nextFaceId, v, t, n);
 }

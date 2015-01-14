@@ -20,6 +20,27 @@
 #include <glm/glm.hpp>
 #include "Face.h"
 #include "Mesh.h"
+/*****************************************************************************/
+
+class MTL
+{
+	public:
+		MTL();
+};
+
+/*****************************************************************************/
+
+class MTLReader
+{
+	protected:
+		std::string mtlFile;
+
+	public:
+		MTLReader(const std::string& mtlFile);
+		~MTLReader();
+
+		std::shared_ptr<MTL> read();
+};
 
 /*****************************************************************************/
 
@@ -51,6 +72,7 @@ class ObjReader
 
 		void reset();
 		void parseComment(int lineNum, const std::string& line, std::istringstream& ss);
+		void parseMtllib(int lineNum, const std::string& line, std::istringstream& ss);
 		void parseV(int lineNum, const std::string& line, std::istringstream& ss);
 		void parseVT(int lineNum, const std::string& line, std::istringstream& ss);
 		void parseVN(int lineNum, const std::string& line, std::istringstream& ss);
@@ -66,7 +88,7 @@ class ObjReader
 		ObjReader(const std::string& objFile);
 		~ObjReader();
 
-		std::shared_ptr<Mesh> parse();
+		std::shared_ptr<Mesh> read();
 
 		const std::vector<glm::vec3>& getVertices() const { return *this->vertices; }
 		const std::vector<glm::vec3>& getNormals() const  { return *this->normals; }

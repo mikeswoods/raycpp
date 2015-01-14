@@ -89,8 +89,8 @@ $(PROJECT): $(OFILES)
 	$(E)Linking $@
 	$(Q)$(CXX) $(CXXFLAGS) -o $@ $(OFILES) $(LDFLAGS)
 
-test_loader:	src/test/test_loader.cpp build/ObjReader.o build/Mesh.o build/Geometry.o build/Tri.o build/KDTree.o build/Ray.o build/AABB.o build/R3.o build/Intersection.o build/Utils.o
-	$(CXX) -o $@ $< $(CXXFLAGS) build/ObjReader.o build/Mesh.o build/Geometry.o build/Tri.o build/KDTree.o build/Ray.o build/AABB.o build/R3.o build/Intersection.o build/Utils.o
+test_loader:	src/test/test_loader.cpp build/ObjReader.o build/Mesh.o build/Geometry.o build/Tri.o build/KDTree.o build/Ray.o build/AABB.o build/R3.o build/Intersection.o build/Utils.o build/Face.o 
+	$(CXX) -o $@ $< $(CXXFLAGS) build/ObjReader.o build/Mesh.o build/Geometry.o build/Tri.o build/KDTree.o build/Ray.o build/AABB.o build/R3.o build/Intersection.o build/Utils.o build/Face.o 
 
 clean:
 	$(E)Removing files

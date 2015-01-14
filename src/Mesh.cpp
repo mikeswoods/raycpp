@@ -34,13 +34,17 @@ ostream& operator<<(ostream& s, const VNIndex& vnIndex)
 
 Mesh::Mesh(const vector<glm::vec3>& vertices
           ,const vector<glm::vec3>& normals
-          ,const std::vector<glm::vec3>& textureUV
+          ,const vector<glm::vec3>& textures
           ,const vector<Face>& _faces) :
-    Geometry(MESH)
+    Geometry(MESH),
+    tree(unique_ptr<KDTree>(nullptr))
 { 
+    this->withNormals  = normals.size() > 0;
+    this->withTextures = textures.size() > 0;
+
     copy(vertices.begin(), vertices.end(), back_inserter(this->vertices_));
     copy(normals.begin(), normals.end(), back_inserter(this->normals_));
-    copy(textureUV.begin(), textureUV.end(), back_inserter(this->textureUV));
+    copy(textures.begin(), textures.end(), back_inserter(this->textures));
     copy(_faces.begin(), _faces.end(), back_inserter(this->faces));
 
     this->buildGeometry();
@@ -48,28 +52,12 @@ Mesh::Mesh(const vector<glm::vec3>& vertices
     this->computeCentroid();
     this->computeAABB();
 
-    //this->tree = nullptr;
-    this->tree = new KDTree(this->triangles, new CycleAxisStrategy(), new MaxValuesPerLeaf(20));
-}
-
-Mesh::Mesh(const Mesh& other) :
-    Geometry(MESH),
-    centroid(other.centroid),
-    volume(other.volume),
-    tree(other.tree),
-    faces(other.faces),
-    triangles(other.triangles)
-{ 
-
+    this->tree = unique_ptr<KDTree>(new KDTree(this->triangles, new CycleAxisStrategy(), new MaxValuesPerLeaf(20)));
 }
 
 Mesh::~Mesh() 
 { 
-    if (this->tree) {
-        delete this->tree;
-    }
-    
-    this->tree = nullptr;
+
 }
 
 void Mesh::repr(std::ostream& s) const

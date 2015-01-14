@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
     }
 
     ObjReader reader(argv[1]);
-    reader.parse();
+    reader.read();
 
     return 0;
 }
