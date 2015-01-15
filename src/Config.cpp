@@ -14,6 +14,9 @@
 #include <sstream>
 #include <utility>
 #include <ctime>
+#include <easylogging++.h>
+
+#include "ModelImport.h"
 #include "Utils.h"
 #include "Config.h"
 #include "Sphere.h"
@@ -117,8 +120,8 @@ void Configuration::parseCameraSection(istream& is, const string& beginToken)
 	string line, attribute;
 	bool readNonEmptyLine = false;
 
-	#ifdef DEBUG
-	clog << "CAMERA:" << endl;
+	#ifdef ENABLE_DEBUG
+	LOG(DEBUG) << "<<parseCameraSection>>";
 	#endif
 
 	while (getline(is, line)) {
@@ -135,37 +138,28 @@ void Configuration::parseCameraSection(istream& is, const string& beginToken)
 		istringstream ss(line);
 		ss >> attribute;
 
-		#ifdef DEBUG
-		clog << "\tparseCameraSection:ATTRIBUTE: " << attribute << endl;
+		#ifdef ENABLE_DEBUG
+		LOG(DEBUG) << "ATTRIBUTE<parseCameraSection>: "<< attribute;
 		#endif
 
 		if (attribute == "RESO") {
-			// ----------------------------------------------------------------
 			ss >> this->RESO[0] >> this->RESO[1];
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "EYEP") {
-			// ----------------------------------------------------------------
 			ss >> this->EYEP[0] >> this->EYEP[1] >> this->EYEP[2];
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "VDIR") {
-			// ----------------------------------------------------------------
 			ss >> this->VDIR[0] >> this->VDIR[1] >> this->VDIR[2];
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "UVEC") {
-			// ----------------------------------------------------------------
 			ss >> this->UVEC[0] >> this->UVEC[1] >> this->UVEC[2];
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "FOVY") {
-			// ----------------------------------------------------------------
 			ss >> this-> FOVY;
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else {
-			clog << "parseCameraSection::Ignoring extra attribute: " << attribute << endl;
+			LOG(WARNING) << "<parseCameraSection> Ignoring extra attribute: " 
+			             << attribute;
 		}
 	}
 }
@@ -185,8 +179,8 @@ void Configuration::parseEnvironmentSection(istream& is, const string& beginToke
 	string envMapFile      = "";
 	string basePath        = Utils::baseName(Utils::realPath(this->filename));
 
-	#ifdef DEBUG
-	clog << "parseEnvironmentSection:MAT:" << endl;
+	#ifdef ENABLE_DEBUG
+	LOG(DEBUG) << "<<parseEnvironmentSection>>" << endl;
 	#endif
 
 	while (getline(is, line)) {
@@ -200,27 +194,24 @@ void Configuration::parseEnvironmentSection(istream& is, const string& beginToke
 			}
 		}
 
-		// ====================================================================
 		istringstream ss(line);
 		ss >> attribute;
-		#ifdef DEBUG
-		clog << "\parseEnvironmentSection:ATTRIBUTE: " << attribute << endl;
+
+		#ifdef ENABLE_DEBUG
+		LOG(DEBUG) << "ATTRIBUTE<parseEnvironmentSection>: " << attribute;
 		#endif
-		// ====================================================================
+
 		if (attribute == "FILE") {
-			// ----------------------------------------------------------------
 			ss >> envMapFile;
 			// Get the basepath from the filename for tetxure map file lookup:
 			envMapFile = basePath + DirSep + "environments" + DirSep + envMapFile;
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "SHAPE") {
-			// ----------------------------------------------------------------
 			ss >> SHAPE;
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else {
-			clog << "parseEnvironmentSection::Ignoring extra attribute: " << attribute << endl;
+			LOG(WARNING) << "<parseEnvironmentSection> Ignoring extra attribute: " 
+			             << attribute ;
 		}
 	}
 
@@ -258,8 +249,8 @@ void Configuration::parseMaterialSection(istream& is, const string& beginToken)
 	string textureMapFile = "", bumpMapFile = "";
 	string basePath = Utils::baseName(Utils::realPath(this->filename));
 
-	#ifdef DEBUG
-	clog << "parseMaterialSection:MAT:" << endl;
+	#ifdef ENABLE_DEBUG
+	LOG(DEBUG) << "<<parseMaterialSection>>";
 	#endif
 
 	while (getline(is, line)) {
@@ -273,72 +264,54 @@ void Configuration::parseMaterialSection(istream& is, const string& beginToken)
 			}
 		}
 
-		// ====================================================================
 		istringstream ss(line);
 		ss >> attribute;
-		#ifdef DEBUG
-		clog << "\tparseMaterialSection:ATTRIBUTE: " << attribute << endl;
+
+		#ifdef ENABLE_DEBUG
+		LOG(DEBUG) << "ATTRIBUTE<parseMaterialSection>: "<< attribute;
 		#endif
-		// ====================================================================
+
 		if (attribute == "DIFF") {
-			// ----------------------------------------------------------------
 			ss >> DIFF[0] >> DIFF[1] >> DIFF[2];
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "REFL") {
-			// ----------------------------------------------------------------
 			ss >> REFL[0] >> REFL[1] >> REFL[2];
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "EXPO") {
-			// ----------------------------------------------------------------
 			ss >> EXPO;
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "IOR") {
-			// ----------------------------------------------------------------
 			ss >> IOR;
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "MIRR") {
-			// ----------------------------------------------------------------
 			ss >> MIRR;
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "TRAN") {
-			// ----------------------------------------------------------------
 			ss >> TRAN;
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "EMIT") {
-			// ----------------------------------------------------------------
 			ss >> EMIT;
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "AMBIENT") {
-			// ----------------------------------------------------------------
 			ss >> AMBIENT;
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "TEXTURE") {
-			// ----------------------------------------------------------------
 			ss >> textureMapFile;
 			// Get the basepath from the filename for tetxure map file lookup:
 			textureMapFile = basePath + DirSep + "textures" + DirSep + textureMapFile;
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "BUMP") {
-			// ----------------------------------------------------------------
 			ss >> bumpMapFile;
 			// Get the basepath from the filename for normal map file lookup:
 			bumpMapFile = basePath + DirSep + "textures" + DirSep + bumpMapFile;
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else {
 			if (beginToken == "MAT") {
 				name = attribute;
 			} else {
-				clog << "parseMaterialSection::Ignoring extra attribute: " << attribute << endl;
+				LOG(WARNING) << "<parseMaterialSection> Ignoring extra attribute: " 
+				             << attribute 
+				             << endl;
 			}
 		}
 	}
@@ -382,8 +355,8 @@ void Configuration::parsePointLightSection(istream& is, const string& beginToken
 	float LPOS[3] = { 0.0f, 0.0f, 0.0f };
 	float LCOL[3] = { 0.0f, 0.0f, 0.0f };
 
-	#ifdef DEBUG
-	clog << "parsePointLightSection:LIGHT:" << endl;
+	#ifdef ENABLE_DEBUG
+	LOG(DEBUG) << "<<parsePointLightSection>>" << endl;
 	#endif
 
 	while (getline(is, line)) {
@@ -397,27 +370,23 @@ void Configuration::parsePointLightSection(istream& is, const string& beginToken
 			}
 		}
 
-		// ====================================================================
 		istringstream ss(line);
 		ss >> attribute;
-		#ifdef DEBUG
-		clog << "\tATTRIBUTE: " << attribute << endl;
+
+		#ifdef ENABLE_DEBUG
+		LOG(DEBUG) << "ATTRIBUTE<parsePointLightSection>: " << attribute;
 		#endif
-		// ====================================================================
+
 		if (attribute == "LPOS") {
-			// ----------------------------------------------------------------
 			ss >> LPOS[0] >> LPOS[1] >> LPOS[2];
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else if (attribute == "LCOL") {
-			// ----------------------------------------------------------------
 			ss >> LCOL[0] >> LCOL[1] >> LCOL[2];
 			readNonEmptyLine = true;
-			// ----------------------------------------------------------------
 		} else {
-			clog << "parsePointLightSection::Ignoring extra attribute: " << attribute << endl;
+			LOG(WARNING) << "<parsePointLightSection> Ignoring extra attribute: " 
+			             << attribute;
 		}
-		// ====================================================================
 	}
 
 	auto light = make_shared<PointLight>(P(LPOS[0], LPOS[1], LPOS[2])
@@ -450,8 +419,8 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 	std::shared_ptr<GraphNode> node(nullptr);
 	shared_ptr<Geometry> geometry(nullptr);
 
-	#ifdef DEBUG
-	clog << "GRAPH-NODE:" << endl;
+	#ifdef ENABLE_DEBUG
+	LOG(DEBUG) << "<<parseNodeDefinition>>" << endl;
 	#endif
 
 	while (getline(is, line)) {
@@ -473,18 +442,17 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 
 		istringstream ss(line);
 		ss >> attribute;
-		#ifdef DEBUG
-		clog << "\tATTRIBUTE: " << attribute << endl;
+
+		#ifdef ENABLE_DEBUG
+		LOG(DEBUG) << "ATTRIBUTE<parseNodeDefinition>: " 
+		           << attribute 
+		           << endl;
 		#endif
 
 		if (attribute == "NODE") {
 
 			string name;
 			ss >> name;
-
-			#ifdef DEBUG
-			clog << "\tCREATE: " << attribute << endl;
-			#endif
 
 			node = make_shared<GraphNode>(name);
 			readNonEmptyLine = true;
@@ -496,14 +464,11 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 			}
 
 			if (attribute == "TRANSLATION") {
-
 				float T[3] = { 0.0f, 0.0f, 0.0f };
 				ss >> T[0] >> T[1] >> T[2];
 				node->setTranslate(glm::vec3(T[0], T[1], T[2]));
 				readNonEmptyLine = true;
-
 			} else if (attribute == "ROTATION") {
-
 				float R[3] = { 0.0f, 0.0f, 0.0f };
 				ss >> R[0] >> R[1] >> R[2];
 				#ifdef GLM_FORCE_RADIANS
@@ -514,23 +479,17 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 					node->setRotate(glm::vec3(rx, ry, rz));
 				#endif
 				readNonEmptyLine = true;
-
 			} else if (attribute == "SCALE") {
-
 				float S[3] = { 0.0f, 0.0f, 0.0f };
 				ss >> S[0] >> S[1] >> S[2];
 				node->setScale(glm::vec3(S[0], S[1], S[2]));
 				readNonEmptyLine = true;
-
 			} else if (attribute == "CENTER") {
-
 				float C[3] = { 0.0f, 0.0f, 0.0f };
 				ss >> C[0] >> C[1] >> C[2];
 				node->setCenter(P(C[0], C[1], C[2]));
 				readNonEmptyLine = true;
-
 			} else if (attribute == "PARENT") {
-
 				string parentName;
 				ss >> parentName;
 				 // if parentName is null, then node is the scene graph's root
@@ -542,55 +501,34 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 					this->graphBuilder.linkNodes(parentName, node);
 				}
 				readNonEmptyLine = true;
-
 			} else if (attribute == "SHAPE") {
-
 				string shapeType;
 				ss >> shapeType;
-
 				if (shapeType == "null") {
-
 					// Do nothing
-
 				} else if (shapeType == "sphere") {
-
 					geometry = shared_ptr<Geometry>(make_shared<Sphere>());
-
 				} else if (shapeType == "cylinder") {
-
 					geometry = shared_ptr<Geometry>(make_shared<Cylinder>());
-
 				} else if (shapeType == "cube") {
-
 					geometry = shared_ptr<Geometry>(make_shared<Cube>());
-
 				} else if (shapeType == "mesh") {
-
 					isMesh = true;
-
 				} else if (shapeType == "volume") {
-
 					isMesh = isVolume = true;
-
 				} else {
-
 					throw runtime_error("parseNodeDefinition: Unsupported geometry type: " + shapeType);
 				}
 				readNonEmptyLine = true;
-
 			} else if (attribute == "FILE") {
-
 				ss >> objFileName;
 				// Get the basepath from the filename for obj file lookup:
 				string path = Utils::baseName(Utils::realPath(this->filename));
-				objFileName = path + DirSep + "obj" + DirSep + objFileName;
+				objFileName = path + DirSep + "models" + DirSep + objFileName;
 				readNonEmptyLine = true;
-
 			} else if (attribute == "MAT") {
-
 				string matName;
 				ss >> matName;
-
 				if (matName != "null") {
 					if (!this->materialExists(matName)) {
 						throw runtime_error("parseNodeDefinition: Material not defined: " + matName);
@@ -603,10 +541,9 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 					node->setMaterial(material);
 				}
 				readNonEmptyLine = true;
-
 			} else {
-
-				clog << "parseNodeDefinition::Ignoring extra attribute: " << attribute << endl;
+				LOG(WARNING) << "<parseNodeDefinition> Ignoring extra attribute: " 
+				             << attribute;
 			}
 		}
 	}
@@ -675,25 +612,15 @@ unique_ptr<SceneContext> Configuration::read()
 	string readToken;
 
 	while (is >> readToken) {
-
 		if (readToken == "CAMERA") { // Begin CAMERA section
-
 			this->parseCameraSection(is, readToken);
-
 		} else if (readToken == "ENVIRONMENT") { // Begin ENVIRONMENT section
-
 			this->parseEnvironmentSection(is, readToken);
-
 		} else if (readToken == "LIGHT") { // Begin LIGHT section
-
 			this->parsePointLightSection(is, readToken);
-
 		} else if (readToken == "MAT") { // Begin material definition
-
 			this->parseMaterialSection(is, readToken);
-
 		} else { // Begin graph node definition
-
 			this->parseNodeDefinition(is, readToken);
 		}
 	}

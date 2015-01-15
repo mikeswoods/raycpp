@@ -21,7 +21,7 @@ Voxel::Voxel(float _density) :
 	density(_density)
 { 
     fill(this->light, this->light + MAX_LIGHTS, -1.0f);
-};
+}
 
 ostream& operator<<(ostream &s, const Voxel &v)
 {

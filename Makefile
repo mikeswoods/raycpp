@@ -53,11 +53,11 @@ endif
 
 ################################################################################
 
-ifeq ($(UNAME), Darwin)
-LDFLAGS = -L/usr/X11/lib -fopenmp -lGLEW `pkg-config --static --libs glfw3` -lX11
-else
-LDFLAGS = -L/usr/X11/lib -fopenmp -lGLEW `pkg-config --static --libs glfw3` -lX11
-endif
+LDFLAGS = -L/usr/X11/lib \
+          -fopenmp \
+          -lGLEW `pkg-config --static --libs glfw3` \
+          -lX11 \
+          -lassimp
 
 ################################################################################
 
@@ -90,6 +90,7 @@ $(BUILD_DIR)/%.o: src/%.cpp
 $(PROJECT): $(OFILES)
 	$(E)Linking $@
 	$(Q)$(CXX) $(CXXFLAGS) -o $@ $(OFILES) $(LDFLAGS)
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 
 test_loader:	build/ObjReader.o\
 				build/Mesh.o \
@@ -103,8 +104,10 @@ test_loader:	build/ObjReader.o\
 				build/Utils.o \
 				build/Face.o \
 				build/Color.o \
+				build/ModelImport.o \
 				src/test/test_loader.cpp
-	$(CXX) -o $@ $(CXXFLAGS) $^
+	$(CXX) -o $@ $(CXXFLAGS) $^ -lassimp -L/usr/local/lib
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 
 clean:
 	$(E)Removing files

@@ -113,7 +113,7 @@ Color EnvironmentMap::getColor(const Ray& ray, shared_ptr<SceneContext> scene) c
 	}
 
 	return Color::BLACK;
-};
+}
 
 /*******************************************************************************
  * Simple color-based environment map type
@@ -155,4 +155,4 @@ TextureEnvironmentMap::TextureEnvironmentMap(const std::string& filename
 Color TextureEnvironmentMap::getColor(float u, float v) const
 {
 	return TextureMap::getColor(u, v);
-};
+}

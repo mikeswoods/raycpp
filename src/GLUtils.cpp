@@ -1,18 +1,28 @@
+/******************************************************************************
+ *
+ * This file defines OpenGL-soecfic utility functions
+ *
+ * @file GLUtils.h
+ * @author Michael Woods
+ *
+ ******************************************************************************/
+
 #include <iostream>
 #include <ostream>
+#include <easylogging++.h>
 #include "GLUtils.h"
 
 using namespace std;
 
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/
 
-void GLUtils::printErrorLog(ostream& os)
+void GLUtils::printErrorLog()
 {
     GLenum error = glGetError();
 
     if (error != GL_NO_ERROR) {
 
-        os << "OpenGL error " << error << ": ";
+        LOG(INFO) << "OpenGL error " << error << ": ";
 
 		const char *e =
             error == GL_INVALID_OPERATION ? "GL_INVALID_OPERATION" :
@@ -21,7 +31,7 @@ void GLUtils::printErrorLog(ostream& os)
             error == GL_INVALID_INDEX     ? "GL_INVALID_INDEX" :
             "unknown";
 
-        os << e << endl;
+        LOG(ERROR) << e << endl;
 
         // Throwing here allows us to use the debugger stack trace to track
         // down the error.
@@ -33,7 +43,7 @@ void GLUtils::printErrorLog(ostream& os)
     }
 }
 
-void GLUtils::printLinkInfoLog(ostream& os, GLint prog)
+void GLUtils::printLinkInfoLog(GLint prog)
 {
     GLint linked;
     glGetProgramiv(prog, GL_LINK_STATUS, &linked);
@@ -42,7 +52,7 @@ void GLUtils::printLinkInfoLog(ostream& os, GLint prog)
         return;
     }
 
-    os << "GLSL LINK ERROR" << std::endl;
+    LOG(ERROR) << "GLSL LINK ERROR: " << std::endl;
 
     int infoLogLen = 0;
     int charsWritten = 0;
@@ -57,7 +67,7 @@ void GLUtils::printLinkInfoLog(ostream& os, GLint prog)
         // error check for fail to allocate memory omitted
         glGetProgramInfoLog(prog, infoLogLen, &charsWritten, infoLog);
 
-        os << "InfoLog:" << endl << infoLog << endl;
+        LOG(ERROR) << "InfoLog:" << endl << infoLog << endl;
 
         delete[] infoLog;
     }
@@ -66,7 +76,7 @@ void GLUtils::printLinkInfoLog(ostream& os, GLint prog)
     throw;
 }
 
-void GLUtils::printShaderInfoLog(ostream& os, GLint shader)
+void GLUtils::printShaderInfoLog(GLint shader)
 {
     GLint compiled;
 
@@ -76,7 +86,7 @@ void GLUtils::printShaderInfoLog(ostream& os, GLint shader)
         return;
     }
 
-    os << "GLSL COMPILE ERROR" << std::endl;
+    LOG(ERROR) << "GLSL COMPILE ERROR" << std::endl;
 
     int infoLogLen = 0, charsWritten = 0;
     GLchar *infoLog;
@@ -90,7 +100,7 @@ void GLUtils::printShaderInfoLog(ostream& os, GLint shader)
 		// error check for fail to allocate memory omitted
         glGetShaderInfoLog(shader, infoLogLen, &charsWritten, infoLog);
 
-        os << "InfoLog:" << endl << infoLog << endl;
+        LOG(ERROR) << "InfoLog:" << endl << infoLog << endl;
 
         delete[] infoLog;
     }
@@ -98,5 +108,3 @@ void GLUtils::printShaderInfoLog(ostream& os, GLint shader)
     // Throwing here allows us to use the debugger to track down the error.
     throw;
 }
-
-///////////////////////////////////////////////////////////////////////////////

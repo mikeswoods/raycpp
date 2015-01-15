@@ -17,6 +17,8 @@
 #include <string>
 #include <vector>
 #include <limits>
+#include <easylogging++.h>
+
 #include "ObjReader.h"
 #include "Utils.h"
 
@@ -54,10 +56,9 @@ MTLReader::MTLReader(const string& _mtlFile) :
 	mtlFile(_mtlFile)
 {
 
-
 }
 
-map<string, shared_ptr<MTL>>  MTLReader::read()
+map<string, shared_ptr<MTL>> MTLReader::read()
 {
 	map<string, shared_ptr<MTL>> mtlMap;
     ifstream is;
@@ -83,52 +84,51 @@ map<string, shared_ptr<MTL>>  MTLReader::read()
         ss >> lineType;
 
         if (lineType == "#") {
-        	continue;
+        	// Do nothing
         } else if (lineType == "newmtl") {
-        	{
-        		string mtlName;
-        		ss >> mtlName;
-        		mtl = shared_ptr<MTL>(make_shared<MTL>());
-        	}
-        	break;
+    		string mtlName;
+    		ss >> mtlName;
+    		mtl = shared_ptr<MTL>(make_shared<MTL>());
         } else if (lineType == "Ka") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: Ka";
         } else if (lineType == "Kd") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: Kd";
         } else if (lineType == "Ks") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: Ks";
         } else if (lineType == "Tf") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: Tf";
         } else if (lineType == "d") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: d";
         } else if (lineType == "Ns") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: Ns";
         } else if (lineType == "Ni") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: Ni";
         } else if (lineType == "illum") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: illum";
         } else if (lineType == "sharpness") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: sharpness";
         } else if (lineType == "map_Ka") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: map_Ka";
         } else if (lineType == "map_Kd") {
-        	continue;
+            string filename;
+            ss >> filename;
+            cout << "====" << resolvePath(filename, baseName(this->mtlFile)) << endl;
         } else if (lineType == "map_Ks") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: map_Ks";
         } else if (lineType == "map_Ns") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: map_Ns";
         } else if (lineType == "map_d") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: map_d";
         } else if (lineType == "disp") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: disp";
         } else if (lineType == "decal") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: decal";
         } else if (lineType == "bump") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: bump";
         } else if (lineType == "refl") {
-        	continue;
+            LOG(WARNING) << "Ignoring material attribute: refl";
         } else {
-        	continue;
+        	LOG(WARNING) << "Unrecognized material attribute: " << lineType;
         }
     }
 
@@ -283,8 +283,8 @@ shared_ptr<Mesh> ObjReader::read()
  */
 void ObjReader::parseComment(int lineNum, const string& line, istringstream& ss)
 {
-    #ifdef DEBUG
-    clog << "called ObjReader::parseComment" << endl;
+    #ifdef ENABLE_DEBUG
+    LOG(DEBUG) << "<<parseComment>>";
     #endif
 }
 
@@ -293,8 +293,8 @@ void ObjReader::parseComment(int lineNum, const string& line, istringstream& ss)
  */
 void ObjReader::parseMtllib(int lineNum, const std::string& line, std::istringstream& ss)
 {
-    #ifdef DEBUG
-    clog << "called ObjReader::parseMtllib" << endl;
+    #ifdef ENABLE_DEBUG
+    clog << "called ObjReader::parseMtllib";
     #endif	
 
     string mtlFile;
@@ -311,8 +311,8 @@ void ObjReader::parseMtllib(int lineNum, const std::string& line, std::istringst
  */
 void ObjReader::parseV(int lineNum, const std::string& line, istringstream& ss)
 {
-    #ifdef DEBUG
-    clog << "called ObjReader::parseV" << endl;
+    #ifdef ENABLE_DEBUG
+    LOG(DEBUG) << "<<parseV>>";
     #endif
 
     float vx, vy, vz;
@@ -336,8 +336,8 @@ void ObjReader::parseV(int lineNum, const std::string& line, istringstream& ss)
  */
 void ObjReader::parseVT(int lineNum, const std::string& line, istringstream& ss)
 {
-    #ifdef DEBUG
-    clog << "called ObjReader::parseVT" << endl;
+    #ifdef ENABLE_DEBUG
+    LOG(DEBUG) << "<<parseVT>>";
     #endif
 
     float vtu, vtv, vtw;
@@ -352,8 +352,8 @@ void ObjReader::parseVT(int lineNum, const std::string& line, istringstream& ss)
  */
 void ObjReader::parseVN(int lineNum, const std::string& line, istringstream& ss)
 {
-    #ifdef DEBUG
-    clog << "called ObjReader::parseVN" << endl;
+    #ifdef ENABLE_DEBUG
+    LOG(DEBUG) << "<<parseVN>>";
     #endif
 
     float vnx, vny, vnz;
@@ -396,8 +396,8 @@ ObjReader::FaceType ObjReader::classifyFaceChunk(std::string chunk)
 void ObjReader::parseF(int lineNum, int nextFaceId
                       ,const std::string& line, istringstream& ss)
 {
-    #ifdef DEBUG
-    clog << "called ObjReader::parseF" << endl;
+    #ifdef ENABLE_DEBUG
+    LOG(DEBUG) << "<<parseF>>";
     #endif
 
     // Detect which variation about we have:

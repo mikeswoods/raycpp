@@ -10,6 +10,9 @@
 #include <stdexcept>
 #include <glew/glew.h>
 #include <GLFW/glfw3.h>
+#include <easylogging++.h>
+
+INITIALIZE_EASYLOGGINGPP
 
 #include "GLSL.h"
 #include "GLUtils.h"
@@ -20,7 +23,6 @@
 #include "Camera.h"
 #include "Options.h"
 #include "Raytrace.h"
-
 //#include <chibi/eval.h>
 
 using namespace glm;
@@ -413,12 +415,12 @@ void initShader()
     // - Vertex shader
     glShaderSource(shadVert, 1, &vertexShader, nullptr);
     glCompileShader(shadVert);
-    GLUtils::printShaderInfoLog(clog, shadVert);
+    GLUtils::printShaderInfoLog(shadVert);
 
     // - Diffuse fragment shader
     glShaderSource(shadFrag, 1, &fragmentShader, nullptr);
     glCompileShader(shadFrag);
-    GLUtils::printShaderInfoLog(clog, shadFrag);
+    GLUtils::printShaderInfoLog(shadFrag);
 
     // Link the shader programs together from compiled bits
     glAttachShader(shaderProgram, shadVert);
@@ -426,7 +428,7 @@ void initShader()
     glBindFragDataLocation(shaderProgram, 0, "out_Color");
     glLinkProgram(shaderProgram);
     glUseProgram(shaderProgram);
-    GLUtils::printLinkInfoLog(clog, shaderProgram);
+    GLUtils::printLinkInfoLog(shaderProgram);
 
     // Clean up the shaders now that they are linked
     glDetachShader(shaderProgram, shadVert);
@@ -445,7 +447,7 @@ void initShader()
     unifLightPos   = glGetUniformLocation(shaderProgram, "u_LightPos");
     unifLightColor = glGetUniformLocation(shaderProgram, "u_LightColor");
 
-    GLUtils::printErrorLog(cerr);
+    GLUtils::printErrorLog();
 }
 
 /**
@@ -546,7 +548,7 @@ void display()
 
     // -------------------------------------------------------------------------
 
-    GLUtils::printErrorLog(cerr);
+    GLUtils::printErrorLog();
 }
 
 /**

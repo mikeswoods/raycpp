@@ -1,7 +1,10 @@
 #include <iostream>
-#include "../ObjReader.h"
+#include <easylogging++.h>
+#include "../ModelImport.h"
 
 using namespace std;
+
+INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char* argv[])
 {
@@ -10,8 +13,7 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    ObjReader reader(argv[1]);
-    reader.read();
+    import(argv[1]);
 
     return 0;
 }
