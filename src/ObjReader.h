@@ -15,17 +15,49 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <tuple>
+#include <map>
 #include <memory>
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include "Face.h"
 #include "Mesh.h"
+#include "Color.h"
+
 /*****************************************************************************/
 
 class MTL
 {
+	protected:
+		Color Ka, Kd, Ks;
+		float d, Ns, illum;
+		std::string mapKdFilename;
+
 	public:
 		MTL();
+		MTL(const MTL& other);
+		~MTL() { };
+
+	const Color& getKa() const  { return this->Ka; }
+	void setKa(const Color& Ka) { this->Ka = Ka; }
+
+	const Color& getKd() const  { return this->Kd; }
+	void setKd(const Color& Kd) { this->Kd = Kd; }
+
+	const Color& getKs() const  { return this->Ks; }
+	void setKs(const Color& Ks) { this->Ks = Ks; }
+
+	float getD() const { return this->d; }
+	void setD(float d) { this->d = d; }
+
+	float getNs() const { return this->Ns; }
+	void setNs(float Ns) { this->Ns = Ns; }
+
+	float getIllum() const { return this->illum; }
+	void setIllum(float illum) { this->illum = illum; }
+
+	const std::string& getMapKdFilename() const { return this->mapKdFilename; }
+	void setMapKdFilename(const std::string& mapKdFilename) { this->mapKdFilename = mapKdFilename; }
 };
 
 /*****************************************************************************/
@@ -37,9 +69,9 @@ class MTLReader
 
 	public:
 		MTLReader(const std::string& mtlFile);
-		~MTLReader();
+		~MTLReader() { };
 
-		std::shared_ptr<MTL> read();
+		std::map<std::string, std::shared_ptr<MTL>> read();
 };
 
 /*****************************************************************************/

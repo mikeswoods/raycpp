@@ -9,7 +9,7 @@
 
 #include <omp.h>
 #include <utility>
-#include <Cimg.h>
+#include <CImg.h>
 #include "Image.h"
 
 using namespace std;

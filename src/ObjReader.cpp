@@ -15,7 +15,6 @@
 #include <iterator>
 #include <algorithm>
 #include <string>
-#include <memory>
 #include <vector>
 #include <limits>
 #include "ObjReader.h"
@@ -27,7 +26,24 @@ using namespace glm;
 
 /*****************************************************************************/
 
-MTL::MTL()
+MTL::MTL() : 
+	Ka(Color::BLACK),
+	Kd(Color::BLACK),
+	Ks(Color::BLACK),
+	d(0.0f),
+	Ns(0.0f),
+	illum(0.0f)
+{
+
+}
+
+MTL::MTL(const MTL& other) : 
+	Ka(other.Ka),
+	Kd(other.Kd),
+	Ks(other.Ks),
+	d(other.d),
+	Ns(other.Ns),
+	illum(other.illum)
 {
 
 }
@@ -41,29 +57,82 @@ MTLReader::MTLReader(const string& _mtlFile) :
 
 }
 
-MTLReader::~MTLReader()
+map<string, shared_ptr<MTL>>  MTLReader::read()
 {
-
-}
-
-shared_ptr<MTL> MTLReader::read()
-{
-	shared_ptr<MTL> mtl = shared_ptr<MTL>(make_shared<MTL>());
-
+	map<string, shared_ptr<MTL>> mtlMap;
     ifstream is;
+
     is.open(this->mtlFile.c_str(), ifstream::in);
 
     if (!is.good()) {
         throw runtime_error(".mtl file '" + this->mtlFile + "' cannot be read or does not exist");
     }
 
-    string line;
+    string line, lineType;
+    shared_ptr<MTL> mtl(nullptr);
 
     while (getline(is, line)) {
-    	cout << line << endl;
+
+        line = trim(line);
+
+        if (line.length() == 0) {
+            continue;
+        }
+
+        istringstream ss(line);
+        ss >> lineType;
+
+        if (lineType == "#") {
+        	continue;
+        } else if (lineType == "newmtl") {
+        	{
+        		string mtlName;
+        		ss >> mtlName;
+        		mtl = shared_ptr<MTL>(make_shared<MTL>());
+        	}
+        	break;
+        } else if (lineType == "Ka") {
+        	continue;
+        } else if (lineType == "Kd") {
+        	continue;
+        } else if (lineType == "Ks") {
+        	continue;
+        } else if (lineType == "Tf") {
+        	continue;
+        } else if (lineType == "d") {
+        	continue;
+        } else if (lineType == "Ns") {
+        	continue;
+        } else if (lineType == "Ni") {
+        	continue;
+        } else if (lineType == "illum") {
+        	continue;
+        } else if (lineType == "sharpness") {
+        	continue;
+        } else if (lineType == "map_Ka") {
+        	continue;
+        } else if (lineType == "map_Kd") {
+        	continue;
+        } else if (lineType == "map_Ks") {
+        	continue;
+        } else if (lineType == "map_Ns") {
+        	continue;
+        } else if (lineType == "map_d") {
+        	continue;
+        } else if (lineType == "disp") {
+        	continue;
+        } else if (lineType == "decal") {
+        	continue;
+        } else if (lineType == "bump") {
+        	continue;
+        } else if (lineType == "refl") {
+        	continue;
+        } else {
+        	continue;
+        }
     }
 
-	return mtl;
+	return mtlMap;
 }
 
 /*****************************************************************************/
@@ -212,7 +281,7 @@ shared_ptr<Mesh> ObjReader::read()
 /** 
  * Parse a comment from the string stream
  */
-void ObjReader::parseComment(int lineNum, const std::string& line, istringstream& ss)
+void ObjReader::parseComment(int lineNum, const string& line, istringstream& ss)
 {
     #ifdef DEBUG
     clog << "called ObjReader::parseComment" << endl;

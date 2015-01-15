@@ -10,14 +10,12 @@
 #ifndef RAYTRACE_H
 #define RAYTRACE_H
 
-#include <Cimg.h>
-
 #include <iostream>
 #include <memory>
 #include <utility> 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
-
+#include <CImg.h>
 #include "Config.h"
 #include "Camera.h"
 #include "Ray.h"

@@ -37,8 +37,10 @@ CXXFLAGS += \
 	--std=c++11 \
 	-Wall \
 	-Wextra \
+	-pedantic \
 	-Wno-unused-parameter \
 	-Wno-unused-function \
+	-Wno-variadic-macros \
 	-ggdb
 
 ifeq ($(UNAME), Darwin)
@@ -89,8 +91,20 @@ $(PROJECT): $(OFILES)
 	$(E)Linking $@
 	$(Q)$(CXX) $(CXXFLAGS) -o $@ $(OFILES) $(LDFLAGS)
 
-test_loader:	src/test/test_loader.cpp build/ObjReader.o build/Mesh.o build/Geometry.o build/Tri.o build/KDTree.o build/Ray.o build/AABB.o build/R3.o build/Intersection.o build/Utils.o build/Face.o 
-	$(CXX) -o $@ $< $(CXXFLAGS) build/ObjReader.o build/Mesh.o build/Geometry.o build/Tri.o build/KDTree.o build/Ray.o build/AABB.o build/R3.o build/Intersection.o build/Utils.o build/Face.o 
+test_loader:	build/ObjReader.o\
+				build/Mesh.o \
+				build/Geometry.o \
+				build/Tri.o \
+				build/KDTree.o \
+				build/Ray.o \
+				build/AABB.o \
+				build/R3.o \
+				build/Intersection.o \
+				build/Utils.o \
+				build/Face.o \
+				build/Color.o \
+				src/test/test_loader.cpp
+	$(CXX) -o $@ $(CXXFLAGS) $^
 
 clean:
 	$(E)Removing files
