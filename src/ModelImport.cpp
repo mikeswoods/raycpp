@@ -28,5 +28,12 @@ void import(const string& model)
 	}
 
 
-	cout << "mNumMaterials: " << scene->mNumMaterials << endl;
+	cout << "mNumMaterials: " << scene->mNumMaterials << endl
+	     << "mNumMeshes: "    << scene->mNumMeshes    << endl;
+
+	for (unsigned int i=0; i<scene->mNumMeshes; i++) {
+		cout << "=== MESH <" << i << "> ===" << endl;
+		cout << "Name: " << scene->mMeshes[i]->mName.C_Str() << endl;
+		cout << "Faces: " << scene->mMeshes[i]->mNumFaces << endl;
+	}
 }

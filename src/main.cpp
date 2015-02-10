@@ -23,7 +23,6 @@ INITIALIZE_EASYLOGGINGPP
 #include "Camera.h"
 #include "Options.h"
 #include "Raytrace.h"
-//#include <chibi/eval.h>
 
 using namespace glm;
 using namespace std;
@@ -181,7 +180,8 @@ static void runRaytracer(bool disablePreview = false)
  */
 static void printConfigAndQuit(const Configuration& config)
 {
-    clog << config << endl;
+    LOG(INFO) << config << endl;
+
     exit(EXIT_SUCCESS);
 }
 
@@ -218,7 +218,7 @@ int main(int argc, char** argv)
     try {
         sceneContext = move(config.read());
     } catch (std::runtime_error& e) {
-        cerr << "[!] Configuration reader error: " << e.what() << endl;
+        LOG(ERROR) << "[!] Configuration reader error: " << e.what() << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -281,7 +281,7 @@ int main(int argc, char** argv)
     output = shared_ptr<CImg<unsigned char>>(make_shared<CImg<unsigned char>>(reso.x, reso.y, 1, 3, 0));
 
     if (options[PRINT_CAMERA]) {
-        clog << rayTraceCamera << endl;
+        LOG(INFO) << rayTraceCamera << endl;
     }
 
     // If no preview, rendering starts immediately:
@@ -302,11 +302,11 @@ void initPreviewWindow(int argc, char** argv, const string& title)
     GLFWwindow* window = nullptr;
 
     #ifdef DEBUG
-    clog << "- initPreviewWindow()" << endl;
+    LOG(DEBUG) << "- initPreviewWindow()" << endl;
     #endif
 
     if (!glfwInit()) {
-        cerr << "glfwInit() failed" << endl;
+        LOG(ERROR) << "glfwInit() failed" << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -323,7 +323,7 @@ void initPreviewWindow(int argc, char** argv, const string& title)
 
     window = glfwCreateWindow(windowWidth, windowHeight, title.c_str(), nullptr, nullptr);
     if (window == nullptr) {
-        cerr << "glfwCreateWindow() failed" << endl;
+        LOG(ERROR) << "glfwCreateWindow() failed" << endl;
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
@@ -332,7 +332,7 @@ void initPreviewWindow(int argc, char** argv, const string& title)
 
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {
-        cerr << "glewInit() failed" << endl;
+        LOG(ERROR) << "glewInit() failed" << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -380,7 +380,7 @@ void initPreviewWindow(int argc, char** argv, const string& title)
 void cleanup()
 {
     #ifdef DEBUG
-    clog << "- cleanup()" << endl;
+    LOG(DEBUG) << "- cleanup()" << endl;
     #endif
 
     glDeleteProgram(shaderProgram);
@@ -400,9 +400,7 @@ void finish()
  */
 void initShader()
 {
-    #ifdef DEBUG
-    clog << "- initShader()" << endl;
-    #endif
+    LOG(DEBUG) << "- initShader()" << endl;
 
     // Tell the GPU to create new shaders and a shader program
     GLuint shadVert = glCreateShader(GL_VERTEX_SHADER);
@@ -455,9 +453,7 @@ void initShader()
  */
 static void* uploadNode(shared_ptr<GraphNode> node, void* ignore, int depth)
 {
-    #ifdef DEBUG
-    clog << "-- uploadNode()" << endl;
-    #endif
+    LOG(DEBUG) << "-- uploadNode()" << endl;
 
     shared_ptr<GLGeometry> instance = node->getInstance();
 
@@ -473,9 +469,7 @@ static void* uploadNode(shared_ptr<GraphNode> node, void* ignore, int depth)
  */
 void uploadGeometry()
 {
-    #ifdef DEBUG
-    clog << "- uploadGeometry()" << endl;
-    #endif
+    LOG(DEBUG) << "- uploadGeometry()" << endl;
 
     auto root = sceneContext->getSceneGraph().getRoot();
 
@@ -556,9 +550,7 @@ void display()
  */
 void handleWindowResize(GLFWwindow* window, int width, int height)
 {
-    #ifdef DEBUG
-    clog << "- handleWindowResize() = <" << width << "," << height << ">" << endl;
-    #endif
+    LOG(DEBUG) << "- handleWindowResize() = <" << width << "," << height << ">" << endl;
 
     glViewport(0, 0, width, height);
 
@@ -583,7 +575,7 @@ void handleWindowResize(GLFWwindow* window, int width, int height)
  */
 void handleError(int error, const char* description)
 {
-    cerr << "Error: " << description << endl;
+    LOG(ERROR) << "Error: " << description << endl;
 }
 
 /**
@@ -591,9 +583,8 @@ void handleError(int error, const char* description)
  */
 void handleKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    #ifdef DEBUG
-    clog << "- handleKeyPress() = '" << key << "'" << endl;
-    #endif
+    LOG(DEBUG) << "- handleKeyPress() = '" << key << "'" << endl;
+
     switch (key) {
         case GLFW_KEY_P:
             {
