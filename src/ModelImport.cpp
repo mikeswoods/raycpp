@@ -12,9 +12,10 @@ using namespace std;
 
 /******************************************************************************/
 
-void import(const string& model)
+vector<shared_ptr<aiMesh>> import(const string& model)
 {
 	Assimp::Importer importer;
+	vector<shared_ptr<aiMesh>> meshes;
 
 	auto scene = importer.ReadFile(model
 		                          , aiProcess_FindDegenerates
@@ -27,13 +28,9 @@ void import(const string& model)
 		LOG(ERROR) << importer.GetErrorString();
 	}
 
-
-	cout << "mNumMaterials: " << scene->mNumMaterials << endl
-	     << "mNumMeshes: "    << scene->mNumMeshes    << endl;
-
 	for (unsigned int i=0; i<scene->mNumMeshes; i++) {
-		cout << "=== MESH <" << i << "> ===" << endl;
-		cout << "Name: " << scene->mMeshes[i]->mName.C_Str() << endl;
-		cout << "Faces: " << scene->mMeshes[i]->mNumFaces << endl;
+		meshes.push_back(make_shared<aiMesh>(*scene->mMeshes[i]));
 	}
+
+	return meshes;
 }

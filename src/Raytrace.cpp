@@ -288,7 +288,7 @@ static bool isOccludedFromPosition(shared_ptr<SceneContext> scene
     Ray ray(hitAt, normalize(L), Utils::EPSILON, Ray::SHADOW);
 
     return fastTestInShadow(ray, scene, selfNode, length(L));
-};
+}
 
 /*******************************************************************************
  *
@@ -329,7 +329,7 @@ static float shadow(shared_ptr<SceneContext> scene
     }
 
     return shadeFactor;
-};
+}
 
 /*******************************************************************************
  *

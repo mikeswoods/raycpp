@@ -1,4 +1,6 @@
 #include <iostream>
+#include <memory>
+#include <vector>
 #include <easylogging++.h>
 #include "../ModelImport.h"
 
@@ -13,7 +15,7 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    import(argv[1]);
+    vector<shared_ptr<aiMesh>> meshes = import(argv[1]);
 
     return 0;
 }
