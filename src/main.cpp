@@ -146,7 +146,7 @@ static void uploadGeometry();
 static void cleanup();
 static void finish();
 
-static void initPreviewWindow(int argc, char** argv, const std::string& title);
+static void initGLPreviewWindow(int argc, char** argv, const std::string& title);
 static void display();
 static void handleWindowResize(GLFWwindow* window, int width, int height);
 static void handleError(int error, const char* description);
@@ -178,10 +178,9 @@ static void runRaytracer(bool disablePreview = false)
 /**
  * Dump the configuration settings to stdout and quit
  */
-static void printConfigAndQuit(const Configuration& config)
+static void printConfigAndQuit(shared_ptr<Configuration>& config)
 {
     LOG(INFO) << config << endl;
-
     exit(EXIT_SUCCESS);
 }
 
@@ -197,29 +196,36 @@ int main(int argc, char** argv)
     argc -= argc > 0;
     argv += argc > 0;
 
+    shared_ptr<Configuration> config(nullptr);
+    vec2 resolution;
     option::Stats  stats(usage, argc, argv);
-    option::Option options[64], buffer[4096];
+
+    option::Option* options = new option::Option[stats.options_max];
+    option::Option* buffer  = new option::Option[stats.buffer_max];
+
     option::Parser parse(usage, argc, argv, options, buffer);
 
-    if (parse.error()) {
-        exit(EXIT_FAILURE);
-    }
-
-    if (options[HELP] || argc == 0) {
+    if (parse.error() || options[HELP] || argc == 0) {
+        if (parse.error()) {
+            LOG(ERROR) << "[!] option parse error" << endl;
+        }
         option::printUsage(std::cout, usage);
-        exit(EXIT_SUCCESS);
+        goto failure;
     }
 
     // Seed PRNG
-    srand((unsigned int)time(nullptr));
+    srand(static_cast<unsigned int>(time(nullptr)));
 
     // Parse configuration
-    Configuration config(argv[argc-1]);
+    config = make_shared<Configuration>(argv[argc-1]);
     try {
-        sceneContext = move(config.read());
+
+        sceneContext = move(config->read());
+
     } catch (std::runtime_error& e) {
+
         LOG(ERROR) << "[!] Configuration reader error: " << e.what() << endl;
-        exit(EXIT_FAILURE);
+        goto failure;
     }
 
     // Dump configuration to stdout
@@ -235,8 +241,8 @@ int main(int argc, char** argv)
 
     // Samples per pixel:
     if (options[SAMPLES_PER_PIXEL].count() > 0) {
-        const char* str = options[SAMPLES_PER_PIXEL].first()->arg;
-        if (str != nullptr) {
+        auto str = options[SAMPLES_PER_PIXEL].first()->arg;
+        if (str) {
             traceOptions->samplesPerPixel = Utils::parseNumber(string(str), TraceOptions::SAMPLES_PER_PIXEL_DEFAULT);
         } else {
             traceOptions->samplesPerPixel = TraceOptions::SAMPLES_PER_PIXEL_DEFAULT;
@@ -245,8 +251,8 @@ int main(int argc, char** argv)
 
     // Samples per light:
     if (options[SAMPLES_PER_LIGHT].count() > 0) {
-        const char* str = options[SAMPLES_PER_LIGHT].first()->arg;
-        if (str != nullptr) {
+        auto str = options[SAMPLES_PER_LIGHT].first()->arg;
+        if (str) {
             traceOptions->samplesPerLight = Utils::parseNumber(string(str), TraceOptions::SAMPLES_PER_LIGHT_DEFAULT);
         } else {
             traceOptions->samplesPerLight = TraceOptions::SAMPLES_PER_LIGHT_DEFAULT;
@@ -274,11 +280,11 @@ int main(int argc, char** argv)
     }
 
     // Initialize raytracer code:
-    vec2 reso = sceneContext->getResolution();
+    resolution = sceneContext->getResolution();
     initRaytrace(rayTraceCamera, sceneContext);
 
     // Dimension the output image:
-    output = shared_ptr<CImg<unsigned char>>(make_shared<CImg<unsigned char>>(reso.x, reso.y, 1, 3, 0));
+    output = shared_ptr<CImg<unsigned char>>(make_shared<CImg<unsigned char>>(resolution.x, resolution.y, 1, 3, 0));
 
     if (options[PRINT_CAMERA]) {
         LOG(INFO) << rayTraceCamera << endl;
@@ -288,21 +294,28 @@ int main(int argc, char** argv)
     if (options[DISABLE_PREVIEW]) {
         runRaytracer(true);
     } else {
-        initPreviewWindow(argc, argv, "OpenGL Preview");
+        initGLPreviewWindow(argc, argv, "raycpp :: OpenGL Preview");
     }
 
     exit(EXIT_SUCCESS);
+
+failure:
+    
+    delete[] options;
+    delete[] buffer;
+
+    exit(EXIT_FAILURE);
 }
 
 /**
  * Initializes the OpenGL preview window
  */
-void initPreviewWindow(int argc, char** argv, const string& title)
+void initGLPreviewWindow(int argc, char** argv, const string& title)
 {
     GLFWwindow* window = nullptr;
 
     #ifdef DEBUG
-    LOG(DEBUG) << "- initPreviewWindow()" << endl;
+    LOG(DEBUG) << "- initGLPreviewWindow()" << endl;
     #endif
 
     if (!glfwInit()) {

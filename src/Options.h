@@ -102,16 +102,7 @@ const option::Descriptor usage[] =
         ,option::Arg::Optional
         ,"  -A/--aa \t\tSpecifies the number of primary rays used to sample each pixel."
     },
-    {
-         UNKNOWN
-        ,0
-        ,""
-        ,""
-        ,option::Arg::None_
-        ,"\nExamples:\n"
-         "  example --unknown -- --this_is_no_option\n"
-         "  example -unk --plus -ppp file1 file2\n" 
-    }
+    {0,0,0,0,0,0}
 };
 
 /******************************************************************************/
