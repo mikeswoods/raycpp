@@ -14,6 +14,8 @@
 #include <cmath>
 #include "GLWorldState.h"
 
+/******************************************************************************/
+
 using namespace std;
 
 /******************************************************************************/
@@ -397,3 +399,5 @@ void GLWorldState::shiftGlobalLightHue()
 	this->globalLightHue    = fmod(globalLightHue + HUE_UNIT, 360.0f);
 	previewLight.setColor(Color::fromHSV(this->globalLightHue, 0.75f, 1.0f));
 }
+
+/******************************************************************************/

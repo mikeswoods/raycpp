@@ -19,10 +19,13 @@
 
 using namespace std;
 
-////////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/
 
-
-Camera::Camera(const P &position, const V &viewDir, const V &up, float fov, float aspectRatio)
+Camera::Camera(const P &position
+              ,const V &viewDir
+              ,const V &up
+              ,float fov
+              ,float aspectRatio)
 {
     this->position    = position;
     this->viewDir     = viewDir;
@@ -35,7 +38,10 @@ Camera::Camera(const P &position, const V &viewDir, const V &up, float fov, floa
     this->calibrateViewPlane();
 }
 
-Camera::Camera(const P &position, const V &viewDir, float fov, float aspectRatio)
+Camera::Camera(const P &position
+              ,const V &viewDir
+              ,float fov
+              ,float aspectRatio)
 {
     this->position    = position;
     this->viewDir     = viewDir;
@@ -216,3 +222,5 @@ void Camera::calibrateViewPlane()
     this->viewPlaneX = (this->u * Wbar * this->theta) / Ubar;    
     this->viewPlaneY = (this->v * Wbar * this->phi) / Vbar;
 }
+
+/******************************************************************************/

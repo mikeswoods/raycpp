@@ -20,6 +20,8 @@
 #include "Config.h"
 #include "PointLight.h"
 
+/******************************************************************************/
+
 #define TRANSLATE_BY_UNIT 0.5f
 //#define ROTATE_BY_UNIT 10.0f
 

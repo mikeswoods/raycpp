@@ -12,6 +12,8 @@
 #include <CImg.h>
 #include "Image.h"
 
+/******************************************************************************/
+
 using namespace std;
 using namespace cimg_library;
 
@@ -95,3 +97,4 @@ unique_ptr<float[]> edges(const Image& input, int w, int h, float& avgIntensity)
     return move(edgeMap);
 }
 
+/******************************************************************************/

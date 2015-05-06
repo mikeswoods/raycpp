@@ -24,11 +24,14 @@ INITIALIZE_EASYLOGGINGPP
 #include "Options.h"
 #include "Raytrace.h"
 
+/******************************************************************************/
+
 using namespace glm;
 using namespace std;
 using namespace cimg_library;
 
-// Raytracer related 
+/******************************************************************************/
+
 static Camera rayTraceCamera;
 static shared_ptr<Image> output;
 
@@ -45,7 +48,7 @@ static GLint unifEyePos;
 static GLint unifLightPos;
 static GLint unifLightColor;
 
-// Shaders 
+// Shader programs:
 static GLuint shaderProgram;
 
 /*******************************************************************************

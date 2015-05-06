@@ -28,7 +28,11 @@
 #include "AreaLight.h"
 #include "SurfaceMap.h"
 
+/******************************************************************************/
+
 using namespace std;
+
+/******************************************************************************/
 
 #if defined(_WIN32) || defined(_WIN64)
 	#define DirSep "\\"
@@ -36,7 +40,7 @@ using namespace std;
 	#define DirSep "/"
 #endif
 
-/*****************************************************************************/
+/******************************************************************************/
 
 Configuration::Configuration(const string& _filename) :
 	filename(_filename),

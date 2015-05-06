@@ -19,4 +19,6 @@ namespace Sampling {
 	glm::vec3 getCosineWeightedDirection(const glm::vec3& normal);
 }
 
+/******************************************************************************/
+
 #endif

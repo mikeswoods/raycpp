@@ -12,6 +12,8 @@
 #include <easylogging++.h>
 #include "GLUtils.h"
 
+/******************************************************************************/
+
 using namespace std;
 
 /******************************************************************************/
@@ -108,3 +110,5 @@ void GLUtils::printShaderInfoLog(GLint shader)
     // Throwing here allows us to use the debugger to track down the error.
     throw;
 }
+
+/******************************************************************************/

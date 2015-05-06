@@ -13,9 +13,11 @@
 #include "GLGeometry.h"
 #include "GLWorldState.h"
 
+/******************************************************************************/
+
 using namespace std;
 
-/*****************************************************************************/
+/******************************************************************************/
 
 GLGeometry::GLGeometry(shared_ptr<Geometry> _geometry) :
 	geometry(_geometry),
@@ -120,7 +122,6 @@ void GLGeometry::draw(const GLWorldState& state
 {
     glUseProgram(shaderProgram);
 
-    // === Current affine transformation ======================================
     glUniformMatrix4fv(unifModel, 1, GL_FALSE, &affine[0][0]);
 
     const glm::mat4 modelInvTranspose = glm::inverse(glm::transpose(affine));
@@ -132,4 +133,4 @@ void GLGeometry::draw(const GLWorldState& state
     glBindVertexArray(0);
 }
 
-/*****************************************************************************/
+/******************************************************************************/

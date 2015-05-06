@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <cmath>
 
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/
 
 glm::vec3 Sampling::getCosineWeightedDirection(const glm::vec3& normal) 
 {
@@ -39,4 +39,4 @@ glm::vec3 Sampling::getCosineWeightedDirection(const glm::vec3& normal)
 	return (up * normal) + (X * perpendicularDirection1) + (Y * perpendicularDirection2);
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************/

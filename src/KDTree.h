@@ -23,7 +23,8 @@
 // Safety measure to prevent the stack + heap from blowing up
 #define DEEPEST_DEPTH_ALLOWED 45
 
-// Forward declarations
+/******************************************************************************/
+
 class NodeChild;
 class SplitStrategy;
 

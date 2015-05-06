@@ -6,10 +6,12 @@
 #include "AreaLight.h"
 #include "SceneContext.h"
 
+/******************************************************************************/
+
 using namespace std;
 using namespace glm;
 
-/*****************************************************************************/
+/******************************************************************************/
 
 GraphNode::GraphNode(const string& _name) :
 	name(_name),
@@ -117,7 +119,7 @@ mat4 applyTransform(shared_ptr<GraphNode> node, mat4 current)
 	return current * (translate(I, T) * RM * scale(I, S));
 }
 
-/*****************************************************************************/
+/******************************************************************************/
 
 Graph::Graph()
 { 
@@ -129,7 +131,7 @@ Graph::Graph(shared_ptr<GraphNode> root)
 	this->root = root;
 }
 
-/*****************************************************************************/
+/******************************************************************************/
 
 /**
  * Accumulator function used to fold over the scene graph collecting
@@ -172,7 +174,7 @@ unique_ptr<LIGHTS> Graph::areaLights() const
 	return unique_ptr<list<shared_ptr<Light>>>(lights);
 }
 
-/*****************************************************************************/
+/******************************************************************************/
 
 static ostream* walkAndPrint(std::shared_ptr<GraphNode> node, ostream* os, int depth)
 {
@@ -189,4 +191,4 @@ ostream& operator<<(ostream& os, const Graph& graph)
 	return os;
 }
 
-/*****************************************************************************/
+/******************************************************************************/

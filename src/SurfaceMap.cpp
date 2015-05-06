@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
  *
  * A surface map class that can map bitmap data as both color and 
  * normal intensity (bump) information
@@ -6,7 +6,7 @@
  * @file SurfaceMap.h
  * @author Michael Woods
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 #define _USE_MATH_DEFINES
 #include <algorithm>
@@ -16,9 +16,13 @@
 #include "SurfaceMap.h"
 #include "Utils.h"
 
+/******************************************************************************/
+
 using namespace std;
 using namespace glm;
 using namespace cimg_library;
+
+/******************************************************************************/
 
 #define USE_BILINEAR_FILTERING 1
 

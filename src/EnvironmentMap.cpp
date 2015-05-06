@@ -12,6 +12,8 @@
 #include <iostream>
 #include "EnvironmentMap.h"
 
+/******************************************************************************/
+
 using namespace std;
 
 /*******************************************************************************
@@ -156,3 +158,5 @@ Color TextureEnvironmentMap::getColor(float u, float v) const
 {
 	return TextureMap::getColor(u, v);
 }
+
+/******************************************************************************/

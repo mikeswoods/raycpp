@@ -21,9 +21,12 @@
 #include "KDTree.h"
 #include "Utils.h"
 
+/******************************************************************************/
+
 using namespace std;
 
-// Forward declarations:
+/******************************************************************************/
+
 static AABB findExtent(const std::vector<Tri>& triangles);
 
 static NodeChild const * build(const std::vector<Tri>& triangles
@@ -745,3 +748,5 @@ void generateSummary(KDTree const * tree
 	}
 	out << endl;
 }
+
+/******************************************************************************/

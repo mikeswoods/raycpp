@@ -11,7 +11,11 @@
 #include "SceneContext.h"
 #include "Utils.h"
 
+/******************************************************************************/
+
 using namespace std;
+
+/******************************************************************************/
 
 SceneContext::SceneContext(const glm::vec2& _resolution
                           ,const glm::vec3& _eyePosition
@@ -40,3 +44,5 @@ SceneContext::~SceneContext()
 {
 
 }
+
+/******************************************************************************/
