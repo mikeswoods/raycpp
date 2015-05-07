@@ -24,8 +24,9 @@ vector<shared_ptr<aiMesh>> Model::importMeshes(const string& model)
 		               | aiProcess_CalcTangentSpace
 		               | aiProcess_Triangulate
 		               | aiProcess_JoinIdenticalVertices
-		               | aiProcess_GenNormals
+		               | aiProcess_GenSmoothNormals
 		               | aiProcess_ImproveCacheLocality
+		               | aiProcess_SplitLargeMeshes
 		               | aiProcess_SortByPType;
 
 	importer.ReadFile(model, flags);
