@@ -20,6 +20,8 @@
 #include <cstdlib>
 #include "Utils.h"
 
+/******************************************************************************/
+
 using namespace std;
 using namespace glm;
 
@@ -179,6 +181,23 @@ vec3 Utils::fixUpVector(const vec3& viewDir, const vec3& up)
     return up;
 }
 
+/**
+ * Homogenous coordinate transformation on a point or vector. 
+ *
+ * If the fourth/"w" component of V is 0, V is interpreted as a vector, 
+ * otherwise, it is interpreted as a position.
+ */
+vec3 transform(mat4 T, vec4 V)
+{
+    vec4 result = T * V;
+    if (V.w != 0.0f) { // Points
+        float w = result.w == 0.0f ? 1.0f : result.w;
+        return glm::vec3(result.x / w, result.y / w, result.z / w);
+    } else { // Vector
+        return glm::vec3(result);
+    }
+}
+
 /*******************************************************************************
  * Geometry functions
  ******************************************************************************/
@@ -301,7 +320,7 @@ string Utils::trim(const string& s)
  */
 string Utils::uppercase(string s)
 {
-	transform(s.begin(), s.end(), s.begin(), ::toupper);
+	std::transform(s.begin(), s.end(), s.begin(), ::toupper);
 	return s;
 }
 
@@ -310,7 +329,7 @@ string Utils::uppercase(string s)
  */
 string Utils::lowercase(string s)
 {
-	transform(s.begin(), s.end(), s.begin(), ::tolower);
+	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
 	return s;
 }
 

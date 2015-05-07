@@ -11,8 +11,9 @@
  ******************************************************************************/
 
 #include <iostream>
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
 #include "Light.h"
-#include "R3.h"
 #include "Color.h"
 
 /******************************************************************************/

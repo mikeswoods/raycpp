@@ -82,7 +82,7 @@ class Geometry
 		virtual const BoundingVolume& getVolume() const { return this->volume; }
 
 		// Returns the centroid of the geometric object
-		virtual const P& getCentroid() const = 0;
+		virtual const glm::vec3& getCentroid() const = 0;
 
 		// Returns the axis-aligned bounding box of the object
 		virtual const AABB& getAABB() const = 0;

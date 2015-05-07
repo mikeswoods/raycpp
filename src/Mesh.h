@@ -14,10 +14,11 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
 #include <memory>
 #include <tuple>
 #include <vector>
-#include "R3.h"
 #include "Geometry.h"
 #include "Tri.h"
 #include "KDTree.h"

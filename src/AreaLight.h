@@ -15,7 +15,6 @@
 #include <memory>
 #include <iostream>
 #include "Light.h"
-#include "R3.h"
 #include "Graph.h"
 
 /******************************************************************************/
@@ -24,7 +23,7 @@ class AreaLight : public Light
 {
 	protected:
 		// The centroid of the light in world space
-		P centroidWorld;
+		glm::vec3 centroidWorld;
 
 		// Graph node that acts as the light source:
 		std::shared_ptr<GraphNode> node;
@@ -42,12 +41,12 @@ class AreaLight : public Light
 		std::shared_ptr<GraphNode> getNode() { return this->node; }
 		const glm::mat4& getT()              { return this->T; }
 
-		virtual V fromCenter(const P& from) const;
+		virtual glm::vec3 fromCenter(const glm::vec3& from) const;
 
-		virtual V fromSampledPoint(const P& from) const;
-		virtual V fromSampledPoint(const P& from, float& cosineAngle) const;
+		virtual glm::vec3 fromSampledPoint(const glm::vec3& from) const;
+		virtual glm::vec3 fromSampledPoint(const glm::vec3& from, float& cosineAngle) const;
 
-		virtual Color getColor(const P& from) const;
+		virtual Color getColor(const glm::vec3& from) const;
 
 		virtual bool isLightSourceNode(std::shared_ptr<GraphNode> testNode) const;
 };

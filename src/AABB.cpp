@@ -11,17 +11,15 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
-#include "R3.h"
 #include "AABB.h"
 #include "Utils.h"
-
-using namespace std;
 
 /******************************************************************************/
 
 AABB::AABB() :
-	Vs(tuple<P,P>(P(), P())),
-	C(P()),
+	v1(glm::vec3()),
+    v2(glm::vec3()),
+	C(glm::vec3()),
     _width(this->computeWidth()),
     _height(this->computeHeight()),
     _depth(this->computeDepth()),
@@ -30,19 +28,20 @@ AABB::AABB() :
 
 }
 
-AABB::AABB(const P& v1, const P& v2) :
-    Vs(tuple<P,P>(v1, v2)),
+AABB::AABB(const glm::vec3& _v1, const glm::vec3& _v2) :
+    v1(_v1),
+    v2(_v2),
     _width(this->computeWidth()),
     _height(this->computeHeight()),
     _depth(this->computeDepth()),
     _area(this->computeArea())
 {
-    this->C = mean(get<0>(this->Vs), get<1>(this->Vs));
+    this->C = (this->v1 + this->v2) * 0.5f;
 }
 
 AABB::AABB(const AABB& other) :
-    Vs(other.Vs),
-    C(other.C),
+    v1(other.v1),
+    v2(other.v2),
     _width(other._width),
     _height(other._height),
     _depth(other._depth),
@@ -56,42 +55,42 @@ AABB::AABB(const AABB& other) :
  */
 bool AABB::intersected(const Ray& ray) const
 {
-	float xd  = x(ray.dir);
-    float yd  = y(ray.dir);
-    float zd  = z(ray.dir);
+	float xd  = ray.dir.x;
+    float yd  = ray.dir.y;
+    float zd  = ray.dir.z;
 	float eps = Utils::EPSILON;
 
-    if (xd == 0) {
+    if (xd == 0.0f) {
         xd = eps;
     }
-    if (yd == 0) {
+    if (yd == 0.0f) {
         yd = eps;
     }
-    if (zd == 0) {
+    if (zd == 0.0f) {
         zd = eps;
     }
 
-    float x1 = (x(get<0>(this->Vs)) - x(ray.orig)) / xd;
-    float x2 = (x(get<1>(this->Vs)) - x(ray.orig)) / xd;
-    float y1 = (y(get<0>(this->Vs)) - y(ray.orig)) / yd;
-    float y2 = (y(get<1>(this->Vs)) - y(ray.orig)) / yd;
-    float z1 = (z(get<0>(this->Vs)) - z(ray.orig)) / zd;
-    float z2 = (z(get<1>(this->Vs)) - z(ray.orig)) / zd;
+    float x1 = (this->v1.x - ray.orig.x) / xd;
+    float x2 = (this->v2.x - ray.orig.x) / xd;
+    float y1 = (this->v1.y - ray.orig.y) / yd;
+    float y2 = (this->v2.y - ray.orig.y) / yd;
+    float z1 = (this->v1.z - ray.orig.z) / zd;
+    float z2 = (this->v2.z - ray.orig.z) / zd;
 
     if (x1 > x2) {
-		swap(x1,x2);
+		std::swap(x1, x2);
     }
     if (y1 > y2) {
-		swap(y1,y2);
+		std::swap(y1, y2);
     }
     if (z1 > z2) {
-		swap(z1,z2);   
+		std::swap(z1, z2);   
     }
 
-    float tNear = max(x1, max(y1, z1));
-    float tFar  = min(x2, min(y2, z2));
+    float tNear = std::max(x1, std::max(y1, z1));
+    float tFar  = std::min(x2, std::min(y2, z2));
 
-    if (tNear > tFar || tFar < 0) {
+    if (tNear > tFar || tFar < 0.0f) {
         return false;
     }
 
@@ -103,8 +102,7 @@ bool AABB::intersected(const Ray& ray) const
  */
 float AABB::computeWidth() const
 {
-    return max(x(get<0>(this->Vs)), x(get<1>(this->Vs))) - 
-           min(x(get<0>(this->Vs)), x(get<1>(this->Vs))); 
+    return std::max(this->v1.x, this->v2.x) - std::min(this->v1.x, this->v2.x);
 }
 
 /**
@@ -112,8 +110,7 @@ float AABB::computeWidth() const
  */
 float AABB::computeHeight() const
 {
-    return max(y(get<0>(this->Vs)), y(get<1>(this->Vs))) - 
-           min(y(get<0>(this->Vs)), y(get<1>(this->Vs)));
+    return std::max(this->v1.y, this->v2.y) - std::min(this->v1.y, this->v2.y);
 }
 
 /**
@@ -121,8 +118,7 @@ float AABB::computeHeight() const
  */
 float AABB::computeDepth() const
 {
-    return max(z(get<0>(this->Vs)), z(get<1>(this->Vs))) -  
-           min(z(get<0>(this->Vs)), z(get<1>(this->Vs)));
+    return std::max(this->v1.z, this->v2.z) - std::min(this->v1.z, this->v2.z);
 }
 
 /**
@@ -135,29 +131,23 @@ float AABB::computeArea() const
 
 AABB& AABB::operator+=(const AABB &other)
 {
-    AABB t = *this + other;
-    get<0>(this->Vs) = get<0>(t.Vs);
-    get<1>(this->Vs) = get<1>(t.Vs);
+    AABB t   = *this + other;
+    this->v1 = t.v1;
+    this->v2 = t.v2;
     return *this;
 }
 
 /******************************************************************************/
 
-ostream& operator<<(ostream& s, const AABB& aabb)
+std::ostream& operator<<(std::ostream& s, const AABB& aabb)
 {
-	return s << "<[" 
-             << get<0>(aabb.Vs) 
-             << ", " 
-             << get<0>(aabb.Vs) 
-             << "]>";
+	//return s << "<["<< aabb.v1 << ", "<< aabb.v2 << "]>";
 }
 
 const AABB operator+(const AABB& p, const AABB& q)
 {
-    return AABB(minimum(minimum(get<0>(p.Vs), get<1>(p.Vs))
-                       ,minimum(get<0>(q.Vs), get<1>(q.Vs)))
-               ,maximum(maximum(get<0>(p.Vs), get<1>(p.Vs))
-                       ,maximum(get<0>(q.Vs), get<1>(q.Vs))));
+    return AABB(glm::min(glm::min(p.v1, p.v2) ,glm::min(q.v1, q.v2))
+               ,glm::max(glm::max(p.v1, p.v2) ,glm::max(q.v1, q.v2)));
 }
 
 /******************************************************************************/

@@ -10,7 +10,6 @@
 #ifndef BOUNDING_VOLUME_H
 #define BOUNDING_VOLUME_H
 
-#include "R3.h"
 #include "Ray.h"
 
 /*******************************************************************************
@@ -49,13 +48,12 @@ class TrivialVolume : public BoundingVolume
 class BoundingSphere : public BoundingVolume
 {
 	protected:
-		P center;
+		glm::vec3 center;
 		float radius;
 
 	public:
 		BoundingSphere();
 		BoundingSphere(const glm::vec3& _center, float _radius);
-		BoundingSphere(const P& _center, float _radius);
 		BoundingSphere(const BoundingSphere& other);
 
 		virtual bool intersects(const Ray& ray) const;

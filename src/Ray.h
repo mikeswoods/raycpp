@@ -11,11 +11,8 @@
 #define RAY_H
 
 #include <iostream>
-
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
-
-#include "R3.h"
 
 /******************************************************************************/
 
@@ -33,7 +30,7 @@ struct Ray
 	glm::vec3 orig;
 
 	// Ray direction (may not be normalized)
-	V dir;
+	glm::vec3 dir;
 
 	// Ray type
 	RayType type;
@@ -62,23 +59,23 @@ struct Ray
 		this->nudge(epsilon);
 	}
 
-	Ray(const P& o, const V& d) :
-		orig(o.xyz),
-		dir(d),
+	Ray(const glm::vec3& _orig, const glm::vec3& _dir) :
+		orig(_orig),
+		dir(_dir),
 		type(PRIMARY)
 	{ }
 
-	Ray(const P& o, const V& d, float epsilon) :
-		orig(o.xyz),
-		dir(d),
+	Ray(const glm::vec3& _orig, const glm::vec3& _dir, float epsilon) :
+		orig(_orig),
+		dir(_dir),
 		type(PRIMARY)
 	{ 
 		this->nudge(epsilon);	
 	}
 
-	Ray(const P& o, const V& d, float epsilon, RayType _type) :
-		orig(o.xyz),
-		dir(d),
+	Ray(const glm::vec3& _orig, const glm::vec3& _dir, float epsilon, RayType _type) :
+		orig(_orig),
+		dir(_dir),
 		type(_type)
 	{ 
 		this->nudge(epsilon);	
@@ -94,7 +91,7 @@ struct Ray
 	Ray normalized() const;
 
 	// Project a magnitude along the ray yielding a position
-	P project(float t) const;
+	glm::vec3 project(float t) const;
 
 	// "Nudges" the position of the ray along the direction by epsilon
 	void nudge(float epsilon);

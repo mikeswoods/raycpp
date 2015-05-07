@@ -12,11 +12,14 @@
 #include <memory>
 #include "AreaLight.h"
 
+/******************************************************************************/
+
 using namespace std;
+using namespace glm;
 
 /******************************************************************************/
 
-AreaLight::AreaLight(shared_ptr<GraphNode> _node, glm::mat4 _T) :
+AreaLight::AreaLight(shared_ptr<GraphNode> _node, mat4 _T) :
 	Light(AREA_LIGHT),
 	node(_node),
 	T(_T)
@@ -25,7 +28,7 @@ AreaLight::AreaLight(shared_ptr<GraphNode> _node, glm::mat4 _T) :
 
 	assert(!!geometry);
 
-	this->centroidWorld = P(transform(this->T, glm::vec4(geometry->getCentroid().xyz, 1.0f)));
+	this->centroidWorld = vec3(Utils::transform(this->T, vec4(geometry->getCentroid(), 1.0f)));
 }
 
 AreaLight::AreaLight(const AreaLight& other) :
@@ -37,22 +40,22 @@ AreaLight::AreaLight(const AreaLight& other) :
 	
 }
 
-void AreaLight::repr(std::ostream& s) const
+void AreaLight::repr(ostream& s) const
 {
 	s << "AreaLight { }";
 }
 
-V AreaLight::fromCenter(const P& from) const
+vec3 AreaLight::fromCenter(const vec3& from) const
 {
 	shared_ptr<Geometry> geometry = this->node->getGeometry();
 
 	assert(!!geometry);
 
 	// Necessary b/c we have to transform the centroid in object space to world space:
-	return this->centroidWorld.xyz - from.xyz;
+	return this->centroidWorld - from;
 }
 
-V AreaLight::fromSampledPoint(const P& from) const
+vec3 AreaLight::fromSampledPoint(const vec3& from) const
 {
 	shared_ptr<Geometry> geometry = this->node->getGeometry();
 
@@ -61,22 +64,22 @@ V AreaLight::fromSampledPoint(const P& from) const
 	return geometry->sample(this->T) - from;
 }
 
-V AreaLight::fromSampledPoint(const P& from, float& cosineAngle) const
+vec3 AreaLight::fromSampledPoint(const vec3& from, float& cosineAngle) const
 {
 	shared_ptr<Geometry> geometry  = this->node->getGeometry();
 
 	assert(!!geometry);
 
-	P samplePoint = geometry->sample(this->T);
-	P centroid    = geometry->getCentroid();
-	V L           = samplePoint - from;
-	V D           = samplePoint - centroid;
-	cosineAngle   = glm::dot(glm::normalize(L), glm::normalize(D));
+	vec3 samplePoint = geometry->sample(this->T);
+	vec3 centroid    = geometry->getCentroid();
+	vec3 L           = samplePoint - from;
+	vec3 D           = samplePoint - centroid;
+	cosineAngle      = dot(normalize(L), normalize(D));
 
 	return L;
 }
 
-Color AreaLight::getColor(const P& from) const
+Color AreaLight::getColor(const vec3& from) const
 {
 	shared_ptr<Material> mat = this->node->getMaterial();
 

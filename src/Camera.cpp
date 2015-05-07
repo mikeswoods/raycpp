@@ -12,7 +12,6 @@
 #include <cmath>
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
-#include "R3.h"
 #include "Ray.h"
 #include "Camera.h"
 #include "Utils.h"

@@ -10,8 +10,9 @@
 #ifndef AABB_H
 #define AABB_H
 
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
 #include <tuple>
-#include "R3.h"
 #include "Ray.h"
 
 /*****************************************************************************/
@@ -32,20 +33,17 @@ class AABB
 		float computeArea() const;
 
 	protected:
-		std::tuple<P,P> Vs; // Vertices defining the AABB
-		P C;                // The centroid of the AABB
+		glm::vec3 v1, v2; // Vertices defining the AABB
+		glm::vec3 C;      // The centroid of the AABB
 		float _width, _height, _depth, _area;
 
 	public:
 		AABB();
-		AABB(const P& v1, const P& v2);
+		AABB(const glm::vec3& v1, const glm::vec3& v2);
 		AABB(const AABB& other);
 
-		// Get the pair of vertices comprising the AABB
-		const std::tuple<P,P>& vertices() const { return this->Vs; }
-
 		// Returns the centroid of the AABB
-		const P& centroid() const { return this->C; }
+		const glm::vec3& centroid() const { return this->C; }
 
 		// Returns the width (x) of the AABB
 		float width() const { return this->_width; };

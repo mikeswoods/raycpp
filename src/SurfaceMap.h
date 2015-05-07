@@ -17,7 +17,6 @@
 #include <glm/glm.hpp>
 #include "Image.h"
 #include "Color.h"
-#include "R3.h"
 #include "Geometry.h"
 
 /*******************************************************************************

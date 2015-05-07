@@ -19,7 +19,6 @@
 #include <stack>
 #include <queue>
 #include <memory>
-#include "R3.h"
 #include "Color.h"
 #include "Material.h"
 #include "Geometry.h"
@@ -59,7 +58,7 @@ class GraphNode
 		glm::vec3 S;
 
 		// [x,y,z] center point
-		P center;
+		glm::vec3 center;
 
 	public:
 		GraphNode(const std::string& name);
@@ -112,8 +111,8 @@ class GraphNode
 		void scaleYBy(float amt)                { this->S[1] += amt; }
 		void scaleZBy(float amt)                { this->S[2] += amt; }
 
-		const P& getCenter() const      { return this->center; }
-		void setCenter(const P& center) { this->center = center; }
+		const glm::vec3& getCenter() const      { return this->center; }
+		void setCenter(const glm::vec3& center) { this->center = center; }
 
 		std::shared_ptr<Material> getMaterial() const { return this->material; }
 		void setMaterial(std::shared_ptr<Material> material) { this->material = material; }

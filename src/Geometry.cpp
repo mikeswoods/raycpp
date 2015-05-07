@@ -11,8 +11,9 @@
 
 #include <sstream>
 #include "Geometry.h"
- #include "Graph.h"
-#include "R3.h"
+#include "Graph.h"
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
 
 /******************************************************************************/
 

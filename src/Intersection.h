@@ -12,10 +12,9 @@
 #include <iostream>
 #define _USE_MATH_DEFINES
 #include <cmath>
-#define GLM_FORCE_RADIANS
 #include <memory>
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
-#include "R3.h"
 
 /******************************************************************************/
 
@@ -37,16 +36,16 @@ class Intersection
 		std::shared_ptr<GraphNode> node;
 
 	    // The surface normal at the point of intersection. (Ignored if t < 0.)
-	    V normal;
+	    glm::vec3 normal;
 
 		// If the intersection occurred inside an object, this flag will be set
 		bool inside;
 
 		// Hit position in world space. Only valid if t >= 0
-		P hitWorld;
+		glm::vec3 hitWorld;
 
 		// Hit position in local space. Only valid if t >= 0
-		P hitLocal;
+		glm::vec3 hitLocal;
 
 		// Flag to indicate if the normal's direction should be corrected 
 		// (i.e flipped) if it is pointing away from the ray's origin
@@ -66,8 +65,8 @@ class Intersection
 
 		// Miss constructor by default:
 		Intersection();
-		Intersection(float _t, V _normal);
-		Intersection(float _t, float _density, V _normal);
+		Intersection(float _t, glm::vec3 _normal);
+		Intersection(float _t, float _density, glm::vec3 _normal);
 		//Intersection(const Intersection& other) ;
 
 		// Is the intersection a miss?

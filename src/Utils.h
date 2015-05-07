@@ -89,6 +89,10 @@ namespace Utils
 	// Returns the smallest of two values >= zero
 	bool leastGreaterThanZero(float x, float y, float& smallest);
 
+
+    // Homogenous coordinate transformation on a point or vector. 
+    glm::vec3 transform(glm::mat4 T, glm::vec4 V);
+
     // Geometry functions //////////////////////////////////////////////////////
 
     // Tests if the ray defined by origin and dir intersects the plane specified

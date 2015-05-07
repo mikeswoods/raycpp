@@ -12,7 +12,8 @@
 #define CAMERA_H
 
 #include <iostream>
-#include "R3.h"
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
 #include "Ray.h"
 
 /******************************************************************************/
