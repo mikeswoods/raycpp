@@ -23,32 +23,11 @@ using namespace std;
 
 /******************************************************************************/
 
-ostream& operator<<(ostream& s, const VNIndex& vnIndex)
-{
-    s << "{ " << get<0>(vnIndex)
-      << ", " << get<1>(vnIndex)
-      << ", " << get<2>(vnIndex)
-      << "}";
-    return s;
-}
-
-/******************************************************************************/
-
-Mesh::Mesh(const vector<glm::vec3>& vertices
-          ,const vector<glm::vec3>& normals
-          ,const vector<glm::vec3>& textures
-          ,const vector<Face>& _faces) :
+Mesh::Mesh(shared_ptr<aiMesh> _meshData) :
     Geometry(MESH),
+    meshData(_meshData),
     tree(unique_ptr<KDTree>(nullptr))
 { 
-    this->withNormals  = normals.size() > 0;
-    this->withTextures = textures.size() > 0;
-
-    copy(vertices.begin(), vertices.end(), back_inserter(this->vertices_));
-    copy(normals.begin(), normals.end(), back_inserter(this->normals_));
-    copy(textures.begin(), textures.end(), back_inserter(this->textures));
-    copy(_faces.begin(), _faces.end(), back_inserter(this->faces));
-
     this->buildGeometry();
     this->buildVolume();
     this->computeCentroid();
@@ -64,6 +43,7 @@ Mesh::~Mesh()
 
 void Mesh::repr(std::ostream& s) const
 {
+    /*
     s << "Mesh {"      << endl;
     s << "  vertices<" << (this->vertices_.size()) << "> = {" << endl;
     for (auto i=this->vertices_.begin(); i != this->vertices_.end(); i++) {
@@ -80,6 +60,7 @@ void Mesh::repr(std::ostream& s) const
     }
     s << "  }" << endl;
     s << "}" << endl;
+    */
 }
 
 void Mesh::computeCentroid()
@@ -135,39 +116,46 @@ const BoundingVolume& Mesh::getVolume() const
 
 void Mesh::buildGeometry()
 {
-    const int VC = this->getVertexCount();
-    const int FC = this->faces.size();
+    // Vertices
 
-    // For each face, compute the face normal and add the normal to
-    // each shared vertex normal
-    for (auto i=0; i<VC; i++) {
-        this->normals_.push_back(glm::vec3());
+    assert(this->meshData->mVertices && this->meshData->mNormals);
+
+    for (unsigned int i = 0; i < this->meshData->mNumVertices; i++) {
+
+        auto vertex = this->meshData->mVertices[i];
+
+        this->vertices_.push_back(glm::vec3(vertex.x, vertex.y, vertex.z));
     }
 
-    for (auto i=0; i<FC; i++) {
+    // Normals
 
-        int u = this->faces[i].v[0] - 1;
-        int v = this->faces[i].v[1] - 1;
-        int w = this->faces[i].v[2] - 1;
+    for (unsigned int i = 0; i < this->meshData->mNumVertices; i++) {
+
+        auto normal = this->meshData->mNormals[i];
+
+        this->normals_.push_back(glm::vec3(normal.x, normal.y, normal.z));
+    }
+
+    // Indices
+
+    for (unsigned int i = 0; i < this->meshData->mNumFaces; i++) {
+
+        auto face = this->meshData->mFaces[i];
+        assert(face.mNumIndices == 3);     
+
+        unsigned int u = face.mIndices[0];
+        unsigned int v = face.mIndices[1];
+        unsigned int w = face.mIndices[2];
 
         this->indices_.push_back(u);
         this->indices_.push_back(v);
         this->indices_.push_back(w);
 
-        Tri TRI(i, this->vertices_[u], this->vertices_[v], this->vertices_[w]);
+        // and generate a triangle from the face: 
 
-        this->triangles.push_back(TRI);
-        this->vnIndex.push_back(VNIndex(u, v, w));
+        Tri t(i, glm::uvec3(u, v, w), this->vertices_[u], this->vertices_[v], this->vertices_[w]);
 
-        glm::vec3 N = TRI.getNormal();
-
-        this->normals_[u] += N;
-        this->normals_[v] += N;
-        this->normals_[w] += N;
-    }
- 
-    for (auto i=0; i<VC; i++) {
-        this->normals_[i] = glm::normalize(this->normals_[i]);
+        this->triangles.push_back(t);
     }
 }
 
@@ -175,8 +163,11 @@ void Mesh::buildGeometry()
  * Given a vector of triangles, this function returns the closest one with
  * a t value >= 0
  */
-static bool closestTriangle(const Ray& ray, const vector<Tri>& tris
-                           ,int& k, float& t, glm::vec3& W)
+static bool closestTriangle(const Ray& ray
+                           , const vector<Tri>& tris
+                           ,int& k
+                           ,float& t
+                           ,glm::vec3& W)
 {
     t = numeric_limits<float>::infinity();
     k = -1;
@@ -238,13 +229,13 @@ Intersection Mesh::intersectImpl(const Ray &ray, shared_ptr<SceneContext> scene)
 
     //assert(this->vertices_.size() == this->normals_.size());
 
-    VNIndex VN  = this->vnIndex[I];
+    glm::uvec3 indices = this->triangles[I].getVertexIndices();
 
-    // Normal at point-of-intersection
-    //glm::vec3 N = this->triangles[I].getNormal();
-    glm::vec3 N  = (W[0] * this->normals_[get<0>(VN)]) 
-                 + (W[1] * this->normals_[get<1>(VN)]) 
-                 + (W[2] * this->normals_[get<2>(VN)]);
+    // Interpolate the normal at the point-of-intersection:
+
+    glm::vec3 N  = (W[0] * this->normals_[indices[0]]) 
+                 + (W[1] * this->normals_[indices[1]]) 
+                 + (W[2] * this->normals_[indices[2]]);
 
     Intersection isect(t, glm::normalize(N));
 

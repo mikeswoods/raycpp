@@ -21,8 +21,8 @@
 #include "Config.h"
 #include "Sphere.h"
 #include "Cube.h"
-#include "Volume.h"
 #include "Cylinder.h"
+#include "Mesh.h"
 #include "GLGeometry.h"
 #include "PointLight.h"
 #include "AreaLight.h"
@@ -416,7 +416,6 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 	string line, attribute;
 	string objFileName    = "";
 	bool isMesh           = false;
-	bool isVolume         = false;
 	bool readNonEmptyLine = false;
 	bool firstLine        = true;
 
@@ -518,8 +517,6 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 					geometry = shared_ptr<Geometry>(make_shared<Cube>());
 				} else if (shapeType == "mesh") {
 					isMesh = true;
-				} else if (shapeType == "volume") {
-					isMesh = isVolume = true;
 				} else {
 					throw runtime_error("parseNodeDefinition: Unsupported geometry type: " + shapeType);
 				}
@@ -566,14 +563,12 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 			throw runtime_error("No object filename given for mesh object!");
 		}
 
-		ObjReader objReader(objFileName);
+		vector<shared_ptr<aiMesh>> meshData = Model::importMeshes(objFileName);
 
-		auto meshData = objReader.read();
-
-		if (isVolume) {
-			geometry = shared_ptr<Geometry>(make_shared<Volume>(new Cube()));
+		if (meshData.size() > 0) {
+			geometry = shared_ptr<Geometry>(make_shared<Mesh>(meshData[0]));
 		} else {
-			geometry = meshData;
+			geometry = shared_ptr<Geometry>(nullptr);
 		}
 	}
 

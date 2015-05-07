@@ -21,9 +21,9 @@ glm::vec3 Sampling::getCosineWeightedDirection(const glm::vec3& normal)
 	const float SQRT_OF_ONE_THIRD = sqrt(1.0f / 3.0f);
 	glm::vec3 directionNotNormal;
 
-	if (abs(normal.x) < SQRT_OF_ONE_THIRD) {
+	if (fabs(normal.x) < SQRT_OF_ONE_THIRD) {
 		directionNotNormal = glm::vec3(1.f, 0.f, 0.f);
-	} else if (abs(normal.y) < SQRT_OF_ONE_THIRD) {
+	} else if (fabs(normal.y) < SQRT_OF_ONE_THIRD) {
 		directionNotNormal = glm::vec3(0.f, 1.f, 0.f);
 	} else {
 		directionNotNormal = glm::vec3(0.f, 0.f, 1.f);

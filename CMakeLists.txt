@@ -83,7 +83,6 @@ set (SOURCE_FILES "src/AABB.cpp"
                   "src/Cube.cpp"
                   "src/Cylinder.cpp"
                   "src/EnvironmentMap.cpp"
-                  "src/Face.cpp"
                   "src/Geometry.cpp"
                   "src/GLGeometry.cpp"
                   "src/GLUtils.cpp"
@@ -99,7 +98,6 @@ set (SOURCE_FILES "src/AABB.cpp"
                   "src/Mesh.cpp"
                   "src/ModelImport.cpp"
                   "src/NormalMap.cpp"
-                  "src/ObjReader.cpp"
                   "src/PointLight.cpp"
                   "src/R3.cpp"
                   "src/Ray.cpp"
@@ -109,9 +107,7 @@ set (SOURCE_FILES "src/AABB.cpp"
                   "src/Sphere.cpp"
                   "src/SurfaceMap.cpp"
                   "src/Tri.cpp"
-                  "src/Utils.cpp"
-                  "src/Volume.cpp"
-                  "src/Voxel.cpp")
+                  "src/Utils.cpp")
 
 add_executable(raycpp ${SOURCE_FILES})
 

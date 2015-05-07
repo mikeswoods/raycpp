@@ -16,7 +16,10 @@
 
 /******************************************************************************/
 
-std::vector<std::shared_ptr<aiMesh>> import(const std::string& model);
+namespace Model
+{
+	std::vector<std::shared_ptr<aiMesh>> importMeshes(const std::string& model);
+};
 
 /******************************************************************************/
 

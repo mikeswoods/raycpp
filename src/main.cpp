@@ -19,7 +19,6 @@ INITIALIZE_EASYLOGGINGPP
 #include "GLWorldState.h"
 #include "SceneContext.h"
 #include "Config.h"
-#include "ObjReader.h"
 #include "Camera.h"
 #include "Options.h"
 #include "Raytrace.h"

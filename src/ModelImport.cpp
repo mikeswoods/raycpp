@@ -14,17 +14,26 @@ using namespace std;
 
 /******************************************************************************/
 
-vector<shared_ptr<aiMesh>> import(const string& model)
+vector<shared_ptr<aiMesh>> Model::importMeshes(const string& model)
 {
 	Assimp::Importer importer;
 	vector<shared_ptr<aiMesh>> meshes;
 
-	auto scene = importer.ReadFile(model
-		                          , aiProcess_FindDegenerates
-		                          | aiProcess_FindInvalidData
-		                          | aiProcess_CalcTangentSpace
-		                          | aiProcess_JoinIdenticalVertices
-		                          | aiProcess_SortByPType);
+	unsigned int flags = aiProcess_FindDegenerates
+		               | aiProcess_FindInvalidData
+		               | aiProcess_CalcTangentSpace
+		               | aiProcess_Triangulate
+		               | aiProcess_JoinIdenticalVertices
+		               | aiProcess_GenNormals
+		               | aiProcess_ImproveCacheLocality
+		               | aiProcess_SortByPType;
+
+	importer.ReadFile(model, flags);
+
+	// Detach the scene from the importer, otherwise when the import goes out
+	// of scope, the scene and all accompanying meshes will be freed:
+
+	auto scene = importer.GetOrphanedScene();
 
 	if (!scene) {
 		LOG(ERROR) << importer.GetErrorString();

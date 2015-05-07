@@ -18,7 +18,6 @@
 #include <string>
 #include "Graph.h"
 #include "GraphBuilder.h"
-#include "ObjReader.h"
 #include "Light.h"
 #include "Material.h"
 #include "EnvironmentMap.h"

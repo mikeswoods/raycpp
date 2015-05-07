@@ -20,9 +20,10 @@
 class Tri
 {
 	private:
-		int meshIndex;
-		P v[3];     // corner vertices
-		V normal;   // precomputed normal
+		unsigned int meshIndex;
+		glm::uvec3 indices;     // Vertex indices
+		P vertices[3];          // Corner vertices
+		V normal;               // precomputed normal
 		AABB aabb;
 
 		void buildAABB();
@@ -35,11 +36,16 @@ class Tri
 
 	public:
 		Tri();
-		Tri(int meshIndex, const glm::vec3& _v1, const glm::vec3& _v2, const glm::vec3& _v3);
+		Tri(unsigned int meshIndex
+		   ,glm::uvec3 _indices
+		   ,glm::vec3 v1
+		   ,glm::vec3 v2
+		   ,glm::vec3 v3);
 		Tri(const Tri& other);
 		virtual ~Tri() { }
 
-		int getMeshIndex() const { return this->meshIndex; }
+		unsigned int getMeshIndex() const   { return this->meshIndex; }
+		glm::uvec3 getVertexIndices() const { return this->indices; }
 
 		float getXMinima() const;
 		float getYMinima() const;
@@ -50,7 +56,7 @@ class Tri
 
 		glm::vec3 barycenter(const P& p) const;
 
-		P const * getVertices() const { return this->v; }
+		P const * getVertices() const { return this->vertices; }
 
 		V getNormal() const;
 		const AABB& getAABB() { return this->aabb; }

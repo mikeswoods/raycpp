@@ -24,12 +24,20 @@ Tri::Tri() :
 	
 }
 
-Tri::Tri(int _meshIndex, const glm::vec3& _v1, const glm::vec3& _v2, const glm::vec3& _v3) :
+Tri::Tri(unsigned int _meshIndex
+	    ,glm::uvec3 _indices
+	    ,glm::vec3 _v1
+	    ,glm::vec3 _v2
+	    ,glm::vec3 _v3) :
     meshIndex(_meshIndex)
-{ 
-	this->v[0] = P(_v1);
-	this->v[1] = P(_v2);
-	this->v[2] = P(_v3);
+{
+	this->indices[0] = _indices[0];
+	this->indices[1] = _indices[1];
+	this->indices[2] = _indices[2];
+
+	this->vertices[0] = P(_v1);
+	this->vertices[1] = P(_v2);
+	this->vertices[2] = P(_v3);
 
 	this->computeNormal();
 	this->buildAABB();
@@ -37,47 +45,48 @@ Tri::Tri(int _meshIndex, const glm::vec3& _v1, const glm::vec3& _v2, const glm::
 
 Tri::Tri(const Tri& other) :
     meshIndex(other.meshIndex),
+    indices(other.indices),
 	normal(other.normal),
 	aabb(other.aabb)
 { 
-	this->v[0] = other.v[0];
-	this->v[1] = other.v[1];
-	this->v[2] = other.v[2];
+	this->vertices[0] = other.vertices[0];
+	this->vertices[1] = other.vertices[1];
+	this->vertices[2] = other.vertices[2];
 }
 
 float Tri::getXMinima() const
 {
-	return min(min(x(this->v[0]), x(this->v[1])), x(this->v[2]));
+	return min(min(x(this->vertices[0]), x(this->vertices[1])), x(this->vertices[2]));
 }
 
 float Tri::getYMinima() const
 {
-	return min(min(y(this->v[0]), y(this->v[1])), y(this->v[2]));
+	return min(min(y(this->vertices[0]), y(this->vertices[1])), y(this->vertices[2]));
 }
 
 float Tri::getZMinima() const
 {
-	return min(min(z(this->v[0]), z(this->v[1])), z(this->v[2]));
+	return min(min(z(this->vertices[0]), z(this->vertices[1])), z(this->vertices[2]));
 }
 
 float Tri::getXMaxima() const
 {
-	return max(max(x(this->v[0]), x(this->v[1])), x(this->v[2]));
+	return max(max(x(this->vertices[0]), x(this->vertices[1])), x(this->vertices[2]));
 }
 
 float Tri::getYMaxima() const
 {
-	return max(max(y(this->v[0]), y(this->v[1])), y(this->v[2]));
+	return max(max(y(this->vertices[0]), y(this->vertices[1])), y(this->vertices[2]));
 }
 
 float Tri::getZMaxima() const
 {
-	return max(max(z(this->v[0]), z(this->v[1])), z(this->v[2]));
+	return max(max(z(this->vertices[0]), z(this->vertices[1])), z(this->vertices[2]));
 }
 
 void Tri::computeNormal()
 {
-	this->normal = glm::normalize(glm::cross(this->v[1] - this->v[0], this->v[2] - this->v[0]));
+	this->normal = glm::normalize(glm::cross(this->vertices[1] - this->vertices[0], this->vertices[2] - this->vertices[0]));
 }
 
 V Tri::getNormal() const
@@ -92,12 +101,12 @@ void Tri::buildAABB()
 {
 	// Find the min and max in X, Y, and Z to use as the two
 	// extrema of the AABB:
-	float xMin = min(min(x(this->v[0]), x(this->v[1])), x(this->v[2]));
-	float xMax = max(max(x(this->v[0]), x(this->v[1])), x(this->v[2]));
-	float yMin = min(min(y(this->v[0]), y(this->v[1])), y(this->v[2]));
-	float yMax = max(max(y(this->v[0]), y(this->v[1])), y(this->v[2]));
-	float zMin = min(min(z(this->v[0]), z(this->v[1])), z(this->v[2]));
-	float zMax = max(max(z(this->v[0]), z(this->v[1])), z(this->v[2]));
+	float xMin = min(min(x(this->vertices[0]), x(this->vertices[1])), x(this->vertices[2]));
+	float xMax = max(max(x(this->vertices[0]), x(this->vertices[1])), x(this->vertices[2]));
+	float yMin = min(min(y(this->vertices[0]), y(this->vertices[1])), y(this->vertices[2]));
+	float yMax = max(max(y(this->vertices[0]), y(this->vertices[1])), y(this->vertices[2]));
+	float zMin = min(min(z(this->vertices[0]), z(this->vertices[1])), z(this->vertices[2]));
+	float zMax = max(max(z(this->vertices[0]), z(this->vertices[1])), z(this->vertices[2]));
 
 	this->aabb = AABB(P(xMin, yMin, zMin), P(xMax, yMax, zMax));
 }
@@ -107,15 +116,15 @@ void Tri::buildAABB()
  */
 float Tri::naiveIntersect(const Ray& ray, glm::vec3& W) const
 {
-	glm::vec3 e21 = this->v[1] - this->v[0];
-	glm::vec3 e32 = this->v[2] - this->v[1];
-	glm::vec3 e13 = this->v[0] - this->v[2];
-	glm::vec3 e31 = this->v[2] - this->v[0];
+	glm::vec3 e21 = this->vertices[1] - this->vertices[0];
+	glm::vec3 e32 = this->vertices[2] - this->vertices[1];
+	glm::vec3 e13 = this->vertices[0] - this->vertices[2];
+	glm::vec3 e31 = this->vertices[2] - this->vertices[0];
 
 	// First, test if the ray intersects the plane formed by the triangle:
 	glm::vec3 k = glm::cross(e21, e31);
 	glm::vec3 n = glm::normalize(k);
-	float d     = glm::dot(n, this->v[0].xyz);
+	float d     = glm::dot(n, this->vertices[0].xyz);
 	
 	// Find the normal of the plane, i.e. the cross product of the two
 	// vectors that are sides of the triangle A-B and B-C:
@@ -136,9 +145,9 @@ float Tri::naiveIntersect(const Ray& ray, glm::vec3& W) const
 	float t  = (d - (glm::dot(n, ray.orig))) / nd;
 	P Q      = ray.project(tInTri);
 
-	glm::vec3 eQ1 = Q - this->v[0];
-	glm::vec3 eQ2 = Q - this->v[1];
-	glm::vec3 eQ3 = Q - this->v[2];
+	glm::vec3 eQ1 = Q - this->vertices[0];
+	glm::vec3 eQ2 = Q - this->vertices[1];
+	glm::vec3 eQ3 = Q - this->vertices[2];
 
 	// Perform the "in-triangle" test against each vertex:
 	float c1 = glm::dot(glm::cross(e21, eQ1), n);
@@ -169,8 +178,8 @@ float Tri::naiveIntersect(const Ray& ray, glm::vec3& W) const
  */
 float Tri::mollerTrumboreIntersect(const Ray& ray, glm::vec3& W) const
 {
-	glm::vec3 e1 = this->v[1] - this->v[0];
-	glm::vec3 e2 = this->v[2] - this->v[0];
+	glm::vec3 e1 = this->vertices[1] - this->vertices[0];
+	glm::vec3 e2 = this->vertices[2] - this->vertices[0];
 	glm::vec3 D  = ray.dir;
 	glm::vec3 P  = glm::cross(D, e2);
 	float det    = glm::dot(e1, P);
@@ -181,7 +190,7 @@ float Tri::mollerTrumboreIntersect(const Ray& ray, glm::vec3& W) const
 	}
 
 	float invDet = 1.0f / det;
-	glm::vec3 T  = ray.orig - this->v[0];
+	glm::vec3 T  = ray.orig - this->vertices[0];
 
 	float u = glm::dot(T, P) * invDet;
 	if (u < 0.0f || u > 1.0f) {
@@ -211,9 +220,9 @@ float Tri::mollerTrumboreIntersect(const Ray& ray, glm::vec3& W) const
 
 glm::vec3 Tri::barycenter(const P& p) const
 {
-    glm::vec3 v0 = this->v[1] - this->v[0]; 
-    glm::vec3 v1 = this->v[2] - this->v[0];
-    glm::vec3 v2 = p - this->v[0];
+    glm::vec3 v0 = this->vertices[1] - this->vertices[0]; 
+    glm::vec3 v1 = this->vertices[2] - this->vertices[0];
+    glm::vec3 v2 = p - this->vertices[0];
     float d00 = glm::dot(v0, v0);
     float d01 = glm::dot(v0, v1);
     float d11 = glm::dot(v1, v1);
