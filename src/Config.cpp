@@ -393,7 +393,7 @@ void Configuration::parsePointLightSection(istream& is, const string& beginToken
 		}
 	}
 
-	auto light = make_shared<PointLight>(P(LPOS[0], LPOS[1], LPOS[2])
+	auto light = make_shared<PointLight>(glm::vec3(LPOS[0], LPOS[1], LPOS[2])
 		                                ,Color(LCOL[0], LCOL[1], LCOL[2]));
 	this->registerLight(light);
 }
@@ -490,7 +490,7 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 			} else if (attribute == "CENTER") {
 				float C[3] = { 0.0f, 0.0f, 0.0f };
 				ss >> C[0] >> C[1] >> C[2];
-				node->setCenter(P(C[0], C[1], C[2]));
+				node->setCenter(glm::vec3(C[0], C[1], C[2]));
 				readNonEmptyLine = true;
 			} else if (attribute == "PARENT") {
 				string parentName;

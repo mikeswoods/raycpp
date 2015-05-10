@@ -10,9 +10,9 @@ Ray Ray::normalized() const
 
 // Given a magnitude t, this function projects along ray with magnitude t
 // to produce a new point
-P Ray::project(float t) const
+glm::vec3 Ray::project(float t) const
 {
-	return P(this->orig + (glm::normalize(this->dir) * t));
+	return this->orig + (glm::normalize(this->dir) * t);
 }
 
 void Ray::nudge(float epsilon)
@@ -22,8 +22,7 @@ void Ray::nudge(float epsilon)
 
 std::ostream& operator<<(std::ostream& s, const Ray& ray)
 {
-	s << "Ray<orig= " << ray.orig << ", dir=" << ray.dir << ">";
-	return s;
+	return s << "Ray";
 }
 
 /******************************************************************************/

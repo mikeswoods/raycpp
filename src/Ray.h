@@ -37,28 +37,6 @@ struct Ray
 
 	inline Ray() { }
 
-	Ray(glm::vec3 o, glm::vec3 d) : 
-		orig(o), 
-		dir(d),
-		type(PRIMARY)
-	{ }
-
-	Ray(glm::vec3 o, glm::vec3 d, float epsilon) : 
-		orig(o), 
-		dir(d),
-		type(PRIMARY)
-	{ 
-		this->nudge(epsilon);
-	}
-
-	Ray(glm::vec3 o, glm::vec3 d, float epsilon, RayType _type) : 
-		orig(o), 
-		dir(d),
-		type(_type)
-	{ 
-		this->nudge(epsilon);
-	}
-
 	Ray(const glm::vec3& _orig, const glm::vec3& _dir) :
 		orig(_orig),
 		dir(_dir),

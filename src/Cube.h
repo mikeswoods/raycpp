@@ -17,7 +17,7 @@
 class Cube : public Geometry
 {
 	protected:
-		P p1, p2, centroid;
+		glm::vec3 v1, v2, centroid;
 
 	private:
 		BoundingSphere volume;
@@ -36,7 +36,7 @@ class Cube : public Geometry
 		virtual ~Cube();
 
 		virtual const BoundingVolume& getVolume() const;
-		virtual const P& getCentroid() const;
+		virtual const glm::vec3& getCentroid() const;
 		virtual const AABB& getAABB() const;
 		virtual void buildGeometry();
 		virtual void repr(std::ostream& s) const;

@@ -7,7 +7,7 @@ cmake_minimum_required (VERSION 3.0.0)
 # installed and it must be in your current path.
 ################################################################################
 
-#set (ENABLE_OPENMP 1)
+set (ENABLE_OPENMP 1)
 
 ################################################################################
 
@@ -64,11 +64,14 @@ if (DEFINED ENABLE_OPENMP)
    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 endif ()
 
-set(CMAKE_EXE_LINKER_FLAGS "-lGL -lassimp")
+# Open asset importer:
+set(CMAKE_EXE_LINKER_FLAGS "-lassimp")
 
 # Special stuff for Linux/X11:
-if (UNIX AND NOT APPLE)
-   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lX11 -pthread -lXrandr -lXcursor -lXinerama")
+if (APPLE)
+   set(CMAKE_EXE_LINKER_FLAGS "-framework OpenGL -framework IOKit ${CMAKE_EXE_LINKER_FLAGS}")
+elseif (UNIX AND NOT APPLE)
+   set(CMAKE_EXE_LINKER_FLAGS "-lGL -lX11 -pthread -lXrandr -lXcursor -lXinerama ${CMAKE_EXE_LINKER_FLAGS}")
 endif()
 
 # Add all source files. Headers don't need to be listed here since the compiler will find them;

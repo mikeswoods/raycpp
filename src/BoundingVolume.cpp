@@ -11,7 +11,11 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
 #include "BoundingVolume.h"
+
+/******************************************************************************/
 
 using namespace std;
 using namespace glm;
@@ -21,21 +25,14 @@ using namespace glm;
  ******************************************************************************/
 
 BoundingSphere::BoundingSphere() :
-	center(P(0.0f, 0.0f, 0.0f)),
+	center(vec3(0.0f, 0.0f, 0.0f)),
 	radius(0.5f)
 { 
 
 }
 
 BoundingSphere::BoundingSphere(const vec3& _center, float _radius) :
-	center(P(_center)),
-	radius(_radius)
-{ 
-
-}
-
-BoundingSphere::BoundingSphere(const P& _center, float _radius) :
-	center(_center),
+	center(vec3(_center)),
 	radius(_radius)
 { 
 

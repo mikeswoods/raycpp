@@ -10,6 +10,7 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
+#define cimg_display 0
 #include <CImg.h>
 #include <tuple>
 #include <memory>

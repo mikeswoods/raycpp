@@ -28,7 +28,7 @@
 class Mesh : public Geometry
 {
 	private:
-		P centroid;
+		glm::vec3 centroid;
 		TrivialVolume volume;
 		AABB aabb;
 		std::shared_ptr<aiMesh> meshData;
@@ -50,7 +50,7 @@ class Mesh : public Geometry
 
 		virtual ~Mesh();
 
-		virtual const P& getCentroid() const;
+		virtual const glm::vec3& getCentroid() const;
 		virtual const BoundingVolume& getVolume() const;
 		virtual const AABB& getAABB() const;
 		virtual void buildGeometry();

@@ -22,7 +22,7 @@ using namespace std;
 // Creates a unit sphere centered about the world origin
 Sphere::Sphere() :
     Geometry(SPHERE),
-    center_(P(0.f, 0.f, 0.f)),
+    center_(glm::vec3(0.f, 0.f, 0.f)),
     radius_(1.0f)
 {
     this->buildGeometry();
@@ -30,7 +30,7 @@ Sphere::Sphere() :
     this->computeAABB();
 }
 
-Sphere::Sphere(const P& _center, float _radius) :
+Sphere::Sphere(const glm::vec3& _center, float _radius) :
     Geometry(SPHERE),
     center_(_center),
     radius_(_radius)
@@ -45,9 +45,7 @@ Sphere::~Sphere()
 
 void Sphere::repr(ostream& s) const
 {
-    s << "Sphere<radius=" << this->radius_ 
-      << ", center="      << this->center_ 
-      << ">";
+    s << "Sphere";
 }
 
 void Sphere::buildVolume()
@@ -57,11 +55,10 @@ void Sphere::buildVolume()
 
 void Sphere::computeAABB()
 {
-    this->aabb = AABB(P(x(this->center_) - this->radius_, y(this->center_) - this->radius_, z(this->center_) - this->radius_)
-                     ,P(x(this->center_) + this->radius_, y(this->center_) + this->radius_, z(this->center_) + this->radius_));
+    this->aabb = AABB(this->center_ - this->radius_, this->center_ + this->radius_);
 }
 
-const P& Sphere::getCentroid() const
+const glm::vec3& Sphere::getCentroid() const
 {
 	return this->center_;
 }
@@ -94,7 +91,7 @@ void Sphere::buildGeometry()
     glm::vec3 point (0.0f, 1.0f, 0.0f);
     normals_.push_back(point);
     // scale by radius_ and translate by center_
-    vertices_.push_back(center_.xyz + radius_ * point);
+    vertices_.push_back(center_ + radius_ * point);
 
     for (float phi = dphi; phi < static_cast<float>(M_PI); phi += dphi) {
         for (float theta = dtheta; theta <= 2.0f * static_cast<float>(M_PI) + epsilon; theta += dtheta) {
@@ -105,13 +102,13 @@ void Sphere::buildGeometry()
             point[2] = sin_phi * cos(theta);
 
             normals_.push_back(point);
-            vertices_.push_back(center_.xyz + radius_ * point);
+            vertices_.push_back(center_ + radius_ * point);
         }
     }
     // South pole
     point = glm::vec3(0.0f, -1.0f, 0.0f);
     normals_.push_back(point);
-    vertices_.push_back(center_.xyz + radius_ * point);
+    vertices_.push_back(center_ + radius_ * point);
 
     // fill in index array.
     // top cap
@@ -187,8 +184,7 @@ Intersection Sphere::intersectImpl(const Ray &ray, shared_ptr<SceneContext> scen
 	float t = u < 0.0f ? v : u;
 
 	glm::vec3 p = ray.orig + (ray.dir * t);
-
-	V N = glm::normalize(p - this->center_);
+	glm::vec3 N = glm::normalize(p - this->center_);
 
 	return Intersection(t, N);
 }

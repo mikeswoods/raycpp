@@ -22,8 +22,8 @@ class Tri
 	private:
 		unsigned int meshIndex;
 		glm::uvec3 indices;     // Vertex indices
-		P vertices[3];          // Corner vertices
-		V normal;               // precomputed normal
+		glm::vec3 vertices[3];  // Corner vertices
+		glm::vec3 normal;       // precomputed normal
 		AABB aabb;
 
 		void buildAABB();
@@ -54,11 +54,11 @@ class Tri
 		float getYMaxima() const;
 		float getZMaxima() const;
 
-		glm::vec3 barycenter(const P& p) const;
+		glm::vec3 barycenter(const glm::vec3& p) const;
 
-		P const * getVertices() const { return this->vertices; }
+		glm::vec3 const * getVertices() const { return this->vertices; }
 
-		V getNormal() const;
+		glm::vec3 getNormal() const;
 		const AABB& getAABB() { return this->aabb; }
 
 		float intersected(const Ray& ray, glm::vec3& W) const;

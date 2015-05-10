@@ -530,14 +530,14 @@ void display()
 
     // Eye position
     vec3 eyePosition = sceneContext->getEyePosition();
-    glUniform4f(unifEyePos, x(eyePosition), y(eyePosition), z(eyePosition), 1.0f);
+    glUniform4f(unifEyePos, eyePosition.x, eyePosition.y, eyePosition.z, 1.0f);
 
     // Eye position
     PointLight light = state->getPreviewLight();
 
     // Position
-    P lpos = light.getPosition();
-    glUniform4f(unifLightPos, x(lpos), y(lpos), z(lpos), 1.0f);
+    vec3 lpos = light.getPosition();
+    glUniform4f(unifLightPos, lpos.x, lpos.y, lpos.z, 1.0f);
 
     // Color
     Color lcol = light.getColor();

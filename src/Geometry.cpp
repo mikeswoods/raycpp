@@ -12,12 +12,15 @@
 #include <sstream>
 #include "Geometry.h"
 #include "Graph.h"
+#include "Utils.h"
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
 /******************************************************************************/
 
 using namespace std;
+using namespace glm;
+using namespace Utils;
 
 /******************************************************************************/
 
@@ -46,23 +49,23 @@ Geometry::~Geometry()
  * Generates vec3 color instances for every vertex  based on the supplied 
  * Color instance
  */
-vector<glm::vec3> Geometry::getColors(const Color& color) const
+vector<vec3> Geometry::getColors(const Color& color) const
 {
-	return vector<glm::vec3>(this->getVertexCount()
-							,glm::vec3(color.fR(), color.fG(), color.fB()));
+	return vector<vec3>(this->getVertexCount()
+							,vec3(color.fR(), color.fG(), color.fB()));
 }
 
-Intersection Geometry::intersect(const glm::mat4 &T
+Intersection Geometry::intersect(const mat4 &T
                                 ,const Ray& rayWorld
                                 ,shared_ptr<SceneContext> scene) const
 {
-	Ray rayNormal  = Ray(rayWorld.orig, glm::normalize(rayWorld.dir));
-	glm::mat4 invT = glm::inverse(T);
+	Ray rayNormal = Ray(rayWorld.orig, normalize(rayWorld.dir));
+	mat4 invT     = inverse(T);
 
     // Transform the ray into OBJECT-LOCAL-space, for intersection calculation.
 	// (Remember that position = vec4(vec3, 1) while direction = vec4(vec3, 0).)
-	Ray rayLocal(transform(invT, glm::vec4(rayNormal.orig, 1.0f))
-		        ,transform(invT, glm::vec4(rayNormal.dir, 0.0f)));
+	Ray rayLocal(transform(invT, vec4(rayNormal.orig, 1.0f))
+		        ,transform(invT, vec4(rayNormal.dir, 0.0f)));
 
 	// Test the bounding volume first:
 	if (!this->getVolume().intersects(rayLocal)) {
@@ -77,26 +80,26 @@ Intersection Geometry::intersect(const glm::mat4 &T
         // Transform the local-space intersection BACK into world-space.
         // (Note that, as long as you didn't re-normalize the ray direction
         // earlier, `t` doesn't need to change.)
-        const glm::vec3 normalLocal = isect.normal;
+        const vec3 normalLocal = isect.normal;
 
         // Inverse-transpose-transform the normal to get it back from 
 		// local-space to world-space. (If you were transforming a position, 
 		// you would just use the unmodified transform T.)
 		//
         // http://www.arcsynthesis.org/gltut/Illumination/Tut09%20Normal%20Transformation.html
-        isect.normal = glm::normalize(transform(glm::transpose(invT), glm::vec4(normalLocal, 0.0f)));
+        isect.normal = normalize(transform(transpose(invT), vec4(normalLocal, 0.0f)));
 
 		// Compute the hit position in world space:
 		isect.hitWorld = rayNormal.project(isect.t);
 
 		// Compute the hit position in local space:
-		isect.hitLocal = transform(invT, glm::vec4(isect.hitWorld.xyz, 1.0f));
+		isect.hitLocal = transform(invT, vec4(isect.hitWorld, 1.0f));
 
 		// Make sure the intersection surface normal always points toward (
         // not away from) the incident ray's origin. Note: this should only
         // be done for instances in which the correctNormal flag on the
         // on the Intersection object is true
-		if (glm::dot(isect.normal, rayWorld.dir) > 0.0f) {
+		if (dot(isect.normal, rayWorld.dir) > 0.0f) {
             
             if (isect.correctNormal || !rayWorld.isPrimaryRay()) {
                 isect.normal = -isect.normal;
@@ -106,7 +109,7 @@ Intersection Geometry::intersect(const glm::mat4 &T
 		}
 
         #ifdef DEBUG
-		assert(abs(glm::length(isect.normal) - 1.0f) <= 1.0e-6f);
+		assert(abs(length(isect.normal) - 1.0f) <= 1.0e-6f);
         #endif
     }
 
@@ -115,9 +118,9 @@ Intersection Geometry::intersect(const glm::mat4 &T
 }
 
 // Returns a sample point from the surface of the object in WORLD-space
-glm::vec3 Geometry::sample(const glm::mat4& T) const
+vec3 Geometry::sample(const mat4& T) const
 {
-	return transform(T, glm::vec4(this->sampleImpl(), 1.0f));
+	return transform(T, vec4(this->sampleImpl(), 1.0f));
 }
 
 /******************************************************************************/

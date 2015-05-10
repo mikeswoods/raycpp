@@ -19,8 +19,8 @@ using namespace std;
 // Creates a unit cube centered at (0, 0, 0)
 Cube::Cube() :
     Geometry(CUBE),
-	p1(P(0.5f, 0.5f, -0.5f)), // BACK_TOP_RIGHT
-	p2(P(-0.5f, -0.5f, 0.5f)) // FRONT_BOTTOM_LEFT
+	v1(glm::vec3(0.5f, 0.5f, -0.5f)), // BACK_TOP_RIGHT
+	v2(glm::vec3(-0.5f, -0.5f, 0.5f)) // FRONT_BOTTOM_LEFT
 
 {
     this->buildGeometry();
@@ -31,8 +31,8 @@ Cube::Cube() :
 
 Cube::Cube(const Cube& other) :
 	Geometry(CUBE),
-	p1(other.p1),
-	p2(other.p2),
+	v1(other.v1),
+	v2(other.v2),
 	centroid(other.centroid),
 	volume(other.volume)
 { 
@@ -56,33 +56,31 @@ const AABB& Cube::getAABB() const
 
 void Cube::computeCentroid()
 {
-	this->centroid = P((this->p1.xyz + this->p2.xyz) / 2.0f);
+	this->centroid = (this->v1 + this->v2) * 0.5f;
 }
 
 void Cube::computeAABB()
 {
-    this->aabb = AABB(this->p1, this->p2);
+    this->aabb = AABB(this->v1, this->v2);
 }
 
 void Cube::buildVolume()
 {
-	float dist1  = glm::distance(this->centroid.xyz, this->p1.xyz);
-	float dist2  = glm::distance(this->centroid.xyz, this->p2.xyz);
+	float dist1  = glm::distance(this->centroid, this->v1);
+	float dist2  = glm::distance(this->centroid, this->v2);
 	float radius = std::max(dist1, dist2);
 	this->volume = BoundingSphere(this->centroid, radius + 0.2f);
 	//this->volume = TrivialVolume();
 }
 
-const P& Cube::getCentroid() const
+const glm::vec3& Cube::getCentroid() const
 {
 	return this->centroid;
 }
 
 void Cube::repr(std::ostream& s) const
 {
-	s << "Cube<p1=" << this->p1 
-	  << ", p2="    << this->p2 
-	  << ">";
+	s << "Cube" << endl;
 }
 
 void Cube::buildGeometry()
@@ -144,40 +142,40 @@ void Cube::buildGeometry()
 
 Intersection Cube::intersectImpl(const Ray &ray, shared_ptr<SceneContext> scene) const
 {
-	float xd  = x(ray.dir);
-    float yd  = y(ray.dir);
-    float zd  = z(ray.dir);
+	float xd  = ray.dir.x;
+    float yd  = ray.dir.y;
+    float zd  = ray.dir.z;
 	float eps = Utils::EPSILON;
 
-    if (xd == 0) {
+    if (xd == 0.0f) {
         xd = eps;
     }
-    if (yd == 0) {
+    if (yd == 0.0f) {
         yd = eps;
     }
-    if (zd == 0) {
+    if (zd == 0.0f) {
         zd = eps;
     }
 
-    float x1 = (x(this->p1) - x(ray.orig)) / xd;
-    float x2 = (x(this->p2) - x(ray.orig)) / xd;
-    float y1 = (y(this->p1) - y(ray.orig)) / yd;
-    float y2 = (y(this->p2) - y(ray.orig)) / yd;
-    float z1 = (z(this->p1) - z(ray.orig)) / zd;
-    float z2 = (z(this->p2) - z(ray.orig)) / zd;
+    float x1 = (this->v1.x - ray.orig.x) / xd;
+    float x2 = (this->v2.x - ray.orig.x) / xd;
+    float y1 = (this->v1.y - ray.orig.y) / yd;
+    float y2 = (this->v2.y - ray.orig.y) / yd;
+    float z1 = (this->v1.z - ray.orig.z) / zd;
+    float z2 = (this->v2.z - ray.orig.z) / zd;
 
     if (x1 > x2) {
-		swap(x1,x2);
+		std::swap(x1, x2);
     }
     if (y1 > y2) {
-		swap(y1,y2);
+		std::swap(y1, y2);
     }
     if (z1 > z2) {
-		swap(z1,z2);   
+		std::swap(z1, z2);   
     }
 
-    float tNear = max(x1, max(y1, z1));
-    float tFar  = min(x2, min(y2, z2));
+    float tNear = std::max(x1, std::max(y1, z1));
+    float tFar  = std::min(x2, std::min(y2, z2));
 
     if (tNear > tFar || tFar < 0) {
         return Intersection::miss();
@@ -198,9 +196,9 @@ Intersection Cube::intersectImpl(const Ray &ray, shared_ptr<SceneContext> scene)
 
 	// Now, compute the normal:
 	glm::vec3 normal;
-	if (abs(nx - t) < eps) {
+	if (fabs(nx - t) < eps) {
 		normal = glm::vec3(nx < 0.0f ? -1.0f : 1.0, 0.0f, 0.0f);
-	} else if (abs(ny - t) < eps) {
+	} else if (fabs(ny - t) < eps) {
 		normal = glm::vec3(0.0f, ny < 0.0f ? -1.0f : 1.0f, 1.0f);
 	} else {
 		normal = glm::vec3(0.0f, 0.0f, nz < 0.0f ? -1.0f : 1.0f);

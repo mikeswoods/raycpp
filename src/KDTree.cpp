@@ -75,7 +75,7 @@ Split RandomAxisStrategy::divide() const
 int SurfaceAreaStrategy::nextAxis(const std::vector<Tri>& data)
 {
 	AABB totalExtent = findExtent(data);
-	P center         = totalExtent.centroid();
+	glm::vec3 center = totalExtent.centroid();
 	float cost[3]    = { 0.0f, 0.0f, 0.0f };
 	float inf        = numeric_limits<float>::infinity();
 
@@ -83,7 +83,7 @@ int SurfaceAreaStrategy::nextAxis(const std::vector<Tri>& data)
 	// axis and compute the size of each resulting bounding box
 	for (int axis=0; axis<3; axis++) {
 
-		float splitValue = center.xyz[axis];
+		float splitValue = center[axis];
 
 		float xMinL = inf, xMinR  = inf;
 		float xMaxL = -inf, xMaxR = -inf;
@@ -95,12 +95,12 @@ int SurfaceAreaStrategy::nextAxis(const std::vector<Tri>& data)
 
 		for (auto i=data.begin(); i != data.end(); i++) {
 			
-			Tri T       = *i;
-			P triCenter = T.getAABB().centroid();
+			Tri T               = *i;
+			glm::vec3 triCenter = T.getAABB().centroid();
 
 			// Partition the points based on the current axis and update the extrema
 			// of the bounding box formed on each side of the partition:
-			if (triCenter.xyz[axis] >= splitValue) {
+			if (triCenter[axis] >= splitValue) {
 				xMinR = min(xMinR, T.getXMinima());
 				yMinR = min(yMinR, T.getYMinima());
 				zMinR = min(zMinR, T.getZMinima());
@@ -119,8 +119,8 @@ int SurfaceAreaStrategy::nextAxis(const std::vector<Tri>& data)
 			}
 		}
 
-		AABB left  = AABB(P(xMinL, yMinL, zMinL), P(xMaxL, yMaxL, zMaxL));
-		AABB right = AABB(P(xMinR, yMinR, zMinR), P(xMaxR, yMaxR, zMaxR));
+		AABB left  = AABB(glm::vec3(xMinL, yMinL, zMinL), glm::vec3(xMaxL, yMaxL, zMaxL));
+		AABB right = AABB(glm::vec3(xMinR, yMinR, zMinR), glm::vec3(xMaxR, yMaxR, zMaxR));
 
 		// Finally, compute the cost, defined as:
 		// cost = #triangles(left) * area(left) + #triangles(right) * area(right)
@@ -486,8 +486,13 @@ static AABB findExtent(const std::vector<Tri>& triangles)
 		zMax += eps;
 	}
 
-	return AABB(P(xMin, yMin, zMin) ,P(xMax, yMax, zMax));
+	return AABB(glm::vec3(xMin, yMin, zMin), glm::vec3(xMax, yMax, zMax));
 }
+
+// Axis getter helpers:
+static float getX(const glm::vec3& p) {return p.x; }
+static float getY(const glm::vec3& p) {return p.y; }
+static float getZ(const glm::vec3& p) {return p.z; }
 
 /**
  * Given a list of triangles and a splitting strategy, this function returns
@@ -523,24 +528,24 @@ NodeChild const * build(const std::vector<Tri>& triangles
 		return nullptr;
 	}
 
-	P splitPoint = extent.centroid();
+	glm::vec3 splitPoint = extent.centroid();
 
 	// Now find the split axis: 0 = X, 1 = Y, 2 = Z
 	int axis = splitStrategy->nextAxis(triangles);
 	assert (axis >= 0 && axis <= 2);
 
 	// Component getter:
-	float (*axisValue)(const P& p) = nullptr;
+	float (*axisValue)(const glm::vec3& p) = nullptr;
 
 	switch (axis) {
 		case 0:
-			axisValue = x; // From R3.h
+			axisValue = getX;
 			break;
 		case 1:
-			axisValue = y; // From R3.h
+			axisValue = getY;
 			break;
 		case 2:
-			axisValue = z; // From R3.h
+			axisValue = getZ;
 			break;
 	}
 
@@ -549,8 +554,8 @@ NodeChild const * build(const std::vector<Tri>& triangles
 
 	for (auto i=triangles.begin(); i != triangles.end(); i++) {
 
-		Tri T      = *i;
-		P centroid = T.getAABB().centroid();
+		Tri T              = *i;
+		glm::vec3 centroid = T.getAABB().centroid();
 
 		// Based on the split-axis. Compare the chosen axis-component of each triangle's
 		// centroid against the split axis value. Those less than splitOnValue go in one

@@ -35,9 +35,9 @@ Tri::Tri(unsigned int _meshIndex
 	this->indices[1] = _indices[1];
 	this->indices[2] = _indices[2];
 
-	this->vertices[0] = P(_v1);
-	this->vertices[1] = P(_v2);
-	this->vertices[2] = P(_v3);
+	this->vertices[0] = _v1;
+	this->vertices[1] = _v2;
+	this->vertices[2] = _v3;
 
 	this->computeNormal();
 	this->buildAABB();
@@ -56,32 +56,32 @@ Tri::Tri(const Tri& other) :
 
 float Tri::getXMinima() const
 {
-	return min(min(x(this->vertices[0]), x(this->vertices[1])), x(this->vertices[2]));
+	return std::min(std::min(this->vertices[0].x, this->vertices[1].x), this->vertices[2].x);
 }
 
 float Tri::getYMinima() const
 {
-	return min(min(y(this->vertices[0]), y(this->vertices[1])), y(this->vertices[2]));
+	return std::min(std::min(this->vertices[0].y, this->vertices[1].y), this->vertices[2].y);
 }
 
 float Tri::getZMinima() const
 {
-	return min(min(z(this->vertices[0]), z(this->vertices[1])), z(this->vertices[2]));
+	return std::min(std::min(this->vertices[0].z, this->vertices[1].z), this->vertices[2].z);
 }
 
 float Tri::getXMaxima() const
 {
-	return max(max(x(this->vertices[0]), x(this->vertices[1])), x(this->vertices[2]));
+	return std::max(std::max(this->vertices[0].x, this->vertices[1].x), this->vertices[2].x);
 }
 
 float Tri::getYMaxima() const
 {
-	return max(max(y(this->vertices[0]), y(this->vertices[1])), y(this->vertices[2]));
+	return std::max(std::max(this->vertices[0].y, this->vertices[1].y), this->vertices[2].y);
 }
 
 float Tri::getZMaxima() const
 {
-	return max(max(z(this->vertices[0]), z(this->vertices[1])), z(this->vertices[2]));
+	return std::max(std::max(this->vertices[0].z, this->vertices[1].z), this->vertices[2].z);
 }
 
 void Tri::computeNormal()
@@ -89,7 +89,7 @@ void Tri::computeNormal()
 	this->normal = glm::normalize(glm::cross(this->vertices[1] - this->vertices[0], this->vertices[2] - this->vertices[0]));
 }
 
-V Tri::getNormal() const
+glm::vec3 Tri::getNormal() const
 {
 	return this->normal;
 }
@@ -101,14 +101,14 @@ void Tri::buildAABB()
 {
 	// Find the min and max in X, Y, and Z to use as the two
 	// extrema of the AABB:
-	float xMin = min(min(x(this->vertices[0]), x(this->vertices[1])), x(this->vertices[2]));
-	float xMax = max(max(x(this->vertices[0]), x(this->vertices[1])), x(this->vertices[2]));
-	float yMin = min(min(y(this->vertices[0]), y(this->vertices[1])), y(this->vertices[2]));
-	float yMax = max(max(y(this->vertices[0]), y(this->vertices[1])), y(this->vertices[2]));
-	float zMin = min(min(z(this->vertices[0]), z(this->vertices[1])), z(this->vertices[2]));
-	float zMax = max(max(z(this->vertices[0]), z(this->vertices[1])), z(this->vertices[2]));
+	float xMin = std::min(std::min(this->vertices[0].x, this->vertices[1].x), this->vertices[2].x);
+	float xMax = std::max(std::max(this->vertices[0].x, this->vertices[1].x), this->vertices[2].x);
+	float yMin = std::min(std::min(this->vertices[0].y, this->vertices[1].y), this->vertices[2].y);
+	float yMax = std::max(std::max(this->vertices[0].y, this->vertices[1].y), this->vertices[2].y);
+	float zMin = std::min(std::min(this->vertices[0].z, this->vertices[1].z), this->vertices[2].z);
+	float zMax = std::max(std::max(this->vertices[0].z, this->vertices[1].z), this->vertices[2].z);
 
-	this->aabb = AABB(P(xMin, yMin, zMin), P(xMax, yMax, zMax));
+	this->aabb = AABB(glm::vec3(xMin, yMin, zMin), glm::vec3(xMax, yMax, zMax));
 }
 
 /**
@@ -124,7 +124,7 @@ float Tri::naiveIntersect(const Ray& ray, glm::vec3& W) const
 	// First, test if the ray intersects the plane formed by the triangle:
 	glm::vec3 k = glm::cross(e21, e31);
 	glm::vec3 n = glm::normalize(k);
-	float d     = glm::dot(n, this->vertices[0].xyz);
+	float d     = glm::dot(n, this->vertices[0]);
 	
 	// Find the normal of the plane, i.e. the cross product of the two
 	// vectors that are sides of the triangle A-B and B-C:
@@ -142,8 +142,8 @@ float Tri::naiveIntersect(const Ray& ray, glm::vec3& W) const
 	
 	// and the actual position from the unnormalized ray. This will make dealing
 	// with transformations easier later:
-	float t  = (d - (glm::dot(n, ray.orig))) / nd;
-	P Q      = ray.project(tInTri);
+	float t     = (d - (glm::dot(n, ray.orig))) / nd;
+	glm::vec3 Q = ray.project(tInTri);
 
 	glm::vec3 eQ1 = Q - this->vertices[0];
 	glm::vec3 eQ2 = Q - this->vertices[1];
@@ -218,7 +218,7 @@ float Tri::mollerTrumboreIntersect(const Ray& ray, glm::vec3& W) const
 	return -1.0f;
 }
 
-glm::vec3 Tri::barycenter(const P& p) const
+glm::vec3 Tri::barycenter(const glm::vec3& p) const
 {
     glm::vec3 v0 = this->vertices[1] - this->vertices[0]; 
     glm::vec3 v1 = this->vertices[2] - this->vertices[0];

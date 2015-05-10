@@ -142,6 +142,7 @@ AABB& AABB::operator+=(const AABB &other)
 std::ostream& operator<<(std::ostream& s, const AABB& aabb)
 {
 	//return s << "<["<< aabb.v1 << ", "<< aabb.v2 << "]>";
+    return s;
 }
 
 const AABB operator+(const AABB& p, const AABB& q)

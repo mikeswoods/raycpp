@@ -82,13 +82,13 @@ Color EnvironmentMap::getColor(const Ray& ray, shared_ptr<SceneContext> scene) c
 
 	if (isect.isHit()) {
 
-		glm::vec3 hit = glm::normalize(ray.project(isect.t).xyz);
+		glm::vec3 hit = glm::normalize(ray.project(isect.t));
 		Color out;
 
 		switch (this->mapType) {
 			case WILD1:
 				{
-					out = Color(abs(hit.x), abs(hit.y), abs(hit.z));
+					out = Color(fabs(hit.x), fabs(hit.y), fabs(hit.z));
 				}
 				break;
 			case WILD2:

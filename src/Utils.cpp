@@ -187,7 +187,7 @@ vec3 Utils::fixUpVector(const vec3& viewDir, const vec3& up)
  * If the fourth/"w" component of V is 0, V is interpreted as a vector, 
  * otherwise, it is interpreted as a position.
  */
-vec3 transform(mat4 T, vec4 V)
+vec3 Utils::transform(mat4 T, vec4 V)
 {
     vec4 result = T * V;
     if (V.w != 0.0f) { // Points

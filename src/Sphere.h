@@ -17,7 +17,7 @@
 class Sphere : public Geometry
 {
 	private:
-		P center_;
+		glm::vec3 center_;
 		float radius_;
 		BoundingSphere volume;
 		AABB aabb;
@@ -31,11 +31,11 @@ class Sphere : public Geometry
 
 	public:
 		Sphere();
-		Sphere(const P& center, float radius);
+		Sphere(const glm::vec3& center, float radius);
 		virtual ~Sphere();
 
 		virtual const BoundingVolume& getVolume() const;
-		virtual const P& getCentroid() const;
+		virtual const glm::vec3& getCentroid() const;
 		virtual const AABB& getAABB() const;
 		virtual void buildGeometry();
 		virtual void repr(std::ostream& s) const;

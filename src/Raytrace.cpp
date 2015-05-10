@@ -12,7 +12,9 @@
 #include <ctime>
 #include <chrono>
 #include <cassert>
+#ifdef ENABLE_OPENMP
 #include <omp.h>
+#endif
 #include <cstdlib>
 #include <iostream>
 #include <stack>
@@ -64,24 +66,12 @@ static Color trace(const Ray&, shared_ptr<SceneContext>, shared_ptr<TraceOptions
 
 ostream& operator<<(ostream& s, const Intersection& isect)
 {
-    s << "Intersection {"                 << endl
-      << "  t="         << isect.t        << endl
-      << "  node="      << isect.node     << endl
-      << "  inside="    << isect.inside   << endl
-      << "  hitWorld="  << isect.hitWorld << endl
-      << "  hitLocal="  << isect.hitLocal << endl
-      << "  normal="    << isect.normal   << endl
-      << "}"                              << endl;
-    return s;
+    return s << "Intersection";
 }
 
 ostream& operator<<(ostream& s, const TraceContext& ctx)
 {
-    s << "TraceContext {"                      << endl
-      << "  ray="          << ctx.ray          << endl
-      << "  closestIsect=" << ctx.closestIsect << endl
-      << "}"                                   << endl;
-    return s;
+    return s << "TraceContext";
 }
 
 ostream& operator<<(ostream& s, const TraceOptions& opts)
@@ -106,31 +96,6 @@ static ostream& debugPixel(ostream& os, string funcName, int depth)
     }
     os << funcName << "<" << depth << ">: ";
     return os;
-}
-
-static ostream& debugPixel(string funcName, int depth, const Color& output)
-{
-    return debugPixel(cerr, funcName, depth) << output << endl;
-}
-
-static ostream& debugPixel(string funcName, int depth, const vec3& output)
-{
-    return debugPixel(cerr, funcName, depth) << output << endl;
-}
-
-static ostream& debugPixel(string funcName, int depth, float output)
-{
-    return debugPixel(cerr, funcName, depth) << output << endl;
-}
-
-static ostream& debugPixel(string funcName, int depth, int output)
-{
-    return debugPixel(cerr, funcName, depth) << output << endl;
-}
-
-static ostream& debugPixel(string funcName, int depth, string output)
-{
-    return debugPixel(cerr, funcName, depth) << output << endl;
 }
 
 /*******************************************************************************
@@ -272,11 +237,11 @@ static bool fastTestInShadow(const Ray& ray
 
 static bool isOccludedFromPosition(shared_ptr<SceneContext> scene
                                   ,shared_ptr<GraphNode> selfNode
-                                  ,const P& hitAt
+                                  ,const glm::vec3& hitAt
                                   ,shared_ptr<Light> light)
 {
     float cosine = 0.0f;
-    V L          = light->fromSampledPoint(hitAt, cosine);
+    glm::vec3 L  = light->fromSampledPoint(hitAt, cosine);
 
     // if the cosine angle is less than zero, then the sample on the surface of
     // the light geometry is pointing away from the position to test for 
@@ -304,10 +269,10 @@ static bool isOccludedFromPosition(shared_ptr<SceneContext> scene
  ******************************************************************************/
 
 static float shadow(shared_ptr<SceneContext> scene
-                    ,shared_ptr<GraphNode> selfNode
-                    ,const P& hitAt
-                    ,shared_ptr<Light> light
-                    ,int samples)
+                   ,shared_ptr<GraphNode> selfNode
+                   ,const glm::vec3& hitAt
+                   ,shared_ptr<Light> light
+                   ,int samples)
 {
     // If the self node being tested is the light itself, bail immediately:
     if (light->isLightSourceNode(selfNode)) {
@@ -342,15 +307,15 @@ static float shadow(shared_ptr<SceneContext> scene
 static Color traceReflect(shared_ptr<SceneContext> scene
                          ,shared_ptr<TraceOptions> opts
                          ,const Intersection& isect
-                         ,const V& I
-                         ,const V& N
+                         ,const glm::vec3& I
+                         ,const glm::vec3& N
                          ,int depth
                          ,bool isDebugPixel = false)
 {
     shared_ptr<Material> mat = isect.node->getMaterial();
     assert(!!mat);
 
-    V R = reflect(I, N);
+    glm::vec3 R = reflect(I, N);
 
     #ifdef ENABLE_PIXEL_DEBUG
     if (opts->enablePixelDebug && isDebugPixel) {
@@ -373,13 +338,13 @@ static Color traceReflect(shared_ptr<SceneContext> scene
 static Color traceRefract(shared_ptr<SceneContext> scene
                          ,shared_ptr<TraceOptions> opts
                          ,const Intersection& isect
-                         ,const V& I
-                         ,const V& N
+                         ,const glm::vec3& I
+                         ,const glm::vec3& N
                          ,float n
                          ,int depth
                          ,bool isDebugPixel)
 {
-    V R = refract(I, N, n);
+    glm::vec3 R = refract(I, N, n);
 
     // Is R a zero vector? If so, reflect instead:
     if (R == vec3(0, 0, 0)) {
@@ -408,12 +373,15 @@ static Color traceRefract(shared_ptr<SceneContext> scene
  *
  ******************************************************************************/
 
-float reflectCoeff(const V& lightDir, const V& viewDir, float n1, float n2)
+float reflectCoeff(const glm::vec3& lightDir
+                  ,const glm::vec3& viewDir
+                  ,float n1
+                  ,float n2)
 {
     // Adapted in part from http://www.cs.utah.edu/~shirley/books/fcg2/rt.pdf
-    V H        = normalize(lightDir + viewDir);
-    float R0   = powf((n1 - n2) / (n2 + n1), 2.0f);
-    float cosI = dot(viewDir, H);
+    glm::vec3 H = normalize(lightDir + viewDir);
+    float R0    = powf((n1 - n2) / (n2 + n1), 2.0f);
+    float cosI  = dot(viewDir, H);
 
     return R0 + ((1.0f - R0) * powf(std::max(0.0f, 1.0f - cosI), 5.0f));
 }
@@ -426,7 +394,7 @@ float reflectCoeff(const V& lightDir, const V& viewDir, float n1, float n2)
 
 static vec3 blinnPhongShade(shared_ptr<TraceOptions> opts
                                 ,const Intersection& isect
-                                ,const V& I
+                                ,const glm::vec3& I
                                 ,shared_ptr<Light> light
                                 ,Color& ambient
                                 ,Color& diffuse
@@ -445,15 +413,15 @@ static vec3 blinnPhongShade(shared_ptr<TraceOptions> opts
 
     // Adjust the height of the normal vector by multiplying it with the
     // intensity value of the bump map
-    V N = isect.normal;
+    glm::vec3 N = isect.normal;
 
     // Choose the UV mapping vector. If one is given in the intersection, use it,
     // otherwise use the local hit
-    vec3 uvFromHit = normalize(isect.hitLocal.xyz);
+    vec3 uvFromHit = normalize(isect.hitLocal);
 
     if (mat->hasBumpMap()) {
 
-        V B = mat->getNormal(uvFromHit, geometry);
+        glm::vec3 B = mat->getNormal(uvFromHit, geometry);
 
         #ifdef ENABLE_PIXEL_DEBUG
         if (opts->enablePixelDebug && isDebugPixel) {
@@ -480,9 +448,9 @@ static vec3 blinnPhongShade(shared_ptr<TraceOptions> opts
         return N; // The surface normal
     }
 
-    V L        = normalize(light->fromCenter(isect.hitWorld));
-    V R        = reflect(L, N);
-    Color lcol = light->getColor(isect.hitWorld);
+    glm::vec3 L = normalize(light->fromCenter(isect.hitWorld));
+    glm::vec3 R = reflect(L, N);
+    Color lcol  = light->getColor(isect.hitWorld);
 
     // Diffuse component:
     float cosineAngle = dot(L, N);
@@ -548,8 +516,8 @@ static Color computeShading(const Ray& ray
     float n           = n1 / n2;
 
     // Incident ray:
-    V I = normalize(ray.dir);
-    V N = vec3();
+    glm::vec3 I = normalize(ray.dir);
+    glm::vec3 N = vec3();
 
     auto lights = scene->getLights();
 
@@ -569,7 +537,7 @@ static Color computeShading(const Ray& ray
 
         // For each light, compute the accumulated the Schlick approximation for  the Fresnel term:
         if (mat->isTransparent() && mat->isMirror()) {
-            V L          = normalize((*l)->fromCenter(isect.hitWorld));
+            glm::vec3 L = normalize((*l)->fromCenter(isect.hitWorld));
             fresnelTerm += reflectCoeff(L, I, n1, n2);
         }
     }

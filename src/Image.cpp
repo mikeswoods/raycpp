@@ -7,9 +7,11 @@
  *
  ******************************************************************************/
 
+#ifdef ENABLE_OPENMP
 #include <omp.h>
+#endif
+#include <algorithm>
 #include <utility>
-#include <CImg.h>
 #include "Image.h"
 
 /******************************************************************************/

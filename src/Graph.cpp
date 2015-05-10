@@ -103,7 +103,7 @@ mat4 applyTransform(shared_ptr<GraphNode> node, mat4 current)
 
 	// Assume the "identity" matrix we are using is centered about 
 	// node->getCenter() initially:
-	mat4 I  = translate(mat4(), toVec3(node->getCenter()));
+	mat4 I  = translate(mat4(), node->getCenter());
 
 	float xAngle = R[0];
 	float yAngle = R[1];

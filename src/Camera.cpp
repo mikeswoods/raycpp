@@ -20,9 +20,9 @@ using namespace std;
 
 /******************************************************************************/
 
-Camera::Camera(const P &position
-              ,const V &viewDir
-              ,const V &up
+Camera::Camera(const glm::vec3 &position
+              ,const glm::vec3 &viewDir
+              ,const glm::vec3 &up
               ,float fov
               ,float aspectRatio)
 {
@@ -37,27 +37,14 @@ Camera::Camera(const P &position
     this->calibrateViewPlane();
 }
 
-Camera::Camera(const P &position
-              ,const V &viewDir
+Camera::Camera(const glm::vec3& position
+              ,const glm::vec3& lookAt
               ,float fov
               ,float aspectRatio)
 {
     this->position    = position;
-    this->viewDir     = viewDir;
-    this->up          = V(0.0f, 1.0f, 0.0f);
-    this->fov         = fov;
-    this->phi         = 0.0f;
-    this->theta       = 0.0f;
-    this->aspectRatio = aspectRatio;
-
-    this->calibrateViewPlane();
-}
-
-Camera::Camera(const P &position, const P &lookAt, float fov, float aspectRatio)
-{
-    this->position    = position;
     this->viewDir     = lookAt - position;
-    this->up          = V(0.0f, 1.0f, 0.0f);
+    this->up          = glm::vec3(0.0f, 1.0f, 0.0f);
     this->fov         = fov;
     this->phi         = 0.0f;
     this->theta       = 0.0f;
@@ -82,7 +69,7 @@ Camera::Camera(const Camera &other)
 /**
  * Update the camera's position
  */
-void Camera::setPosition(const P& position)
+void Camera::setPosition(const glm::vec3& position)
 {
     this->position = position;
 
@@ -92,7 +79,7 @@ void Camera::setPosition(const P& position)
 /**
  * Update the camera's view direction
  */
-void Camera::setViewDir(const V& viewDir)
+void Camera::setViewDir(const glm::vec3& viewDir)
 {
     this->viewDir = viewDir;
 
@@ -102,7 +89,7 @@ void Camera::setViewDir(const V& viewDir)
 /**
  * Update the camera's "up" vector
  */
-void Camera::setUp(const V& up)
+void Camera::setUp(const glm::vec3& up)
 {
     this->up = up;
 
@@ -133,7 +120,7 @@ void Camera::setAspectRatio(float aspectRatio)
  * Convert an (u,v) coordinate in the range {[0,1],[0,1]} to a position 
  * in R3 space
  */
-P Camera::ndc2World(float x, float y) const 
+glm::vec3 Camera::ndc2World(float x, float y) const 
 {
     // This is needed since (0,0) corresponds to the bottom-left corner.
     // This inverts (0,0) such that it is in the upper-left corner, since y
@@ -147,7 +134,7 @@ P Camera::ndc2World(float x, float y) const
  * Convert an x,y coorindate in the range {[0,screenWidth),[0,screenHeight)} 
  * to a position in R3 space
  */
-P Camera::screen2World(float x, float y, float resoX, float resoY) const
+glm::vec3 Camera::screen2World(float x, float y, float resoX, float resoY) const
 {
     return ndc2World(static_cast<float>(x) / static_cast<float>(resoX)
 		            ,static_cast<float>(y) / static_cast<float>(resoY));
@@ -189,14 +176,13 @@ ostream& operator<<(ostream& s, const Camera& c)
 {
     return s                                << 
         "Camera {"                          << endl <<
-        "  position    = " << c.position    << endl << 
-        "  viewDir     = " << c.viewDir     << endl <<
-        "  up          = " << c.up          << endl <<
+        "  position    = <" << c.position.x << ", " << c.position.y << ", " << c.position.z << "> " << endl << 
+        "  viewDir     = <" << c.viewDir.x << ", " << c.viewDir.y << ", " << c.viewDir.z << "> " << endl << 
         "  fov         = " << c.fov         << endl <<
         "  theta       = " << c.theta       << endl <<
         "  phi         = " << c.phi         << endl <<
         "  aspectRatio = " << c.aspectRatio << endl <<
-        "  midpoint    = " << c.midpoint    << endl << 
+        "  midpoint    = [" << c.midpoint.x << ", " << c.midpoint.y << ", " << c.midpoint.z << "]" << endl << 
         "}";
 }
 

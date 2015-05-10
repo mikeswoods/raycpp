@@ -36,8 +36,8 @@ using namespace cimg_library;
  */
 vec2 SurfaceMap::mapToSphere(const vec3& d)
 {
-	float u = 0.5f + ((atan(z(d), x(d)) / (2.0f * static_cast<float>(M_PI))));
-	float v = 0.5f - (asin(y(d)) / static_cast<float>(M_PI));
+	float u = 0.5f + ((atan(d.z, d.x) / (2.0f * static_cast<float>(M_PI))));
+	float v = 0.5f - (asin(d.y) / static_cast<float>(M_PI));
 	return vec2(u, v);
 }
 

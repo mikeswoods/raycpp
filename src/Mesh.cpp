@@ -65,7 +65,13 @@ void Mesh::repr(std::ostream& s) const
 
 void Mesh::computeCentroid()
 {
-    this->centroid = mean(this->vertices_);
+    this->centroid = glm::vec3();
+
+    for (auto i = this->vertices_.begin(); i != this->vertices_.end(); i++) {
+        this->centroid += *i;
+    }
+
+    this->centroid /= static_cast<float>(this->vertices_.size());
 }
 
 void Mesh::computeAABB()
@@ -77,7 +83,7 @@ void Mesh::computeAABB()
     }
 }
 
-const P& Mesh::getCentroid() const
+const glm::vec3& Mesh::getCentroid() const
 {
     return this->centroid;
 }

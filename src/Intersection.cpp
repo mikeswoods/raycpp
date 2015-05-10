@@ -28,7 +28,7 @@ Intersection::Intersection() :
     
 }
 
-Intersection::Intersection(float _t, V _normal) : 
+Intersection::Intersection(float _t, glm::vec3 _normal) : 
     t(_t), 
     density(1.0f),
     node(nullptr),
@@ -39,7 +39,7 @@ Intersection::Intersection(float _t, V _normal) :
     
 }
 
-Intersection::Intersection(float _t, float _density, V _normal) : 
+Intersection::Intersection(float _t, float _density, glm::vec3 _normal) : 
     t(_t), 
     density(_density),
     node(nullptr),
@@ -49,21 +49,6 @@ Intersection::Intersection(float _t, float _density, V _normal) :
 { 
 
 }
-
-/*
-Intersection::Intersection(const Intersection& other) : 
-    t(other.t), 
-    density(other.density),
-    normal(other.normal),
-    node(other.node),
-    inside(other.inside),
-    hitWorld(other.hitWorld),
-    hitLocal(other.hitLocal),
-    correctNormal(other.correctNormal)
-{ 
-
-}
-*/
 
 bool Intersection::isMiss() const 
 {

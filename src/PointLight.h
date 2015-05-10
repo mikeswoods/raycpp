@@ -22,7 +22,7 @@ class PointLight : public Light
 {
 	protected:
 		// Light world position
-		P position;
+		glm::vec3 position;
 
 		// Light color
 		Color color;
@@ -30,28 +30,27 @@ class PointLight : public Light
     public:
         PointLight();
 		PointLight(const glm::vec3& position);
-		PointLight(const P& position);
-        PointLight(const P& position, const Color& color);
+        PointLight(const glm::vec3& position, const Color& color);
         PointLight(const PointLight &other);
 
 		virtual void repr(std::ostream& s) const;
 
-		const P& getPosition() const        { return this->position; }
-		void setPosition(const P& position) { this->position = position; }
+		const glm::vec3& getPosition() const        { return this->position; }
+		void setPosition(const glm::vec3& position) { this->position = position; }
 
-		void translateX(float amount) { this->position.xyz.x += amount; }
-		void translateY(float amount) { this->position.xyz.y += amount; }
-		void translateZ(float amount) { this->position.xyz.z += amount; }
+		void translateX(float amount) { this->position.x += amount; }
+		void translateY(float amount) { this->position.y += amount; }
+		void translateZ(float amount) { this->position.z += amount; }
 
 		const Color& getColor() const     { return this->color; }
 		void setColor(const Color& color) { this->color = color; }
 
-		virtual V fromCenter(const P& from) const;
+		virtual glm::vec3 fromCenter(const glm::vec3& from) const;
 
-		virtual V fromSampledPoint(const P& from) const;
-		virtual V fromSampledPoint(const P& from, float& cosineAngle) const;
+		virtual glm::vec3 fromSampledPoint(const glm::vec3& from) const;
+		virtual glm::vec3 fromSampledPoint(const glm::vec3& from, float& cosineAngle) const;
 
-		virtual Color getColor(const P& from) const;
+		virtual Color getColor(const glm::vec3& from) const;
 
 		virtual bool isLightSourceNode(std::shared_ptr<GraphNode> testNode) const;
 };

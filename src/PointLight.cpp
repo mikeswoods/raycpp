@@ -27,21 +27,13 @@ PointLight::PointLight() :
 
 PointLight::PointLight(const glm::vec3& _position) :
 	Light(POINT_LIGHT),
-	position(P(_position)),
-	color(Color::WHITE)
-{ 
-	
-}
-
-PointLight::PointLight(const P& _position) :
-	Light(POINT_LIGHT),
 	position(_position),
 	color(Color::WHITE)
 { 
 	
 }
 
-PointLight::PointLight(const P& _position, const Color& _color) :
+PointLight::PointLight(const glm::vec3& _position, const Color& _color) :
 	Light(POINT_LIGHT),
 	position(_position),
 	color(_color)
@@ -59,29 +51,26 @@ PointLight::PointLight(const PointLight &other) :
 
 void PointLight::repr(std::ostream& s) const
 {
-	s << "PointLight { " 
-	  << "  position = " << this->position
-      << ", color = "    << this->color
-	  << " }";
+	s << "PointLight";
 }
 
-V PointLight::fromCenter(const P& from) const
+glm::vec3 PointLight::fromCenter(const glm::vec3& from) const
 {
-	return this->position.xyz - from;
+	return this->position - from;
 }
 
-V PointLight::fromSampledPoint(const P& from) const
+glm::vec3 PointLight::fromSampledPoint(const glm::vec3& from) const
 {
 	return this->fromCenter(from);
 }
 
-V PointLight::fromSampledPoint(const P& from, float& cosineAngle) const
+glm::vec3 PointLight::fromSampledPoint(const glm::vec3& from, float& cosineAngle) const
 {
 	cosineAngle = numeric_limits<float>::infinity();
 	return this->fromCenter(from);
 }
 
-Color PointLight::getColor(const P& from) const
+Color PointLight::getColor(const glm::vec3& from) const
 {
 	return this->color;
 }

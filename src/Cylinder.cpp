@@ -24,7 +24,7 @@ using namespace std;
 // Creates a unit cylinder centered at (0, 0, 0)
 Cylinder::Cylinder() :
     Geometry(CYLINDER),
-    center_(P(0.f, 0.f, 0.f)),
+    center_(glm::vec3(0.f, 0.f, 0.f)),
     radius_(0.5f),
     height_(1.0f)
 {
@@ -50,13 +50,10 @@ Cylinder::~Cylinder()
 
 void Cylinder::repr(std::ostream& s) const
 {
-	s << "Cylinder<center=" << this->center_ 
-	  << ", radius="        << this->radius_
-	  << ", height="        << this->height_
-	  << ">";
+	s << "Cylinder";
 }
 
-const P& Cylinder::getCentroid() const
+const glm::vec3& Cylinder::getCentroid() const
 {
 	return this->center_;
 }
@@ -73,13 +70,12 @@ const AABB& Cylinder::getAABB() const
 
 void Cylinder::buildVolume()
 {
-	this->volume = BoundingSphere(this->center_, (this->center_.xyz.y + this->height_) + Utils::EPSILON);
+	this->volume = BoundingSphere(this->center_, (this->center_.y + this->height_) + Utils::EPSILON);
 }
 
 void Cylinder::computeAABB()
 {
-    this->aabb = AABB(P(x(this->center_) - this->radius_, y(this->center_) - this->height_, z(this->center_) - this->radius_)
-                     ,P(x(this->center_) + this->radius_, y(this->center_) + this->height_, z(this->center_) + this->radius_));
+    this->aabb = AABB(this->center_ - this->radius_, this->center_ + this->radius_);
 }
 
 void Cylinder::buildGeometry()
@@ -97,8 +93,8 @@ void Cylinder::buildGeometry()
 
     // top and bottom cap vertices
     for (int i = 0; i < subdiv + 1; ++i) {
-        glm::mat4 rotate = glm::rotate(glm::mat4(1.0f), i * dtheta, glm::vec3(0.f, 1.f, 0.f));
-        glm::mat4 translate = glm::translate(glm::mat4(1.0f), center_.xyz);
+        glm::mat4 rotate    = glm::rotate(glm::mat4(1.0f), i * dtheta, glm::vec3(0.f, 1.f, 0.f));
+        glm::mat4 translate = glm::translate(glm::mat4(1.0f), center_);
 
         cap_top.push_back(glm::vec3(translate * rotate * point_top));
         cap_bottom.push_back(glm::vec3(translate * rotate * point_bottom));
@@ -169,12 +165,12 @@ Intersection Cylinder::intersectImpl(const Ray &ray, shared_ptr<SceneContext> sc
     float r2    = this->radius_ * this->radius_;
 	glm::vec3 E = ray.orig - this->center_;
 
-	float xo = x(ray.orig);
-    float yo = y(ray.orig);
-    float zo = z(ray.orig);
-    float xd = x(ray.dir);
-    float yd = y(ray.dir);
-    float zd = z(ray.dir);
+	float xo = ray.orig.x;
+    float yo = ray.orig.y;
+    float zo = ray.orig.z;
+    float xd = ray.dir.x;
+    float yd = ray.dir.y;
+    float zd = ray.dir.z;
     float A  = (xd * xd) + (zd * zd);
     float B  = (2.0f * xo * xd) + (2.0f * zo * zd);
     float C  = (xo * xo) + (zo * zo) - r2;
@@ -205,8 +201,8 @@ Intersection Cylinder::intersectImpl(const Ray &ray, shared_ptr<SceneContext> sc
 	// Test for intersections: sides
 	float y0  = yo + (t0 * yd);
 	float y1  = yo + (t1 * yd);
-	float yLo = this->center_.xyz.y - halfH;
-	float yHi = this->center_.xyz.y + halfH;
+	float yLo = this->center_.y - halfH;
+	float yHi = this->center_.y + halfH;
 	float side1 = inf, side2 = inf;
 
 	if (y0 >= yLo && y0 <= yHi) {
@@ -226,7 +222,7 @@ Intersection Cylinder::intersectImpl(const Ray &ray, shared_ptr<SceneContext> sc
 		|| (y1 <= yHi && y0 >= yHi) 
 		|| (y0 == y1)) 
 	{
-		tTop = (-y(E) + halfH) / yd;
+		tTop = (-E.y + halfH) / yd;
 	}
 
 	// Test for intersections:  bottom:
@@ -234,7 +230,7 @@ Intersection Cylinder::intersectImpl(const Ray &ray, shared_ptr<SceneContext> sc
 		|| (y1 <= yLo && y0 >= yLo) 
 		|| (y0 == y1))
 	{
-		tBottom = (-y(E) - halfH) / yd;
+		tBottom = (-E.y - halfH) / yd;
 	}
 
 	// Bad results when yd is zero:
@@ -260,8 +256,8 @@ Intersection Cylinder::intersectImpl(const Ray &ray, shared_ptr<SceneContext> sc
 	} else if (t == tBottom) {
 		normal = glm::vec3(0.0f, -1.0f, 0.0f);
 	} else {
-		P p = ray.project(t);
-		normal = glm::vec3(x(p) / this->radius_, 0.0f, z(p) / this->radius_);
+		glm::vec3 p = ray.project(t);
+		normal = glm::vec3(p.x / this->radius_, 0.0f, p.z / this->radius_);
 	}
 
 	return Intersection(t, normal);

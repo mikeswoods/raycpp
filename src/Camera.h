@@ -24,13 +24,13 @@ class Camera
         void calibrateViewPlane();
 
     protected:
-        P position;
-        V viewDir, up;
-        V u, v, w;     // Basis vectors
+        glm::vec3 position;
+        glm::vec3 viewDir, up;
+        glm::vec3 u, v, w;     // Basis vectors
         float fov, aspectRatio, phi, theta;
 
-        V viewPlaneX, viewPlaneY;
-        P midpoint;
+        glm::vec3 viewPlaneX, viewPlaneY;
+        glm::vec3 midpoint;
 
     public:
 
@@ -38,19 +38,18 @@ class Camera
 		static void pixelDimensions(int resoX, int resoY, float& pw, float& ph);
 
         Camera() {};
-        Camera(const P &position, const V &viewDir, const V &up, float fov, float aspectRatio);
-        Camera(const P &position, const V &viewDir, float fov, float aspectRatio);
-        Camera(const P &position, const P &lookAt, float fov, float aspectRatio);
+        Camera(const glm::vec3& position, const glm::vec3& viewDir, const glm::vec3 &up, float fov, float aspectRatio);
+        Camera(const glm::vec3& position, const glm::vec3& lookAt, float fov, float aspectRatio);
         Camera(const Camera &other);
 
-        void setPosition(const P& position);
-		const P& getPosition() const { return this->position; }
+        void setPosition(const glm::vec3& position);
+		const glm::vec3& getPosition() const { return this->position; }
         
-		void setViewDir(const V& viewDir);
-		const V& getViewDir() const { return this->viewDir; }
+		void setViewDir(const glm::vec3& viewDir);
+		const glm::vec3& getViewDir() const { return this->viewDir; }
 
-		const V& getUp() const { return this->up; }
-		void setUp(const V& up);
+		const glm::vec3& getUp() const { return this->up; }
+		void setUp(const glm::vec3& up);
 
 		void setFOV(float fov);
 		float getFOV() const { return this->fov; }
@@ -58,8 +57,8 @@ class Camera
 		void setAspectRatio(float aspectRatio);
 		float getAspectRatio() const { return this->aspectRatio; }
 
-        P ndc2World(float x, float y) const;
-        P screen2World(float x, float y, float resoX, float resoY) const;
+        glm::vec3 ndc2World(float x, float y) const;
+        glm::vec3 screen2World(float x, float y, float resoX, float resoY) const;
 
         Ray spawnRay(float x, float y) const;
         Ray spawnRay(float x, float y, float resoX, float resoY) const;

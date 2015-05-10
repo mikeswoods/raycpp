@@ -17,7 +17,7 @@
 class Cylinder : public Geometry
 {
 	private:
-		P center_;
+		glm::vec3 center_;
 		float radius_;
 		float height_;
 		BoundingSphere volume;
@@ -35,7 +35,7 @@ class Cylinder : public Geometry
 		Cylinder(const Cylinder& other);
 		virtual ~Cylinder();
 
-		virtual const P& getCentroid() const;
+		virtual const glm::vec3& getCentroid() const;
 		virtual const BoundingVolume& getVolume() const;
 		virtual const AABB& getAABB() const;
 		virtual void buildGeometry();

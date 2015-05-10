@@ -15,6 +15,7 @@
 #include <utility> 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
+#define cimg_display 0
 #include <CImg.h>
 #include "Config.h"
 #include "Camera.h"
