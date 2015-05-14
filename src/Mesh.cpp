@@ -15,6 +15,7 @@
 #include <iterator>
 #include <numeric>
 #include <limits>
+#include <easylogging++.h>
 #include "Mesh.h"
 
 /******************************************************************************/
@@ -90,7 +91,7 @@ void Mesh::buildGeometry()
 {
     // Vertices
 
-    assert(this->meshData->mVertices && this->meshData->mNormals);
+    assert(this->meshData->HasFaces() && this->meshData->HasNormals());
 
     for (unsigned int i = 0; i < this->meshData->mNumVertices; i++) {
 
@@ -113,7 +114,10 @@ void Mesh::buildGeometry()
     for (unsigned int i = 0; i < this->meshData->mNumFaces; i++) {
 
         auto face = this->meshData->mFaces[i];
-        assert(face.mNumIndices == 3);     
+        if (face.mNumIndices != 3) {
+            LOG(ERROR) << "face.mNumIndices = " << face.mNumIndices << endl;
+            assert(face.mNumIndices == 3);
+        }
 
         unsigned int u = face.mIndices[0];
         unsigned int v = face.mIndices[1];

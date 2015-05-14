@@ -44,6 +44,14 @@ using namespace Utils;
 
 /******************************************************************************/
 
+static bool isNullValue(const string& testValue)
+{
+	auto s = lowercase(string(testValue));
+	return s == "null" || s == "~";
+}
+
+/******************************************************************************/
+
 Configuration::Configuration(const string& _filename) :
 	filename(_filename),
 	RESO{0,0},
@@ -141,8 +149,9 @@ void Configuration::parseCameraSection(istream& is, const string& beginToken)
 			}
 		}
 
-		istringstream ss(lowercase(line));
+		istringstream ss(line);
 		ss >> attribute;
+		attribute = lowercase(attribute);
 
 		#ifdef ENABLE_DEBUG
 		LOG(DEBUG) << "ATTRIBUTE<parseCameraSection>: "<< attribute;
@@ -200,8 +209,9 @@ void Configuration::parseEnvironmentSection(istream& is, const string& beginToke
 			}
 		}
 
-		istringstream ss(lowercase(line));
+		istringstream ss(line);
 		ss >> attribute;
+		attribute = lowercase(attribute);
 
 		#ifdef ENABLE_DEBUG
 		LOG(DEBUG) << "ATTRIBUTE<parseEnvironmentSection>: " << attribute;
@@ -270,8 +280,9 @@ void Configuration::parseMaterialSection(istream& is, const string& beginToken)
 			}
 		}
 
-		istringstream ss(lowercase(line));
+		istringstream ss(line);
 		ss >> attribute;
+		attribute = lowercase(attribute);
 
 		#ifdef ENABLE_DEBUG
 		LOG(DEBUG) << "ATTRIBUTE<parseMaterialSection>: "<< attribute;
@@ -376,17 +387,18 @@ void Configuration::parsePointLightSection(istream& is, const string& beginToken
 			}
 		}
 
-		istringstream ss(lowercase(line));
+		istringstream ss(line);
 		ss >> attribute;
+		attribute = lowercase(attribute);
 
 		#ifdef ENABLE_DEBUG
 		LOG(DEBUG) << "ATTRIBUTE<parsePointLightSection>: " << attribute;
 		#endif
 
-		if (attribute == "lpos") {
+		if (attribute == "lpos" || attribute == "position") {
 			ss >> LPOS[0] >> LPOS[1] >> LPOS[2];
 			readNonEmptyLine = true;
-		} else if (attribute == "lcol") {
+		} else if (attribute == "lcol" || attribute == "color") {
 			ss >> LCOL[0] >> LCOL[1] >> LCOL[2];
 			readNonEmptyLine = true;
 		} else {
@@ -445,8 +457,9 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 			}
 		}
 
-		istringstream ss(lowercase(line));
+		istringstream ss(line);
 		ss >> attribute;
+		attribute = lowercase(attribute);
 
 		#ifdef ENABLE_DEBUG
 		LOG(DEBUG) << "ATTRIBUTE<parseNodeDefinition>: " 
@@ -495,7 +508,7 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 				string parentName;
 				ss >> parentName;
 				 // if parentName is null, then node is the scene graph's root
-				if (parentName == "null") {
+				if (isNullValue(parentName)) {
 					node->setParent(nullptr);
 					this->graphBuilder.setRoot(node);
 				} else {
@@ -506,7 +519,7 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 			} else if (attribute == "shape") {
 				string shapeType;
 				ss >> shapeType;
-				if (shapeType == "null") {
+				if (isNullValue(shapeType)) {
 					// Do nothing
 				} else if (shapeType == "sphere") {
 					geometry = shared_ptr<Geometry>(make_shared<Sphere>());
@@ -529,7 +542,7 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 			} else if (attribute == "mat" || attribute == "material") {
 				string matName;
 				ss >> matName;
-				if (matName != "null") {
+				if (!isNullValue(matName)) {
 					if (!this->materialExists(matName)) {
 						throw runtime_error("parseNodeDefinition: Material not defined: " + matName);
 					}
@@ -562,7 +575,12 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 			throw runtime_error("No object filename given for mesh object!");
 		}
 
+		LOG(INFO) << "load model from file: " << objFileName << endl;
+ 
 		auto meshData = Model::importMeshes(objFileName);
+
+		assert(meshData.size() > 0);
+
 		std::vector<std::shared_ptr<Mesh>> meshes;
 
 		for (auto i = meshData.begin(); i != meshData.end(); i++) {

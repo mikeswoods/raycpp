@@ -6,8 +6,8 @@
 	field-of-view 45
 
 [light]
-	LPOS 0 9 0
-	LCOL 1 1 1
+	position 0 9 0
+	color 1 1 1
 
 [material] mat0
 	diffuse-color 1.0 1.0 1.0
@@ -58,7 +58,7 @@
 	transparent 0
 
 [node] root
-	parent null
+	parent ~
 
 [node] floor
 	translation 0 0 0
@@ -106,7 +106,7 @@
 	scale 1.5 1.5 1.5
 	parent root
 	shape mesh
-	FILE dragon.obj
+	model-file dragon.obj
 	material mat5
 
 [node] mirror_sphere
