@@ -40,7 +40,6 @@ class AABB
 	public:
 		AABB();
 		AABB(const glm::vec3& v1, const glm::vec3& v2);
-		AABB(const AABB& other);
 
 		// Returns the centroid of the AABB
 		const glm::vec3& centroid() const { return this->C; }

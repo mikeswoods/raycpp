@@ -23,12 +23,10 @@ class Tri
 		unsigned int meshIndex;
 		glm::uvec3 indices;     // Vertex indices
 		glm::vec3 vertices[3];  // Corner vertices
-		glm::vec3 normal;       // precomputed normal
 		AABB aabb;
 
 		void buildAABB();
 		void computeCentroid();
-		void computeNormal();
 
 	protected:
 		float naiveIntersect(const Ray& ray, glm::vec3& W) const;
@@ -41,7 +39,6 @@ class Tri
 		   ,glm::vec3 v1
 		   ,glm::vec3 v2
 		   ,glm::vec3 v3);
-		Tri(const Tri& other);
 		virtual ~Tri() { }
 
 		unsigned int getMeshIndex() const   { return this->meshIndex; }
@@ -58,7 +55,6 @@ class Tri
 
 		glm::vec3 const * getVertices() const { return this->vertices; }
 
-		glm::vec3 getNormal() const;
 		const AABB& getAABB() { return this->aabb; }
 
 		float intersected(const Ray& ray, glm::vec3& W) const;

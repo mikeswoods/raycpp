@@ -29,29 +29,14 @@ Tri::Tri(unsigned int _meshIndex
 	    ,glm::vec3 _v1
 	    ,glm::vec3 _v2
 	    ,glm::vec3 _v3) :
-    meshIndex(_meshIndex)
+    meshIndex(_meshIndex),
+    indices(_indices)
 {
-	this->indices[0] = _indices[0];
-	this->indices[1] = _indices[1];
-	this->indices[2] = _indices[2];
-
 	this->vertices[0] = _v1;
 	this->vertices[1] = _v2;
 	this->vertices[2] = _v3;
 
-	this->computeNormal();
 	this->buildAABB();
-}
-
-Tri::Tri(const Tri& other) :
-    meshIndex(other.meshIndex),
-    indices(other.indices),
-	normal(other.normal),
-	aabb(other.aabb)
-{ 
-	this->vertices[0] = other.vertices[0];
-	this->vertices[1] = other.vertices[1];
-	this->vertices[2] = other.vertices[2];
 }
 
 float Tri::getXMinima() const
@@ -82,16 +67,6 @@ float Tri::getYMaxima() const
 float Tri::getZMaxima() const
 {
 	return std::max(std::max(this->vertices[0].z, this->vertices[1].z), this->vertices[2].z);
-}
-
-void Tri::computeNormal()
-{
-	this->normal = glm::normalize(glm::cross(this->vertices[1] - this->vertices[0], this->vertices[2] - this->vertices[0]));
-}
-
-glm::vec3 Tri::getNormal() const
-{
-	return this->normal;
 }
 
 /**

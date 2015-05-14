@@ -7,31 +7,24 @@ cmake_minimum_required (VERSION 3.0.0)
 project(raycpp)
 find_package(PkgConfig REQUIRED)
 
+#set(ENABLE_PROFILING 1)
+set(ENABLE_OPENMP 1)
+
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 ################################################################################
-# Enable profiling generation
-################################################################################
-
-set(ENABLE_PROFILING 1)
 
 if(DEFINED ENABLE_PROFILING)
    MESSAGE("-- Enabled profiling")
 endif()
 
-################################################################################
 # To enable OpenMP support in the simulator, uncomment the line below.
 # Note: if compiling on OSX (10.8.x Mavericks as I write this), be aware that
 # clang/clang++ does not support OpenMP out of the box. You must have g++
 # installed and it must be in your current path.
-################################################################################
-
-set(ENABLE_OPENMP 1)
-
-################################################################################
 
 # Only use g++ if we're using OpenMP:
 if(DEFINED ENABLE_OPENMP)
@@ -46,6 +39,7 @@ else()
    set(CMAKE_CXX_COMPILER clang++)
 endif()
 
+################################################################################
 
 # Find and set up core dependency libs:
 pkg_search_module(assimp REQUIRED assimp)
@@ -76,11 +70,9 @@ endif()
 
 #Compiler flag magic:
 if(UNIX AND NOT APPLE)
-#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -msse2")
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -m64 -msse2")
 elseif(APPLE)
-#	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -m64 -msse2")
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -m64 -msse2")
 elseif(WIN32)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 endif()

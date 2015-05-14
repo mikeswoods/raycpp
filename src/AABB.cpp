@@ -39,17 +39,6 @@ AABB::AABB(const glm::vec3& _v1, const glm::vec3& _v2) :
     this->C = (this->v1 + this->v2) * 0.5f;
 }
 
-AABB::AABB(const AABB& other) :
-    v1(other.v1),
-    v2(other.v2),
-    _width(other._width),
-    _height(other._height),
-    _depth(other._depth),
-    _area(other._area)
-{
-
-}
-
 /**
  * Tests if the given ray intersects the AABB
  */

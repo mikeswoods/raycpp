@@ -233,8 +233,6 @@ Intersection Mesh::intersectImpl(const Ray &ray, shared_ptr<SceneContext> scene)
         I = k;
     }
 
-    //assert(this->vertices_.size() == this->normals_.size());
-
     glm::uvec3 indices = this->triangles[I].getVertexIndices();
 
     // Interpolate the normal at the point-of-intersection:
