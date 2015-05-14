@@ -51,6 +51,7 @@ class Mesh : public Geometry
 		Mesh(std::shared_ptr<aiMesh> meshData);
 
 		virtual ~Mesh();
+		
 
 		virtual const glm::vec3& getCentroid() const;
 		virtual const BoundingVolume& getVolume() const;
