@@ -27,6 +27,8 @@
 
 class Mesh : public Geometry
 {
+	friend class MultiMesh;
+
 	private:
 		glm::vec3 centroid;
 		TrivialVolume volume;
@@ -55,10 +57,38 @@ class Mesh : public Geometry
 		virtual const AABB& getAABB() const;
 		virtual void buildGeometry();
 		virtual void repr(std::ostream& s) const;
-
-		const std::vector<Tri>& getTriangles() { return this->triangles; }
 };
 
-#endif
+/******************************************************************************/
+
+class MultiMesh : public Geometry
+{
+	private:
+		glm::vec3 centroid;
+		TrivialVolume volume;
+		AABB aabb;
+		std::vector<std::shared_ptr<Mesh>> meshes;
+
+		void computeCentroid();
+		void computeAABB();
+		void buildVolume();
+
+	protected:
+		virtual Intersection intersectImpl(const Ray &ray, std::shared_ptr<SceneContext> scene) const;
+		virtual glm::vec3 sampleImpl() const;
+
+	public:
+		MultiMesh(std::vector<std::shared_ptr<Mesh>> meshes);
+
+		virtual ~MultiMesh();
+
+		virtual const glm::vec3& getCentroid() const;
+		virtual const BoundingVolume& getVolume() const;
+		virtual const AABB& getAABB() const;
+		virtual void buildGeometry();
+		virtual void repr(std::ostream& s) const;
+};
 
 /******************************************************************************/
+
+#endif

@@ -563,10 +563,15 @@ void Configuration::parseNodeDefinition(istream& is, const string& beginToken)
 			throw runtime_error("No object filename given for mesh object!");
 		}
 
-		vector<shared_ptr<aiMesh>> meshData = Model::importMeshes(objFileName);
+		auto meshData = Model::importMeshes(objFileName);
+		std::vector<std::shared_ptr<Mesh>> meshes;
 
-		if (meshData.size() > 0) {
-			geometry = shared_ptr<Geometry>(make_shared<Mesh>(meshData[0]));
+		for (auto i = meshData.begin(); i != meshData.end(); i++) {
+			meshes.push_back(shared_ptr<Mesh>(make_shared<Mesh>(*i)));
+		}
+
+		if (meshes.size() > 0) {
+			geometry = shared_ptr<Geometry>(make_shared<MultiMesh>(meshes));
 		} else {
 			geometry = shared_ptr<Geometry>(nullptr);
 		}

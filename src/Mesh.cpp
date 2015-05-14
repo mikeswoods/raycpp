@@ -43,24 +43,7 @@ Mesh::~Mesh()
 
 void Mesh::repr(std::ostream& s) const
 {
-    /*
-    s << "Mesh {"      << endl;
-    s << "  vertices<" << (this->vertices_.size()) << "> = {" << endl;
-    for (auto i=this->vertices_.begin(); i != this->vertices_.end(); i++) {
-        s << "    " << *i << endl;
-    }
-    s << "  }" << endl;
-    s << "  normals<" << (this->normals_.size()) << "> = {" << endl;
-    for (auto i=this->normals_.begin(); i != this->normals_.end(); i++) {
-        s << "    " << *i << endl;
-    }
-    s << "  faces<" << (this->faces.size()) << "> = {" << endl;
-    for (auto i=this->faces.begin(); i != this->faces.end(); i++) {
-        s << "    " << *i << endl;
-    }
-    s << "  }" << endl;
-    s << "}" << endl;
-    */
+    s << "Mesh<vertices=" << this->vertices_.size() << ">";
 }
 
 void Mesh::computeCentroid()
@@ -78,7 +61,7 @@ void Mesh::computeAABB()
 {
     this->aabb = AABB();
 
-    for (auto i=this->triangles.begin(); i != this->triangles.end(); i++) {
+    for (auto i = this->triangles.begin(); i != this->triangles.end(); i++) {
         this->aabb += i->getAABB();
     }
 }
@@ -95,23 +78,6 @@ const AABB& Mesh::getAABB() const
 
 void Mesh::buildVolume()
 {
-    // Start the radius at 0 and update it when a new maximum is encountered:
-    float radius = 0.0f;
-
-    // Iterate and sum over each vertex to compute the centroid of the mesh:
-    glm::vec3 center = accumulate(this->vertices_.begin(), this->vertices_.end(), glm::vec3());
-    center /= static_cast<float>(this->getVertexCount());
-
-    // Then, for every vertex, compute the distance to the center, updating radius to contain
-    // the current maximum distance:
-    for (auto i=this->vertices_.begin(); i != this->vertices_.end(); i++) {
-
-        float dist = glm::distance(center, *i);
-        if (dist > radius) {
-            radius = dist;
-        }
-    }
-
     this->volume = TrivialVolume();
 }
 
@@ -251,6 +217,91 @@ Intersection Mesh::intersectImpl(const Ray &ray, shared_ptr<SceneContext> scene)
 glm::vec3 Mesh::sampleImpl() const
 {
     throw runtime_error("Mesh::sampleImpl() not implemented");
+}
+
+/******************************************************************************/
+
+MultiMesh::MultiMesh(std::vector<std::shared_ptr<Mesh>> _meshes) :
+    Geometry(MESH),
+    meshes(_meshes)
+{ 
+    this->buildGeometry();
+    this->buildVolume();
+    this->computeCentroid();
+    this->computeAABB();
+}
+
+MultiMesh::~MultiMesh()
+{
+
+}
+
+void MultiMesh::repr(std::ostream& s) const
+{
+    s << "MultiMesh<meshCount=" << this->meshes.size() << ">";
+}
+
+void MultiMesh::computeCentroid()
+{
+    this->centroid = glm::vec3();
+    size_t n = this->meshes.size();
+
+    for (auto i = this->meshes.begin(); i != this->meshes.end(); i++) {
+        this->centroid += (*i)->getCentroid();
+    }
+
+    this->centroid /= static_cast<float>(n);
+}
+
+void MultiMesh::computeAABB()
+{
+    this->aabb = AABB();
+
+    for (auto i = this->meshes.begin(); i != this->meshes.end(); i++) {
+        this->aabb += (*i)->getAABB();
+    }
+}
+
+const glm::vec3& MultiMesh::getCentroid() const
+{
+    return this->centroid;
+}
+
+const AABB& MultiMesh::getAABB() const
+{
+    return this->aabb;
+}
+
+void MultiMesh::buildVolume()
+{
+    this->volume = TrivialVolume();
+}
+
+const BoundingVolume& MultiMesh::getVolume() const
+{
+    return this->volume;
+}
+
+void MultiMesh::buildGeometry()
+{
+
+}
+
+Intersection MultiMesh::intersectImpl(const Ray &ray, std::shared_ptr<SceneContext> scene) const
+{
+    for (auto i = this->meshes.begin(); i != this->meshes.end(); i++) {
+        auto isect = (*i)->intersectImpl(ray, scene);
+        if (isect.isHit()) {
+            return isect;
+        }
+    }
+
+    return Intersection::miss();
+}
+
+glm::vec3 MultiMesh::sampleImpl() const
+{
+    throw runtime_error("MultiMesh::sampleImpl() not implemented");
 }
 
 /******************************************************************************/
